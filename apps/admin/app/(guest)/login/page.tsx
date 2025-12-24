@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { generateMeta } from "@/lib/utils";
-import { GithubIcon } from "lucide-react";
 import Link from "next/link";
 import { Metadata } from "next";
 
@@ -10,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return generateMeta({
     title: "Login Page",
     description:
-      "A login form with email and password. There's an option to login with Google and a link to sign up if you don't have an account.",
+      "A login form with account and password.",
   });
 }
 
@@ -31,17 +30,18 @@ export default function LoginPageV1() {
           <form className="mt-8 space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="email" className="sr-only">
-                  Email address
+                <Label htmlFor="account" className="sr-only">
+                  Account
                 </Label>
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="account"
+                  name="account"
+                  type="text"
+                  autoComplete="username"
                   required
                   className="w-full"
-                  placeholder="Email address"
+                  placeholder="Account"
+                  defaultValue="admin"
                 />
               </div>
               <div>
@@ -56,6 +56,7 @@ export default function LoginPageV1() {
                   required
                   className="w-full"
                   placeholder="Password"
+                  defaultValue="admin"
                 />
               </div>
               <div className="text-end">
@@ -72,6 +73,8 @@ export default function LoginPageV1() {
             </div>
           </form>
 
+          {/* Third-party login & registration (temporarily disabled) */}
+          {/*
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -117,6 +120,7 @@ export default function LoginPageV1() {
               </Link>
             </div>
           </div>
+          */}
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@
 - `apps/web`：摄影工作室官网（Next.js）
 - `apps/admin`：管理后台（Next.js）
 - `packages/*`：预留给共享组件/工具库
+- `docs/deployment.md`：部署指南
 
 ## 本地开发
 
@@ -23,3 +24,10 @@ pnpm -C apps/admin dev
 pnpm dev
 ```
 
+## Web → Admin 跳转配置
+
+`apps/web` 的「管理员登录」按钮默认在本地跳转到 `http://localhost:3001/login`，线上默认跳转到 `/admin/login`。如需自定义（例如线上使用独立域名），设置：
+
+```bash
+NEXT_PUBLIC_ADMIN_BASE_URL="https://admin.example.com"
+```

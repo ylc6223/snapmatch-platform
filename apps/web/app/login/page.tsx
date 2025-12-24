@@ -4,24 +4,34 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Camera, ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { ADMIN_DASHBOARD_URL } from "@/lib/urls"
 
 export default function LoginPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
-    email: "",
+    account: "",
     password: "",
   })
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login - redirect to admin dashboard
-    console.log("Login attempt:", formData)
+    setErrorMessage(null)
+
+    if (formData.account === "admin" && formData.password === "admin") {
+      router.push(ADMIN_DASHBOARD_URL)
+      return
+    }
+
+    setErrorMessage("账号或密码错误")
   }
 
   return (
@@ -51,13 +61,13 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">邮箱地址</Label>
+                <Label htmlFor="account">账号</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@guangying.studio"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  id="account"
+                  type="text"
+                  placeholder="admin"
+                  value={formData.account}
+                  onChange={(e) => setFormData({ ...formData, account: e.target.value })}
                   className="rounded-lg"
                   required
                 />
@@ -73,7 +83,7 @@ export default function LoginPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="请输入密码"
+                    placeholder="admin"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="rounded-lg pr-10"
@@ -99,6 +109,12 @@ export default function LoginPage() {
                 登录
               </Button>
             </form>
+
+            {errorMessage && (
+              <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {errorMessage}
+              </div>
+            )}
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
               <p>如需开通管理员账号，请联系</p>

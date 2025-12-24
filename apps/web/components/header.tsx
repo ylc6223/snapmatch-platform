@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Menu, X, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { ADMIN_LOGIN_URL } from "@/lib/urls"
 
 const navigation = [
   { name: "首页", href: "/" },
@@ -49,9 +50,9 @@ export function Header() {
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
           <ThemeToggle />
-          <Link href="/login">
+          <Link href={ADMIN_LOGIN_URL}>
             <Button variant="outline" className="rounded-full bg-transparent">
-              管理员登录
+              Sign in
             </Button>
           </Link>
         </div>
@@ -90,8 +91,11 @@ export function Header() {
                   ))}
                 </div>
                 <div className="py-6">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full rounded-full">管理员登录</Button>
+                  <Link
+                    href={ADMIN_LOGIN_URL}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button className="w-full rounded-full">Sign in</Button>
                   </Link>
                 </div>
               </div>
