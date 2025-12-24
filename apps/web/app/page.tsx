@@ -1,0 +1,23 @@
+import { Header } from "@/components/header"
+import { Hero } from "@/components/hero"
+import { PortfolioGallery } from "@/components/portfolio-gallery"
+import { CaseStudies } from "@/components/case-studies"
+import { Services } from "@/components/services"
+import { About } from "@/components/about"
+import { Contact } from "@/components/contact"
+import { Footer } from "@/components/footer"
+
+export default function HomePage() {
+  return (
+    <main className="min-h-screen">
+      <Header />
+      <Hero />
+      <Services />
+      <PortfolioGallery />
+      <CaseStudies />
+      <About />
+      <Contact />
+      <Footer />
+    </main>
+  )
+}

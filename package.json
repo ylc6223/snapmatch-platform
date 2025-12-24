@@ -1,0 +1,21 @@
+{
+  "name": "snapmatch-platform",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "dev:web": "pnpm -C apps/web dev",
+    "dev:admin": "pnpm -C apps/admin dev",
+    "build:web": "pnpm -C apps/web build",
+    "build:admin": "pnpm -C apps/admin build",
+    "lint:web": "pnpm -C apps/web lint",
+    "lint:admin": "pnpm -C apps/admin lint"
+  }
+}
+
