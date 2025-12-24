@@ -1,9 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { generateMeta } from "@/lib/utils";
-import Link from "next/link";
 import { Metadata } from "next";
+import { LoginForm } from "./login-form";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateMeta({
@@ -27,51 +24,7 @@ export default function LoginPageV1() {
             <p className="mt-2 text-sm text-gray-600">Please sign in to your account</p>
           </div>
 
-          <form className="mt-8 space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="account" className="sr-only">
-                  Account
-                </Label>
-                <Input
-                  id="account"
-                  name="account"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  className="w-full"
-                  placeholder="Account"
-                  defaultValue="admin"
-                />
-              </div>
-              <div>
-                <Label htmlFor="password" className="sr-only">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="w-full"
-                  placeholder="Password"
-                  defaultValue="admin"
-                />
-              </div>
-              <div className="text-end">
-                <Link href="#" className="ml-auto inline-block text-sm underline">
-                  Forgot your password?
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <Button type="submit" className="w-full">
-                Sign in
-              </Button>
-            </div>
-          </form>
+          <LoginForm />
 
           {/* Third-party login & registration (temporarily disabled) */}
           {/*
