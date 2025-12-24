@@ -8,6 +8,7 @@
 - `apps/admin`：管理后台（Next.js）
 - `packages/*`：预留给共享组件/工具库
 - `docs/deployment.md`：部署指南
+- `docs/admin-api-strategy.md`：后台 API/数据流方案
 
 ## 本地开发
 
