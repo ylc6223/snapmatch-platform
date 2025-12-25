@@ -6,9 +6,11 @@
 
 - `apps/web`：摄影工作室官网（Next.js）
 - `apps/admin`：管理后台（Next.js）
+- `apps/backend`：后台 API（NestJS，JWT + 权限控制）
 - `packages/*`：预留给共享组件/工具库
 - `docs/deployment.md`：部署指南
 - `docs/admin-api-strategy.md`：后台 API/数据流方案
+- `docs/backend.md`：后端（NestJS）开发说明
 
 ## 本地开发
 

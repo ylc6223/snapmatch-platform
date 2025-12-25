@@ -12,10 +12,12 @@
     "lint": "pnpm -r lint",
     "dev:web": "pnpm -C apps/web dev",
     "dev:admin": "pnpm -C apps/admin dev",
+    "dev:backend": "pnpm -C apps/backend dev",
     "build:web": "pnpm -C apps/web build",
     "build:admin": "pnpm -C apps/admin build",
+    "build:backend": "pnpm -C apps/backend build",
     "lint:web": "pnpm -C apps/web lint",
-    "lint:admin": "pnpm -C apps/admin lint"
+    "lint:admin": "pnpm -C apps/admin lint",
+    "lint:backend": "pnpm -C apps/backend lint"
   }
 }
-

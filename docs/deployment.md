@@ -4,6 +4,10 @@
 
 - `apps/web`：官网站点（对外）
 - `apps/admin`：管理后台（内部）
+ 
+并包含一个后端 API 服务：
+
+- `apps/backend`：后台 API（NestJS，默认 `http://localhost:3002`）
 
 同时，`apps/web` 的「管理员登录」按钮会跳转到 Admin 的登录页（默认生产为 `/admin/login`，可通过环境变量覆盖）。
 
@@ -15,6 +19,7 @@
 
 - Web：`http://localhost:3000`
 - Admin：`http://localhost:3001`
+- Backend：`http://localhost:3002`
 
 启动方式：
 
@@ -24,6 +29,9 @@ pnpm -C apps/web dev
 
 # Admin（指定端口）
 PORT=3001 pnpm -C apps/admin dev
+
+# Backend
+pnpm -C apps/backend dev
 ```
 
 Web → Admin 跳转在本地默认指向 `http://localhost:3001/login`，无需额外配置。
@@ -152,4 +160,3 @@ Web 已改为本地字体（`next/font/local`），字体文件在：
 - `apps/web/app/fonts/GeistMono[wght].woff2`
 
 线上不会再请求 `fonts.gstatic.com`。
-
