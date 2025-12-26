@@ -10,13 +10,18 @@ import {
 
 import { backendFetch, BackendError } from "@/lib/api/backend";
 import type { AuthUser } from "@/lib/auth/types";
+import type { ApiResponse } from "@/lib/api/response";
 
 
 export default async function Page({ children }: { children: React.ReactNode }) {
   let user: AuthUser;
   try {
-    const result = await backendFetch<{ user: AuthUser }>("/auth/me");
-    user = result.user;
+    const result = await backendFetch<ApiResponse<{ user: AuthUser }>>("/auth/me");
+    const current = result.data?.user;
+    if (!current) {
+      throw new Error("Invalid /auth/me response: missing user");
+    }
+    user = current;
   } catch (error) {
     if (error instanceof BackendError && error.status === 401) {
       redirect("/login?next=/dashboard");

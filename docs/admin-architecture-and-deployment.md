@@ -69,45 +69,38 @@
 
 - `accessToken`：
   - 形式：JWT
-  - 存储：前端内存（推荐）或短期持久化（可选，不推荐 localStorage）
-  - 用途：请求业务 API（`/api/*`）时的 `Authorization` 头
+  - 存储：`HttpOnly Cookie`（`admin_access_token`，由 Admin BFF 读取并转成 `Authorization: Bearer ...`）
+  - 用途：访问后端受保护接口（`/auth/me` 与业务 API）
 - `refreshToken`：
-  - 形式：JWT 或随机串（由后端决定）
-  - 存储：`Set-Cookie` 写入 `httpOnly Cookie`
-  - 用途：仅用于刷新接口（`POST /api/auth/refresh`）
+  - 形式：随机串（数据库仅存 hash）
+  - 存储：`HttpOnly Cookie`（`admin_refresh_token`）
+  - 用途：续期（后端 `POST /auth/refresh` 旋转刷新）与登出/踢下线（`POST /auth/logout` 撤销会话）
 
 ### 5.2 401/403 统一处理（前端请求层）
 
-建议在 `apps/admin` 采用 Axios 实例做请求层（你已安装 `axios`），实现以下策略：
+当前 `apps/admin` 采用 BFF（Route Handlers）统一转发后端，并在 401 时清理 cookie、引导重新登录：
 
 - `401`：
-  - 若当前无刷新中任务：触发一次 `POST /api/auth/refresh`
-  - 刷新成功：重放原请求（队列化，避免并发风暴）
-  - 刷新失败：清理本地 accessToken，跳转 `/login`，并提示“登录已过期”
+  - BFF 清理 `admin_access_token` / `admin_refresh_token`
+  - 前端跳转 `/login?next=...`
 - `403`：
   - 统一 toast/notification 提示“无权限”
   - 对关键页面：可导航到 403 页面（你已有 404/500 页面，可新增 403）
 
-### 5.3 后端接口契约（建议补齐）
+### 5.3 后端接口契约（当前实现）
 
-当前后端已有：
+后端（`apps/backend`）已实现：
 
-- `POST /auth/login`：返回 `accessToken`
+- `POST /auth/login`：返回 `accessToken` + `refreshToken` + `refreshExpiresAt`
+- `POST /auth/refresh`：输入 `{ refreshToken }`，旋转 refresh token 并返回新的 `accessToken`
+- `POST /auth/logout`：输入 `{ refreshToken }`，撤销会话（踢下线）
 - `GET /auth/me`：校验 JWT 并返回用户
 
-为了满足 refresh 与统一体验，建议补齐：
-
-- `POST /auth/refresh`：
-  - 输入：refresh cookie（httpOnly）
-  - 输出：新的 `accessToken`（并建议旋转 refresh cookie）
-- `POST /auth/logout`：
-  - 输出：清理 refresh cookie（并使 refresh 失效）
-
-> 你可以先实现最小版本（refresh 不旋转），但生产建议尽快做到 rotation + 失效策略（黑名单/版本号）。
+Admin（`apps/admin`）通过 BFF 读取 `HttpOnly Cookie`（`admin_refresh_token`），再以 JSON body 调用后端 `/auth/refresh` / `/auth/logout`，避免前端 JS 直接接触 refresh token。
 
 ### 5.4 CSRF 风险说明（为什么同源更好）
 
-refresh token 在 Cookie 中，理论上会引入 CSRF 风险。推荐组合：
+refresh token 存在 `HttpOnly Cookie`，理论上会引入 CSRF 风险。推荐组合：
 
 - 同源请求 + `SameSite=Lax`（通常已足够）
 - refresh 接口限定 `POST` 且仅接受 `Content-Type: application/json`
@@ -234,4 +227,3 @@ server {
   - 或在 Admin 开发模式下用 Next `rewrites` 把 `/api` 代理到 `localhost:3002`
 
 关键原则：**前端始终用相对路径 `/api` 请求**，上线不会改代码，只改网关转发。
-

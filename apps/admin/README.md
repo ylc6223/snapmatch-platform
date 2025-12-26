@@ -63,6 +63,7 @@ pnpm -C apps/admin dev
 ### 会话策略
 
 - Cookie：`admin_access_token`（HttpOnly，SameSite=Lax）
+- Cookie：`admin_refresh_token`（HttpOnly，SameSite=Lax，用于服务端登出/续期能力）
 - 未登录访问 `/dashboard/*`：`proxy.ts` 重定向到 `/login?next=...`
 - 后端返回 401：BFF 会清 cookie，并返回 401 给前端，由前端跳转登录
 
@@ -70,7 +71,7 @@ pnpm -C apps/admin dev
 
 - `POST /api/auth/login`：账号密码登录 → Set-Cookie
 - `GET /api/auth/me`：获取当前用户（roles/permissions）
-- `POST /api/auth/logout`：退出登录（清 cookie）
+- `POST /api/auth/logout`：退出登录（先调用后端 `/auth/logout` 撤销会话，再清理 cookie）
 
 ### RBAC（展示层）
 

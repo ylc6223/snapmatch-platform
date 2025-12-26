@@ -10,4 +10,8 @@ export class UsersService {
   findByAccount(account: string): Promise<User | null> {
     return this.repo.findByAccount(account);
   }
+
+  findById(id: string): Promise<User | null> {
+    return this.repo.findById(id);
+  }
 }

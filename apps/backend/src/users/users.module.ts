@@ -1,23 +1,23 @@
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { CloudbaseModule } from "../database/cloudbase.module";
+import { CLOUDBASE_APP } from "../database/cloudbase.constants";
 import { USERS_REPOSITORY, type UsersRepository } from "./users.repository";
 import { CloudBaseUsersRepository } from "./users.repository.cloudbase";
-import { InMemoryUsersRepository } from "./users.repository.memory";
 import { UsersService } from "./users.service";
+import type { CloudBase } from "@cloudbase/node-sdk";
 
 @Module({
+  imports: [CloudbaseModule],
   providers: [
     // 对外暴露用户查询能力（AuthService 依赖该服务）。
     UsersService,
     {
-      // 通过环境变量选择用户仓库实现，便于后续平滑切换到 CloudBase。
+      // 固定使用 CloudBase 数据模型作为存储层。
       provide: USERS_REPOSITORY,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService): UsersRepository => {
-        const repo = (config.get<string>("USERS_REPOSITORY") ?? "memory").toLowerCase();
-        if (repo === "cloudbase") return new CloudBaseUsersRepository(config);
-        return new InMemoryUsersRepository(config);
-      },
+      inject: [ConfigService, CLOUDBASE_APP],
+      useFactory: (config: ConfigService, app: CloudBase): UsersRepository =>
+        new CloudBaseUsersRepository(app.models, config),
     },
   ],
   exports: [UsersService],

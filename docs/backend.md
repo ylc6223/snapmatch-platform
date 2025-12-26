@@ -2,7 +2,7 @@
 
 本仓库的后端服务位于 `apps/backend`，用于给 `apps/admin`（未来也包括摄影师端、客户端）提供 API 能力。
 
-当前阶段目标：**把后台鉴权与权限控制框架先搭起来**，后续再逐步接入 CloudBase 数据库/存储等能力。
+当前阶段目标：**后端鉴权与权限控制（JWT + RBAC）已落地，并使用 CloudBase 数据模型持久化管理员与会话**；后续再逐步接入业务数据与云存储等能力。
 
 ---
 
@@ -11,7 +11,8 @@
 - `apps/backend/src/main.ts`：应用入口（CORS、全局 ValidationPipe、启动端口）
 - `apps/backend/src/app.module.ts`：模块装配 + 全局 Guard（JWT/Roles/Permissions）
 - `apps/backend/src/auth/*`：登录、JWT 策略、装饰器、RBAC
-- `apps/backend/src/users/*`：用户仓库（当前内存实现，预留 CloudBase 实现）
+- `apps/backend/src/users/*`：用户仓库（CloudBase 数据模型：`admin_users`）
+- `apps/backend/src/auth/sessions/*`：会话仓库（CloudBase 数据模型：`auth_sessions`，用于 refresh/logout/踢下线）
 - `apps/backend/src/health/*`：健康检查
 
 ---
@@ -30,19 +31,12 @@ pnpm -C apps/backend install
 cp apps/backend/.env.example apps/backend/.env.local
 ```
 
-生成管理员密码 Hash（bcrypt）：
+生成密码 Hash（bcrypt，用于写入 `admin_users.password_hash`）：
 
 ```bash
 pnpm -C apps/backend hash:password "your-password"
 ```
 
-将输出填入 `apps/backend/.env.local`：
-
-```bash
-ADMIN_ACCOUNT=admin
-ADMIN_PASSWORD_HASH=...上一步输出...
-JWT_SECRET=...强随机字符串...
-```
 
 `JWT_SECRET` 建议用强随机值（长度 ≥ 32），可用下面命令生成：
 
@@ -68,8 +62,11 @@ pnpm -C apps/backend dev
 - `ADMIN_ORIGIN`：允许访问后端的 Admin 前端 Origin（CORS；默认 `http://localhost:3001`）
 - `JWT_SECRET`：JWT 签名密钥
 - `JWT_EXPIRES_IN`：过期时间（默认 `12h`）
-- `USERS_REPOSITORY`：用户仓库实现（`memory` | `cloudbase`，当前默认 `memory`）
-- `ADMIN_ACCOUNT` / `ADMIN_PASSWORD_HASH`：内置管理员账号（仅启动期用于登录打通）
+- `AUTH_REFRESH_TOKEN_TTL_DAYS`：refresh token 有效期（默认 `30` 天）
+- `CLOUDBASE_ENV` / `CLOUDBASE_REGION`：CloudBase 环境与地域（region 默认 `ap-shanghai`）
+- `CLOUDBASE_SECRET_ID` / `CLOUDBASE_SECRET_KEY`：CloudBase 服务端密钥（用于 Node SDK 初始化）
+- `CLOUDBASE_MODEL_USERS`：用户数据模型名称（默认 `rbac_users`）
+- `CLOUDBASE_MODEL_AUTH_SESSIONS`：会话数据模型名称（默认 `auth_sessions`）
 
 生产环境保护：
 
@@ -92,7 +89,12 @@ pnpm -C apps/backend dev
 响应：
 
 ```json
-{ "accessToken": "...", "user": { "id": "...", "account": "...", "roles": ["admin"], "permissions": ["*"] } }
+{
+  "accessToken": "...",
+  "refreshToken": "...",
+  "refreshExpiresAt": 1730000000000,
+  "user": { "id": "...", "account": "...", "roles": ["admin"], "permissions": ["*"] }
+}
 ```
 
 ### 4.2 携带 Token
@@ -106,6 +108,26 @@ Authorization: Bearer <accessToken>
 ### 4.3 当前用户
 
 接口：`GET /auth/me`（需要 JWT）
+
+### 4.4 Refresh（续期）
+
+接口：`POST /auth/refresh`（公开接口）
+
+```json
+{ "refreshToken": "rt_..." }
+```
+
+成功返回新的 `accessToken` 与（旋转后的）`refreshToken`。
+
+### 4.5 Logout（服务端登出/踢下线）
+
+接口：`POST /auth/logout`（公开接口）
+
+```json
+{ "refreshToken": "rt_..." }
+```
+
+该接口会撤销对应会话；由于 `accessToken` 绑定 `sid` 且每次请求会校验会话是否有效，被撤销后会**立即失效**。
 
 ---
 
@@ -183,9 +205,7 @@ pnpm -C apps/backend test
 
 ## 9. CloudBase 接入规划（后续）
 
-当前 `USERS_REPOSITORY=cloudbase` 仅为占位（会抛错），目的是让后端结构上能平滑切换到 CloudBase：
+当前已在后端落地 CloudBase Node SDK 数据模型访问（用于管理员与会话）。后续可以按业务模块继续新增数据模型并逐步接入：
 
-- 用户：未来可从 CloudBase Auth / 自建用户表读取
-- 数据：套系、作品、选片等业务数据写入 CloudBase（NoSQL 或 MySQL）
-
-当你确定 CloudBase 的“用户体系”（仅管理员？摄影师/客户是否走同一 Auth Provider？）之后，我可以把 `CloudBaseUsersRepository` 和业务模型一起落地。
+- 套系、作品、选片等业务主数据：建议统一用数据模型（便于权限、关联与后续扩展）
+- 云存储：素材/作品原图、导出文件等

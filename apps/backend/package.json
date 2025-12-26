@@ -8,9 +8,12 @@
     "start": "node dist/main.js",
     "lint": "eslint .",
     "test": "jest",
-    "hash:password": "ts-node --files ./src/scripts/hash-password.ts"
+    "hash:password": "ts-node --files ./src/scripts/hash-password.ts",
+    "seed:rbac": "ts-node --files ./src/scripts/seed-rbac.ts"
   },
   "dependencies": {
+    "@cloudbase/node-sdk": "^3.16.0",
+    "@cloudbase/wx-cloud-client-sdk": "^1.7.2",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",

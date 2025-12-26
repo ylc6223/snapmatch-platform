@@ -11,6 +11,7 @@ export type JwtPayload = {
   account: string;
   roles: Role[];
   permissions: string[];
+  sid?: string;
 };
 
 // Controller 层使用的用户对象（由 JwtStrategy 注入到 request.user）。

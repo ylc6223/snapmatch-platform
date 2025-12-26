@@ -48,7 +48,7 @@
   <!-- header -->
   <text x="682" y="36" text-anchor="middle" class="title">Admin 登录流程（BFF + HttpOnly Cookie）</text>
   <text x="682" y="58" text-anchor="middle" class="muted">
-    前端仅请求 /api/*；BFF 负责调用后端 /auth/login 并写入 admin_access_token（HttpOnly Cookie）
+    前端仅请求 /api/*；BFF 负责调用后端 /auth/login 并写入 admin_access_token/admin_refresh_token（HttpOnly Cookie）
   </text>
 
   <!-- Layer: Client -->
@@ -96,11 +96,11 @@
   <rect x="960" y="452" width="340" height="78" fill="#f3fff8" class="box-strong"/>
   <text x="980" y="480" class="text">3) 后端登录（NestJS）</text>
   <text x="980" y="502" class="sub">POST /auth/login</text>
-  <text x="980" y="522" class="sub">返回：{ accessToken, user }</text>
+  <text x="980" y="522" class="sub">返回：{ accessToken, refreshToken, user }</text>
 
   <rect x="600" y="548" width="700" height="86" fill="#ffffff" class="box"/>
   <text x="620" y="576" class="text">4) BFF 写入会话（Set-Cookie）</text>
-  <text x="620" y="598" class="sub">Set-Cookie: admin_access_token=&lt;jwt&gt;; HttpOnly; SameSite=Lax; Path=/; Secure(生产)</text>
+  <text x="620" y="598" class="sub">Set-Cookie: admin_access_token=&lt;jwt&gt;; admin_refresh_token=&lt;rt&gt;; HttpOnly; SameSite=Lax; Path=/; Secure(生产)</text>
   <text x="620" y="618" class="sub">响应：{ user }（或 204）</text>
 
   <rect x="210" y="656" width="360" height="86" fill="#ffffff" class="box"/>
@@ -148,4 +148,3 @@
   <path d="M930,820 L972,820" class="arrow-soft"/>
   <text x="980" y="824" class="sub">虚线：返回/跳转/说明性链路</text>
 </svg>
-

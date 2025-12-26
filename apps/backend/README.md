@@ -22,8 +22,10 @@ cp apps/backend/.env.example apps/backend/.env.local
 关键变量：
 
 - `JWT_SECRET`：JWT 签名密钥（务必修改）
-- `ADMIN_ACCOUNT` / `ADMIN_PASSWORD_HASH`：本地内置管理员账号（仅用于启动期）
 - `ADMIN_ORIGIN`：CORS 允许的管理后台 Origin（默认 `http://localhost:3001`）
+- `CLOUDBASE_ENV` / `CLOUDBASE_SECRET_ID` / `CLOUDBASE_SECRET_KEY`：CloudBase Node SDK 初始化所需
+- `CLOUDBASE_MODEL_USERS`：用户数据模型名（默认 `rbac_users`）
+- `CLOUDBASE_MODEL_AUTH_SESSIONS`：会话数据模型名（默认 `auth_sessions`）
 
 生成密码 hash：
 
@@ -33,7 +35,9 @@ pnpm -C apps/backend hash:password "your-password"
 
 ## API 速览
 
-- `POST /auth/login`（Public）：账号+密码 → `accessToken`
+- `POST /auth/login`（Public）：账号+密码 → `accessToken` + `refreshToken`
+- `POST /auth/refresh`（Public）：`refreshToken` → 新的 `accessToken`（并旋转 `refreshToken`）
+- `POST /auth/logout`（Public）：撤销 `refreshToken` 对应会话（accessToken 绑定 `sid`，撤销后立即失效）
 - `GET /auth/me`（JWT）：返回当前用户
 - `GET /health`（Public）：健康检查
 - `GET /secure/admin-only`（JWT + role=admin）：示例受保护接口

@@ -15,7 +15,7 @@ import { UsersModule } from "./users/users.module";
       isGlobal: true,
       envFilePath: [".env.local", ".env"],
     }),
-    // 用户相关模块：当前为内存用户仓库（用于启动期管理员登录打通），后续可切换到 CloudBase 实现。
+    // 用户相关模块：使用 CloudBase 数据模型持久化管理员与会话。
     UsersModule,
     // 鉴权与权限模块：JWT 签发/解析、登录接口、RBAC（角色/权限）能力。
     AuthModule,

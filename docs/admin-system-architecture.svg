@@ -53,7 +53,7 @@
 
   <!-- header -->
   <text x="682" y="36" text-anchor="middle" class="title">SnapMatch 管理后台（单域名同源）设计与部署架构</text>
-  <text x="682" y="58" text-anchor="middle" class="muted">推荐：网关/反向代理按路径分流（/ → Next Admin，/api → Nest API）+ refreshToken(httpOnly Cookie)</text>
+  <text x="682" y="58" text-anchor="middle" class="muted">推荐：网关/反向代理按路径分流（/ → Next Admin，/api → Nest API）+ accessToken/refreshToken（HttpOnly Cookie）</text>
 
   <!-- common geometry -->
   <!-- left labels: x=20 w=120, right layer: x=150 w=1194 -->
@@ -70,8 +70,8 @@
 
   <rect x="730" y="112" width="594" height="92" fill="#ffffff" class="box"/>
   <text x="750" y="142" class="text">前端鉴权策略（浏览器侧）</text>
-  <text x="750" y="164" class="sub">accessToken：JWT（Authorization: Bearer）</text>
-  <text x="750" y="186" class="sub">refreshToken：httpOnly Cookie（仅用于 /api/auth/refresh）</text>
+  <text x="750" y="164" class="sub">admin_access_token：HttpOnly Cookie（由 BFF 转发为 Authorization: Bearer）</text>
+  <text x="750" y="186" class="sub">admin_refresh_token：HttpOnly Cookie（用于 refresh/logout）</text>
 
   <!-- Layer 2: Edge -->
   <rect x="20" y="240" width="120" height="160" fill="url(#g-edge)" class="layer-border"/>
@@ -112,22 +112,22 @@
   <rect x="210" y="488" width="360" height="112" fill="#f3fff8" class="box-strong"/>
   <text x="230" y="518" class="text">Admin Web（Next.js）</text>
   <text x="230" y="540" class="sub">apps/admin · App Router</text>
-  <text x="230" y="562" class="sub">请求：Axios 实例 + 统一拦截器</text>
+  <text x="230" y="562" class="sub">请求：同源 /api（BFF）</text>
   <text x="230" y="584" class="sub">登录页 / 业务页面 / RBAC UI 控制</text>
 
   <!-- Backend -->
   <rect x="610" y="488" width="360" height="112" fill="#f3fff8" class="box-strong"/>
   <text x="630" y="518" class="text">Backend API（NestJS）</text>
   <text x="630" y="540" class="sub">apps/backend · JWT + RBAC</text>
-  <text x="630" y="562" class="sub">/auth/login、/auth/me、/auth/refresh（建议补齐）</text>
+  <text x="630" y="562" class="sub">/auth/login、/auth/me、/auth/refresh、/auth/logout</text>
   <text x="630" y="584" class="sub">统一返回错误码 + 403 权限提示</text>
 
   <!-- Auth box -->
   <rect x="1010" y="488" width="290" height="112" fill="#f3fff8" class="box"/>
   <text x="1030" y="518" class="text">鉴权与会话</text>
   <text x="1030" y="540" class="sub">accessToken：短有效期 JWT</text>
-  <text x="1030" y="562" class="sub">refreshToken：旋转/黑名单（建议）</text>
-  <text x="1030" y="584" class="sub">401：自动 refresh；403：统一提示</text>
+  <text x="1030" y="562" class="sub">refreshToken：旋转刷新（auth_sessions 落库）</text>
+  <text x="1030" y="584" class="sub">401：清 cookie → 重新登录；403：统一提示</text>
 
   <!-- arrows Admin -> Backend -->
   <path d="M570,544 L610,544" class="arrow" marker-end="url(#arrowHead)"/>

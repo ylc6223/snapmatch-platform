@@ -96,7 +96,7 @@
 
   <rect x="232" y="616" width="520" height="72" fill="#ffffff" class="box"/>
   <text x="252" y="644" class="text">401 Unauthorized（未登录/过期/无效）</text>
-  <text x="252" y="666" class="sub">BFF 返回 401 → 前端触发 logout（清 cookie）并跳转 /login?next=...</text>
+  <text x="252" y="666" class="sub">BFF 返回 401 → 前端触发 logout（清 access/refresh cookie）并跳转 /login?next=...</text>
 
   <rect x="780" y="616" width="500" height="72" fill="#ffffff" class="box"/>
   <text x="800" y="644" class="text">403 Forbidden（无权限）</text>
@@ -128,4 +128,3 @@
   <path d="M765,420 C840,420 840,400 930,354" class="arrow-soft" marker-end="url(#arrowHead)"/>
   <text x="850" y="412" class="arrow-label">请求前：UI 可见性/禁用</text>
 </svg>
-

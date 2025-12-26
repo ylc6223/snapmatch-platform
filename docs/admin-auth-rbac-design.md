@@ -45,8 +45,9 @@
 
 ### 2.3 总体架构图（参考 `docs/admin-system-architecture.svg` 风格）
 
-> 本图基于本文推荐方案：`accessToken` 存在 `HttpOnly Cookie`，由 Admin BFF 读取后转发到后端。
-> 后续如需升级为“`accessToken` 仅驻留内存 + `refreshToken`(HttpOnly Cookie) 旋转刷新”，可在 BFF/Backend 侧补齐 `refresh` 流程，不影响整体分层与职责边界。
+> 本图基于当前落地方案：`admin_access_token` 与 `admin_refresh_token` 均存在 `HttpOnly Cookie`，
+> 由 Admin BFF 读取并转发到后端。后端已提供 `/auth/refresh`（旋转 refresh token）与 `/auth/logout`（撤销会话），
+> 且 `accessToken` 绑定会话 `sid`，被撤销后会立即失效。
 
 ![SnapMatch Admin 登录与 RBAC 总体架构图](./admin-auth-rbac-architecture.svg)
 
@@ -65,6 +66,7 @@
 3. 后端返回 `{ accessToken, user }`
 4. Admin Route Handler 写入 cookie：
    - `Set-Cookie: admin_access_token=<jwt>; HttpOnly; SameSite=Lax; Path=/; Secure(生产)`
+   - `Set-Cookie: admin_refresh_token=<rt>; HttpOnly; SameSite=Lax; Path=/; Secure(生产)`
 5. 前端收到 `user`（或 204），跳转到 dashboard
 
 > 前端不直接接触 token，只拿到 user 信息用于展示层逻辑。
@@ -76,7 +78,9 @@
 
 ### 3.3 退出登录
 
-- `POST /api/auth/logout`：清空 `admin_access_token` cookie（设置空值 + 过期时间）
+- `POST /api/auth/logout`：
+  - 先调用后端 `POST /auth/logout` 撤销会话（使用 `admin_refresh_token`）
+  - 再清空 `admin_access_token` 与 `admin_refresh_token` 两个 cookie
 
 ---
 
@@ -182,7 +186,7 @@
 
 - `ADMIN_ORIGIN=http://localhost:3001`
 - `JWT_SECRET=...`
-- `ADMIN_ACCOUNT/ADMIN_PASSWORD_HASH=...`
+- `CLOUDBASE_ENV` / `CLOUDBASE_SECRET_ID` / `CLOUDBASE_SECRET_KEY`
 
 ---
 

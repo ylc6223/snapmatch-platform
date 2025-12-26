@@ -35,12 +35,21 @@ export function LoginForm() {
         headers: {
           "content-type": "application/json"
         },
-        body: JSON.stringify({ account, password })
+        body: JSON.stringify({ account: account.trim(), password: password.trim() })
       });
 
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-        setErrorMessage(payload?.message ?? "登录失败");
+        const payload = (await response.json().catch(() => null)) as
+          | {
+              message?: string;
+              errors?: Array<{ field?: string; reason?: string }>;
+            }
+          | null;
+        const reasons = payload?.errors
+          ?.map((item) => item?.reason)
+          .filter((reason): reason is string => Boolean(reason && reason.length > 0));
+        const detail = reasons && reasons.length > 0 ? reasons.join("；") : null;
+        setErrorMessage(detail ? `${payload?.message ?? "登录失败"}：${detail}` : payload?.message ?? "登录失败");
         return;
       }
 

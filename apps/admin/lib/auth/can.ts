@@ -1,5 +1,12 @@
 import type { AuthUser, Role } from "@/lib/auth/types";
 
+/**
+ * RBAC（展示层）
+ *
+ * 注意：
+ * - 后端有强校验（Guard），这里仅用于前端菜单/按钮的展示控制
+ * - `admin` 视为超级管理员，默认拥有全部权限（permissions 包含 "*"）
+ */
 type AccessRule = {
   roles?: Role[];
   permissions?: string[];
@@ -14,6 +21,7 @@ export function hasPermission(user: AuthUser, permission: string) {
 }
 
 export function canAccess(user: AuthUser, rule: AccessRule) {
+  // 超级管理员兜底：无视细粒度规则直接放行。
   if (isAdmin(user)) return true;
 
   if (rule.roles && rule.roles.length > 0) {
@@ -28,4 +36,3 @@ export function canAccess(user: AuthUser, rule: AccessRule) {
 
   return true;
 }
-

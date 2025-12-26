@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { BadRequestException, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
+import os from "node:os";
 import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
 import { ResponseEnvelopeInterceptor } from "./common/interceptors/response-envelope.interceptor";
@@ -62,6 +63,23 @@ async function bootstrap() {
   // 监听端口：本地默认 3002；容器/CloudRun 部署时通常由平台注入 PORT。
   const port = Number(config.get<string>("PORT") ?? "3002");
   await app.listen(port);
+
+  const protocol = "http";
+  const localUrl = `${protocol}://localhost:${port}`;
+  const networks = os.networkInterfaces();
+  const networkUrls = Object.values(networks)
+    .flat()
+    .filter((item): item is NonNullable<(typeof item)> => Boolean(item))
+    .filter((item) => item.family === "IPv4" && !item.internal)
+    .map((item) => `${protocol}://${item.address}:${port}`);
+
+  // 对齐 Next.js 的启动输出风格，方便本地对照端口与访问地址。
+  console.log("");
+  console.log("  ▲ NestJS");
+  console.log(`   - Local:         ${localUrl}`);
+  if (networkUrls.length > 0) {
+    console.log(`   - Network:       ${networkUrls[0]}`);
+  }
 }
 
 void bootstrap();

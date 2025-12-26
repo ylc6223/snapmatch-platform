@@ -1,3 +1,12 @@
+/**
+ * 标准 API 响应 envelope（apps/admin 与 apps/backend 约定一致）
+ *
+ * - 成功：{ code, message, data, timestamp }
+ * - 失败：{ code, message, errors?, timestamp }
+ *
+ * 前端建议按 HTTP status 处理通用策略（例如 401 跳转登录、403 提示无权限），
+ * 展示层再使用 message/errors 做用户可读提示。
+ */
 export type ApiErrorItem = {
   field: string;
   reason: string;
@@ -29,4 +38,3 @@ export function makeErrorResponse(input: {
     timestamp: Date.now(),
   };
 }
-

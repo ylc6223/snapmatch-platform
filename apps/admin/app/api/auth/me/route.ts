@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { backendFetch, BackendError } from "@/lib/api/backend";
-import { clearAdminAccessToken } from "@/lib/auth/session";
+import { clearAdminAccessToken, clearAdminRefreshToken } from "@/lib/auth/session";
 import type { AuthUser } from "@/lib/auth/types";
 import { isApiResponse, makeErrorResponse, type ApiResponse } from "@/lib/api/response";
+
+export const runtime = "nodejs";
 
 /**
  * BFF：获取当前登录用户（同源）
@@ -30,11 +32,13 @@ export async function GET() {
     if (error instanceof BackendError) {
       if (error.status === 401) {
         // 401：未登录/过期/无效 → 清 cookie，前端收到 401 后跳转登录
-        clearAdminAccessToken();
-        if (isApiResponse(error.payload)) {
-          return NextResponse.json(error.payload, { status: 401 });
-        }
-        return NextResponse.json(makeErrorResponse({ code: 401, message: "未登录" }), { status: 401 });
+        const response = NextResponse.json(
+          isApiResponse(error.payload) ? error.payload : makeErrorResponse({ code: 401, message: "未登录" }),
+          { status: 401 }
+        );
+        clearAdminAccessToken(response);
+        clearAdminRefreshToken(response);
+        return response;
       }
       if (isApiResponse(error.payload)) {
         return NextResponse.json(error.payload, { status: error.status });

@@ -3,6 +3,13 @@ type PageRoutesType = {
   items: PageRoutesItemType;
 };
 
+/**
+ * 侧边栏路由配置
+ *
+ * 说明：
+ * - 这是纯“展示层菜单”配置，不代表后端权限；权限由后端 Guard 强校验
+ * - 若要基于 roles/permissions 做菜单过滤，建议在渲染侧结合 `lib/auth/can.ts`
+ */
 type PageRoutesItemType = {
   title: string;
   href: string;

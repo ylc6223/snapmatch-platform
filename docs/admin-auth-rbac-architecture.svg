@@ -50,7 +50,7 @@
   <!-- header -->
   <text x="682" y="36" text-anchor="middle" class="title">SnapMatch Admin 登录与 RBAC（同源 BFF）总体架构</text>
   <text x="682" y="58" text-anchor="middle" class="muted">
-    推荐：Admin 同域 /api（BFF）转发后端 + accessToken(HttpOnly Cookie) + 后端 JWT/RBAC 强校验
+    推荐：Admin 同域 /api（BFF）转发后端 + accessToken/refreshToken（HttpOnly Cookie）+ 后端 JWT/RBAC 强校验
   </text>
 
   <!-- Layer 1: Client -->
@@ -66,7 +66,7 @@
   <rect x="750" y="112" width="574" height="92" fill="#ffffff" class="box"/>
   <text x="770" y="142" class="text">会话策略（浏览器侧）</text>
   <text x="770" y="164" class="sub">admin_access_token：HttpOnly Cookie（SameSite=Lax）</text>
-  <text x="770" y="186" class="sub">前端只使用 /api/* 同源请求，不直接拼接 Authorization</text>
+  <text x="770" y="186" class="sub">admin_refresh_token：HttpOnly Cookie（用于 refresh/logout）</text>
 
   <!-- Layer 2: Edge -->
   <rect x="20" y="240" width="120" height="160" fill="url(#g-edge)" class="layer-border"/>
@@ -148,11 +148,11 @@
   <rect x="550" y="700" width="420" height="150" fill="#ffffff" class="dash"/>
   <text x="572" y="728" class="text">可选增强</text>
   <rect x="572" y="744" width="376" height="34" fill="#f6fff2" class="box"/>
-  <text x="588" y="766" class="sub">Redis：缓存/限流/会话黑名单（可选）</text>
+  <text x="588" y="766" class="sub">Redis：缓存/限流（可选）</text>
   <rect x="572" y="782" width="376" height="34" fill="#f6fff2" class="box"/>
   <text x="588" y="804" class="sub">权限点字典：后端统一维护（permissions.ts）</text>
   <rect x="572" y="820" width="376" height="34" fill="#f6fff2" class="box"/>
-  <text x="588" y="842" class="sub">refresh 流程：旋转刷新（后续可加）</text>
+  <text x="588" y="842" class="sub">refresh 流程：已实现（/auth/refresh 旋转刷新 + 可撤销）</text>
 
   <rect x="990" y="700" width="334" height="150" fill="#ffffff" class="dash"/>
   <text x="1012" y="728" class="text">运维与安全</text>
@@ -167,4 +167,3 @@
   <path d="M1130,610 L1130,690" class="arrow" marker-end="url(#arrowHead)"/>
   <text x="1142" y="662" class="arrow-label">SDK/HTTP</text>
 </svg>
-
