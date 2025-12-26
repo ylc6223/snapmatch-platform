@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1364"
+  height="960"
+  viewBox="0 0 1364 960"
+  role="img"
+  aria-label="SnapMatch Admin 登录与 RBAC 总体架构图"
+>
+  <defs>
+    <style>
+      .title { font: 700 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .label { font: 600 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .text { font: 500 14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .sub { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #334155; }
+      .muted { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #475569; }
+      .box { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .18; stroke-width: 1; }
+      .box-strong { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; }
+      .dash { rx: 12; ry: 12; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; stroke-dasharray: 6 5; }
+      .layer-border { rx: 16; ry: 16; stroke: #0f172a; stroke-opacity: .22; stroke-width: 1.2; }
+      .arrow { stroke: #0f172a; stroke-opacity: .55; stroke-width: 1.5; fill: none; }
+      .arrow-label { font: 500 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; opacity: .75; }
+    </style>
+
+    <linearGradient id="g-client" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bfe3ff"/>
+      <stop offset="1" stop-color="#d8efff"/>
+    </linearGradient>
+    <linearGradient id="g-edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bdf7ff"/>
+      <stop offset="1" stop-color="#d6fffb"/>
+    </linearGradient>
+    <linearGradient id="g-app" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bff3d1"/>
+      <stop offset="1" stop-color="#ddffe9"/>
+    </linearGradient>
+    <linearGradient id="g-cloud" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d9f7c9"/>
+      <stop offset="1" stop-color="#f0ffe6"/>
+    </linearGradient>
+
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0f172a" opacity=".55"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0" y="0" width="1364" height="960" fill="#ffffff"/>
+
+  <!-- header -->
+  <text x="682" y="36" text-anchor="middle" class="title">SnapMatch Admin 登录与 RBAC（同源 BFF）总体架构</text>
+  <text x="682" y="58" text-anchor="middle" class="muted">
+    推荐：Admin 同域 /api（BFF）转发后端 + accessToken(HttpOnly Cookie) + 后端 JWT/RBAC 强校验
+  </text>
+
+  <!-- Layer 1: Client -->
+  <rect x="20" y="80" width="120" height="150" fill="url(#g-client)" class="layer-border"/>
+  <text x="80" y="165" text-anchor="middle" class="label">客户端</text>
+
+  <rect x="150" y="80" width="1194" height="150" fill="#f8fbff" class="layer-border"/>
+  <rect x="170" y="112" width="560" height="92" fill="#ffffff" class="box"/>
+  <text x="190" y="142" class="text">运营/管理员浏览器</text>
+  <text x="190" y="164" class="sub">访问：Admin 域名（本地：http://localhost:3001）</text>
+  <text x="190" y="186" class="sub">交互：登录、表格/筛选、内容配置、素材管理</text>
+
+  <rect x="750" y="112" width="574" height="92" fill="#ffffff" class="box"/>
+  <text x="770" y="142" class="text">会话策略（浏览器侧）</text>
+  <text x="770" y="164" class="sub">admin_access_token：HttpOnly Cookie（SameSite=Lax）</text>
+  <text x="770" y="186" class="sub">前端只使用 /api/* 同源请求，不直接拼接 Authorization</text>
+
+  <!-- Layer 2: Edge -->
+  <rect x="20" y="240" width="120" height="160" fill="url(#g-edge)" class="layer-border"/>
+  <text x="80" y="330" text-anchor="middle" class="label">入口层</text>
+
+  <rect x="150" y="240" width="1194" height="160" fill="#f7fffe" class="layer-border"/>
+  <rect x="170" y="270" width="330" height="110" fill="#ffffff" class="box"/>
+  <text x="190" y="300" class="text">DNS / HTTPS 证书</text>
+  <text x="190" y="322" class="sub">域名解析 + TLS 终止</text>
+  <text x="190" y="344" class="sub">建议：HSTS + 强密码套件</text>
+
+  <rect x="520" y="270" width="320" height="110" fill="#ffffff" class="box"/>
+  <text x="540" y="300" class="text">CDN / WAF（可选）</text>
+  <text x="540" y="322" class="sub">静态资源加速</text>
+  <text x="540" y="344" class="sub">基础防护/限流</text>
+
+  <rect x="860" y="262" width="464" height="126" fill="#ffffff" class="dash"/>
+  <text x="882" y="290" class="text">网关 / 反向代理（路径分流）</text>
+  <rect x="882" y="304" width="420" height="32" fill="#eefcff" class="box"/>
+  <text x="898" y="325" class="sub">/     → Next Admin（UI 页面）</text>
+  <rect x="882" y="340" width="420" height="32" fill="#eefcff" class="box"/>
+  <text x="898" y="361" class="sub">/api  → Admin BFF（Route Handlers）</text>
+
+  <!-- arrows Client -> Edge -->
+  <path d="M780,204 L780,258" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="790" y="240" class="arrow-label">HTTPS</text>
+
+  <!-- Layer 3: Application -->
+  <rect x="20" y="410" width="120" height="250" fill="url(#g-app)" class="layer-border"/>
+  <text x="80" y="540" text-anchor="middle" class="label">应用层</text>
+
+  <rect x="150" y="410" width="1194" height="250" fill="#f7fff9" class="layer-border"/>
+  <rect x="170" y="440" width="1154" height="190" fill="#ffffff" class="dash"/>
+  <text x="192" y="468" class="text">运行环境（本地或云托管）</text>
+
+  <rect x="210" y="498" width="350" height="112" fill="#f3fff8" class="box-strong"/>
+  <text x="230" y="528" class="text">Admin Web（Next.js）</text>
+  <text x="230" y="550" class="sub">app router / pages：/login、/dashboard/*</text>
+  <text x="230" y="572" class="sub">展示层权限：菜单/按钮可见性（非强校验）</text>
+  <text x="230" y="594" class="sub">未登录：跳转 /login?next=...</text>
+
+  <rect x="600" y="498" width="330" height="112" fill="#ffffff" class="box"/>
+  <text x="620" y="528" class="text">BFF（Route Handlers）</text>
+  <text x="620" y="550" class="sub">apps/admin/app/api/*</text>
+  <text x="620" y="572" class="sub">读取 HttpOnly Cookie → 拼 Authorization</text>
+  <text x="620" y="594" class="sub">统一错误映射：401/403/422/500</text>
+
+  <rect x="960" y="498" width="340" height="112" fill="#f3fff8" class="box-strong"/>
+  <text x="980" y="528" class="text">Backend API（NestJS）</text>
+  <text x="980" y="550" class="sub">apps/backend · /auth/login、/auth/me</text>
+  <text x="980" y="572" class="sub">JwtAuthGuard：校验 Bearer 并注入 user</text>
+  <text x="980" y="594" class="sub">Roles/Permissions Guard：RBAC 强校验</text>
+
+  <!-- arrows within app layer -->
+  <path d="M560,554 L600,554" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="568" y="542" class="arrow-label">fetch /api/*</text>
+
+  <path d="M930,554 L960,554" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="938" y="542" class="arrow-label">Authorization</text>
+
+  <path d="M640,498 C640,470 300,470 300,498" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="410" y="474" class="arrow-label">Set-Cookie（登录成功）</text>
+
+  <!-- Layer 4: CloudBase Resources -->
+  <rect x="20" y="670" width="120" height="210" fill="url(#g-cloud)" class="layer-border"/>
+  <text x="80" y="785" text-anchor="middle" class="label">云开发资源</text>
+
+  <rect x="150" y="670" width="1194" height="210" fill="#fbfff7" class="layer-border"/>
+
+  <rect x="170" y="700" width="360" height="150" fill="#ffffff" class="dash"/>
+  <text x="192" y="728" class="text">数据与存储（建议）</text>
+  <rect x="192" y="744" width="316" height="34" fill="#f6fff2" class="box"/>
+  <text x="208" y="766" class="sub">MySQL：业务主数据（套系/素材/配置）</text>
+  <rect x="192" y="782" width="316" height="34" fill="#f6fff2" class="box"/>
+  <text x="208" y="804" class="sub">云存储：素材直传（Signed URL/STS）</text>
+  <rect x="192" y="820" width="316" height="34" fill="#f6fff2" class="box"/>
+  <text x="208" y="842" class="sub">审计日志：写接口必记（建议）</text>
+
+  <rect x="550" y="700" width="420" height="150" fill="#ffffff" class="dash"/>
+  <text x="572" y="728" class="text">可选增强</text>
+  <rect x="572" y="744" width="376" height="34" fill="#f6fff2" class="box"/>
+  <text x="588" y="766" class="sub">Redis：缓存/限流/会话黑名单（可选）</text>
+  <rect x="572" y="782" width="376" height="34" fill="#f6fff2" class="box"/>
+  <text x="588" y="804" class="sub">权限点字典：后端统一维护（permissions.ts）</text>
+  <rect x="572" y="820" width="376" height="34" fill="#f6fff2" class="box"/>
+  <text x="588" y="842" class="sub">refresh 流程：旋转刷新（后续可加）</text>
+
+  <rect x="990" y="700" width="334" height="150" fill="#ffffff" class="dash"/>
+  <text x="1012" y="728" class="text">运维与安全</text>
+  <rect x="1012" y="744" width="290" height="34" fill="#f6fff2" class="box"/>
+  <text x="1028" y="766" class="sub">密钥：ENV/Secret 管理（禁硬编码）</text>
+  <rect x="1012" y="782" width="290" height="34" fill="#f6fff2" class="box"/>
+  <text x="1028" y="804" class="sub">监控告警：请求异常/403 激增</text>
+  <rect x="1012" y="820" width="290" height="34" fill="#f6fff2" class="box"/>
+  <text x="1028" y="842" class="sub">发布回滚：多环境隔离</text>
+
+  <!-- arrow Backend -> Resources -->
+  <path d="M1130,610 L1130,690" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="1142" y="662" class="arrow-label">SDK/HTTP</text>
+</svg>
+

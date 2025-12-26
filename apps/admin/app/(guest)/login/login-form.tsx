@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 export function LoginForm() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const dashboardPath = useMemo(() => {
     const current = pathname || "/login";
@@ -18,20 +19,41 @@ export function LoginForm() {
     return replaced === current ? "/dashboard" : replaced;
   }, [pathname]);
 
-  const [account, setAccount] = useState("admin");
-  const [password, setPassword] = useState("admin");
+  const [account, setAccount] = useState("");
+  const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setIsSubmitting(true);
 
-    if (account === "admin" && password === "admin") {
-      router.push(dashboardPath);
-      return;
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ account, password })
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setErrorMessage(payload?.message ?? "登录失败");
+        return;
+      }
+
+      const next = searchParams.get("next");
+      const redirectTo =
+        next && next.startsWith("/") && !next.startsWith("//") ? next : dashboardPath;
+
+      router.replace(redirectTo);
+    } catch {
+      setErrorMessage("网络错误，请稍后重试");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setErrorMessage("账号或密码错误");
   };
 
   return (
@@ -51,6 +73,7 @@ export function LoginForm() {
             placeholder="Account"
             value={account}
             onChange={(e) => setAccount(e.target.value)}
+            disabled={isSubmitting}
           />
         </div>
         <div>
@@ -67,6 +90,7 @@ export function LoginForm() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={isSubmitting}
           />
         </div>
         <div className="text-end">
@@ -77,7 +101,7 @@ export function LoginForm() {
       </div>
 
       <div>
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
           Sign in
         </Button>
       </div>
@@ -90,4 +114,3 @@ export function LoginForm() {
     </form>
   );
 }
-

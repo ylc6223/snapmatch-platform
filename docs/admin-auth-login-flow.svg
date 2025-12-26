@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1364"
+  height="860"
+  viewBox="0 0 1364 860"
+  role="img"
+  aria-label="SnapMatch Admin 登录流程（BFF + Cookie）"
+>
+  <defs>
+    <style>
+      .title { font: 700 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .label { font: 600 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .text { font: 500 14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .sub { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #334155; }
+      .muted { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #475569; }
+      .box { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .18; stroke-width: 1; }
+      .box-strong { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; }
+      .dash { rx: 12; ry: 12; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; stroke-dasharray: 6 5; }
+      .layer-border { rx: 16; ry: 16; stroke: #0f172a; stroke-opacity: .22; stroke-width: 1.2; }
+      .arrow { stroke: #0f172a; stroke-opacity: .55; stroke-width: 1.5; fill: none; }
+      .arrow-soft { stroke: #0f172a; stroke-opacity: .35; stroke-width: 1.5; fill: none; stroke-dasharray: 5 5; }
+      .arrow-label { font: 500 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; opacity: .75; }
+      .pill { rx: 999; ry: 999; }
+    </style>
+
+    <linearGradient id="g-client" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bfe3ff"/>
+      <stop offset="1" stop-color="#d8efff"/>
+    </linearGradient>
+    <linearGradient id="g-edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bdf7ff"/>
+      <stop offset="1" stop-color="#d6fffb"/>
+    </linearGradient>
+    <linearGradient id="g-app" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bff3d1"/>
+      <stop offset="1" stop-color="#ddffe9"/>
+    </linearGradient>
+
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0f172a" opacity=".55"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0" y="0" width="1364" height="860" fill="#ffffff"/>
+
+  <!-- header -->
+  <text x="682" y="36" text-anchor="middle" class="title">Admin 登录流程（BFF + HttpOnly Cookie）</text>
+  <text x="682" y="58" text-anchor="middle" class="muted">
+    前端仅请求 /api/*；BFF 负责调用后端 /auth/login 并写入 admin_access_token（HttpOnly Cookie）
+  </text>
+
+  <!-- Layer: Client -->
+  <rect x="20" y="80" width="120" height="110" fill="url(#g-client)" class="layer-border"/>
+  <text x="80" y="145" text-anchor="middle" class="label">客户端</text>
+
+  <rect x="150" y="80" width="1194" height="110" fill="#f8fbff" class="layer-border"/>
+  <rect x="170" y="108" width="1154" height="62" fill="#ffffff" class="box"/>
+  <text x="190" y="136" class="text">浏览器：登录页提交账号/密码 → 仅调用同源 /api/auth/login</text>
+  <text x="190" y="156" class="sub">成功后由服务端 Set-Cookie，前端跳转到 /dashboard</text>
+
+  <!-- Layer: Edge -->
+  <rect x="20" y="210" width="120" height="140" fill="url(#g-edge)" class="layer-border"/>
+  <text x="80" y="290" text-anchor="middle" class="label">入口层</text>
+
+  <rect x="150" y="210" width="1194" height="140" fill="#f7fffe" class="layer-border"/>
+  <rect x="170" y="240" width="1154" height="86" fill="#ffffff" class="dash"/>
+  <text x="192" y="268" class="text">网关 / 反向代理（路径分流）</text>
+  <rect x="192" y="282" width="520" height="32" fill="#eefcff" class="box"/>
+  <text x="208" y="303" class="sub">/     → Next Admin（页面）</text>
+  <rect x="732" y="282" width="572" height="32" fill="#eefcff" class="box"/>
+  <text x="748" y="303" class="sub">/api  → Admin BFF（Route Handlers）</text>
+
+  <!-- Layer: App -->
+  <rect x="20" y="370" width="120" height="420" fill="url(#g-app)" class="layer-border"/>
+  <text x="80" y="590" text-anchor="middle" class="label">应用层</text>
+
+  <rect x="150" y="370" width="1194" height="420" fill="#f7fff9" class="layer-border"/>
+
+  <!-- Steps container -->
+  <rect x="170" y="398" width="1154" height="370" fill="#ffffff" class="dash"/>
+  <text x="192" y="426" class="text">登录时序（关键步骤）</text>
+
+  <!-- Step boxes -->
+  <rect x="210" y="452" width="360" height="78" fill="#f3fff8" class="box-strong"/>
+  <text x="230" y="480" class="text">1) 提交表单（浏览器）</text>
+  <text x="230" y="502" class="sub">POST /api/auth/login</text>
+  <text x="230" y="522" class="sub">{ account, password }</text>
+
+  <rect x="600" y="452" width="330" height="78" fill="#ffffff" class="box"/>
+  <text x="620" y="480" class="text">2) BFF（Admin Route Handler）</text>
+  <text x="620" y="502" class="sub">校验入参、限流/审计（可选）</text>
+  <text x="620" y="522" class="sub">转发到后端 /auth/login</text>
+
+  <rect x="960" y="452" width="340" height="78" fill="#f3fff8" class="box-strong"/>
+  <text x="980" y="480" class="text">3) 后端登录（NestJS）</text>
+  <text x="980" y="502" class="sub">POST /auth/login</text>
+  <text x="980" y="522" class="sub">返回：{ accessToken, user }</text>
+
+  <rect x="600" y="548" width="700" height="86" fill="#ffffff" class="box"/>
+  <text x="620" y="576" class="text">4) BFF 写入会话（Set-Cookie）</text>
+  <text x="620" y="598" class="sub">Set-Cookie: admin_access_token=&lt;jwt&gt;; HttpOnly; SameSite=Lax; Path=/; Secure(生产)</text>
+  <text x="620" y="618" class="sub">响应：{ user }（或 204）</text>
+
+  <rect x="210" y="656" width="360" height="86" fill="#ffffff" class="box"/>
+  <text x="230" y="684" class="text">5) 跳转与初始化</text>
+  <text x="230" y="706" class="sub">前端跳转：/dashboard</text>
+  <text x="230" y="726" class="sub">GET /api/auth/me → 展示层权限（菜单/按钮）</text>
+
+  <rect x="600" y="656" width="330" height="86" fill="#ffffff" class="box"/>
+  <text x="620" y="684" class="text">6) BFF 获取 Me（可缓存）</text>
+  <text x="620" y="706" class="sub">读取 cookie → Authorization: Bearer</text>
+  <text x="620" y="726" class="sub">转发 GET /auth/me</text>
+
+  <rect x="960" y="656" width="340" height="86" fill="#ffffff" class="box"/>
+  <text x="980" y="684" class="text">7) 后端返回当前用户</text>
+  <text x="980" y="706" class="sub">roles / permissions（RBAC）</text>
+  <text x="980" y="726" class="sub">401：token 过期/无效（需重新登录）</text>
+
+  <!-- Arrows between steps -->
+  <path d="M570,491 L600,491" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="578" y="480" class="arrow-label">同源 /api</text>
+
+  <path d="M930,491 L960,491" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="938" y="480" class="arrow-label">转发</text>
+
+  <path d="M1130,530 L1130,548" class="arrow-soft" marker-end="url(#arrowHead)"/>
+  <text x="1142" y="544" class="arrow-label">返回 accessToken</text>
+
+  <path d="M600,592 C460,592 460,656 570,699" class="arrow-soft" marker-end="url(#arrowHead)"/>
+  <text x="430" y="632" class="arrow-label">登录成功 → 跳转</text>
+
+  <path d="M570,699 L600,699" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="578" y="688" class="arrow-label">GET /api/auth/me</text>
+
+  <path d="M930,699 L960,699" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="938" y="688" class="arrow-label">Authorization</text>
+
+  <!-- Legend -->
+  <rect x="170" y="804" width="1154" height="36" fill="#ffffff" class="box"/>
+  <rect x="192" y="814" width="12" height="12" fill="#f3fff8" class="box-strong pill"/>
+  <text x="214" y="824" class="sub">强相关组件（Next Admin / Backend）</text>
+  <rect x="420" y="814" width="12" height="12" fill="#ffffff" class="box pill"/>
+  <text x="442" y="824" class="sub">实现建议组件（BFF / Me 缓存/封装）</text>
+  <path d="M710,820 L752,820" class="arrow"/>
+  <text x="760" y="824" class="sub">实线：强依赖请求链路</text>
+  <path d="M930,820 L972,820" class="arrow-soft"/>
+  <text x="980" y="824" class="sub">虚线：返回/跳转/说明性链路</text>
+</svg>
+

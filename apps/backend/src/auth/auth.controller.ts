@@ -4,6 +4,7 @@ import { CurrentUser } from "./decorators/current-user.decorator";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
 import type { AuthUser } from "./types";
+import { AUTH_ERROR_CODE } from "./error-codes";
 
 // 鉴权入口控制器：提供登录与获取当前用户信息等能力。
 @Controller("auth")
@@ -16,7 +17,10 @@ export class AuthController {
   async login(@Body() dto: LoginDto) {
     const result = await this.authService.login(dto.account, dto.password);
     if (!result) {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException({
+        code: AUTH_ERROR_CODE.InvalidCredentials,
+        message: "账号或密码错误",
+      });
     }
     return result;
   }
@@ -25,7 +29,10 @@ export class AuthController {
   @Get("me")
   me(@CurrentUser() user: AuthUser | undefined) {
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        code: AUTH_ERROR_CODE.Unauthorized,
+        message: "未登录",
+      });
     }
     return { user };
   }

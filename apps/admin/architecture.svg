@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1364"
+  height="640"
+  viewBox="0 0 1364 640"
+  role="img"
+  aria-label="SnapMatch Admin 总体架构图（BFF + JWT/RBAC）"
+>
+  <defs>
+    <style>
+      .title { font: 700 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .muted { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #475569; }
+      .label { font: 600 15px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .text { font: 500 13px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .sub { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #334155; }
+      .layer { rx: 16; ry: 16; stroke: #0f172a; stroke-opacity: .18; stroke-width: 1.2; }
+      .box { rx: 12; ry: 12; stroke: #0f172a; stroke-opacity: .18; stroke-width: 1; fill: #ffffff; }
+      .box-strong { rx: 12; ry: 12; stroke: #0f172a; stroke-opacity: .26; stroke-width: 1.2; fill: #ffffff; }
+      .dash { rx: 14; ry: 14; stroke: #0f172a; stroke-opacity: .22; stroke-width: 1.2; stroke-dasharray: 6 5; fill: #ffffff; }
+      .arrow { stroke: #0f172a; stroke-opacity: .55; stroke-width: 1.5; fill: none; }
+      .arrow-label { font: 500 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; opacity: .75; }
+    </style>
+
+    <linearGradient id="g-client" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bfe3ff"/>
+      <stop offset="1" stop-color="#d8efff"/>
+    </linearGradient>
+    <linearGradient id="g-edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bdf7ff"/>
+      <stop offset="1" stop-color="#d6fffb"/>
+    </linearGradient>
+    <linearGradient id="g-app" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bff3d1"/>
+      <stop offset="1" stop-color="#ddffe9"/>
+    </linearGradient>
+
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0f172a" opacity=".55"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1364" height="640" fill="#ffffff"/>
+
+  <!-- header -->
+  <text x="682" y="36" text-anchor="middle" class="title">Admin 总体架构（同源 BFF + JWT/RBAC）</text>
+  <text x="682" y="58" text-anchor="middle" class="muted">
+    浏览器仅访问同源 /api；BFF 读取 HttpOnly Cookie 并转发到后端；后端负责 JWT 校验与 RBAC 强授权
+  </text>
+
+  <!-- Layer 1: Client -->
+  <rect x="40" y="96" width="1284" height="132" fill="#f8fbff" class="layer"/>
+  <rect x="60" y="130" width="600" height="78" class="box"/>
+  <text x="84" y="160" class="label">客户端（浏览器）</text>
+  <text x="84" y="182" class="sub">登录页、Dashboard、表单与列表交互</text>
+  <text x="84" y="202" class="sub">请求：仅调用同源 /api/*（不直接带 Authorization）</text>
+
+  <rect x="688" y="130" width="616" height="78" class="box"/>
+  <text x="712" y="160" class="label">会话（浏览器侧）</text>
+  <text x="712" y="182" class="sub">admin_access_token：HttpOnly Cookie（SameSite=Lax）</text>
+  <text x="712" y="202" class="sub">401：清 cookie → 跳转 /login?next=...</text>
+
+  <!-- Layer 2: Edge -->
+  <rect x="40" y="250" width="1284" height="132" fill="#f7fffe" class="layer"/>
+  <rect x="60" y="284" width="1244" height="78" class="dash"/>
+  <text x="84" y="314" class="label">入口层（网关/反向代理）</text>
+  <text x="84" y="336" class="sub">/ → Next Admin（页面）</text>
+  <text x="84" y="356" class="sub">/api → Admin BFF（Route Handlers）</text>
+
+  <!-- Layer 3: App -->
+  <rect x="40" y="404" width="1284" height="196" fill="#f7fff9" class="layer"/>
+
+  <rect x="60" y="438" width="420" height="132" class="box-strong"/>
+  <text x="84" y="468" class="label">Next Admin（apps/admin）</text>
+  <text x="84" y="490" class="sub">App Router + middleware</text>
+  <text x="84" y="510" class="sub">页面路由保护：/dashboard/*</text>
+  <text x="84" y="530" class="sub">展示层权限：菜单/按钮可见性</text>
+
+  <rect x="508" y="438" width="392" height="132" class="box"/>
+  <text x="532" y="468" class="label">BFF（apps/admin/app/api/*）</text>
+  <text x="532" y="490" class="sub">login/me/logout：写/读 cookie</text>
+  <text x="532" y="510" class="sub">统一错误映射：401/403/422/500</text>
+  <text x="532" y="530" class="sub">转发后端：Authorization: Bearer</text>
+
+  <rect x="928" y="438" width="376" height="132" class="box-strong"/>
+  <text x="952" y="468" class="label">Backend（apps/backend）</text>
+  <text x="952" y="490" class="sub">/auth/login、/auth/me</text>
+  <text x="952" y="510" class="sub">JwtAuthGuard：校验 token 注入 user</text>
+  <text x="952" y="530" class="sub">Roles/Permissions Guard：RBAC 强授权</text>
+
+  <!-- arrows -->
+  <path d="M680,208 L680,280" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="692" y="254" class="arrow-label">HTTPS</text>
+
+  <path d="M270,362 L270,438" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="282" y="410" class="arrow-label">/</text>
+
+  <path d="M704,362 L704,438" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="716" y="410" class="arrow-label">/api</text>
+
+  <path d="M480,504 L508,504" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="486" y="494" class="arrow-label">fetch /api/*</text>
+
+  <path d="M900,504 L928,504" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="906" y="494" class="arrow-label">Authorization</text>
+</svg>
+

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1364"
+  height="900"
+  viewBox="0 0 1364 900"
+  role="img"
+  aria-label="SnapMatch Admin 权限控制流程（路由保护 + 后端 RBAC）"
+>
+  <defs>
+    <style>
+      .title { font: 700 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .label { font: 600 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .text { font: 500 14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .sub { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #334155; }
+      .muted { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #475569; }
+      .box { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .18; stroke-width: 1; }
+      .box-strong { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; }
+      .dash { rx: 12; ry: 12; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; stroke-dasharray: 6 5; }
+      .layer-border { rx: 16; ry: 16; stroke: #0f172a; stroke-opacity: .22; stroke-width: 1.2; }
+      .arrow { stroke: #0f172a; stroke-opacity: .55; stroke-width: 1.5; fill: none; }
+      .arrow-soft { stroke: #0f172a; stroke-opacity: .35; stroke-width: 1.5; fill: none; stroke-dasharray: 5 5; }
+      .arrow-label { font: 500 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; opacity: .75; }
+    </style>
+
+    <linearGradient id="g-client" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bfe3ff"/>
+      <stop offset="1" stop-color="#d8efff"/>
+    </linearGradient>
+    <linearGradient id="g-app" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bff3d1"/>
+      <stop offset="1" stop-color="#ddffe9"/>
+    </linearGradient>
+
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0f172a" opacity=".55"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0" y="0" width="1364" height="900" fill="#ffffff"/>
+
+  <!-- header -->
+  <text x="682" y="36" text-anchor="middle" class="title">权限控制流程（路由保护 + 后端 RBAC 强校验）</text>
+  <text x="682" y="58" text-anchor="middle" class="muted">
+    middleware 只做“是否已登录”的轻量拦截；角色/权限判定由后端 Guard 执行（401/403 兜底）
+  </text>
+
+  <!-- Layer: Client -->
+  <rect x="20" y="80" width="120" height="120" fill="url(#g-client)" class="layer-border"/>
+  <text x="80" y="150" text-anchor="middle" class="label">客户端</text>
+
+  <rect x="150" y="80" width="1194" height="120" fill="#f8fbff" class="layer-border"/>
+  <rect x="170" y="108" width="1154" height="72" fill="#ffffff" class="box"/>
+  <text x="190" y="136" class="text">浏览器访问受保护页面（/dashboard/*）并进行数据读写（通过 /api/*）</text>
+  <text x="190" y="158" class="sub">展示层权限：菜单/按钮隐藏或禁用；真实授权由后端 RBAC 决定</text>
+
+  <!-- Layer: App -->
+  <rect x="20" y="220" width="120" height="640" fill="url(#g-app)" class="layer-border"/>
+  <text x="80" y="560" text-anchor="middle" class="label">应用层</text>
+
+  <rect x="150" y="220" width="1194" height="640" fill="#f7fff9" class="layer-border"/>
+  <rect x="170" y="248" width="1154" height="592" fill="#ffffff" class="dash"/>
+  <text x="192" y="276" class="text">访问与授权路径</text>
+
+  <!-- Boxes -->
+  <rect x="210" y="308" width="360" height="92" fill="#f3fff8" class="box-strong"/>
+  <text x="230" y="338" class="text">A) 路由保护（middleware.ts）</text>
+  <text x="230" y="360" class="sub">匹配：/dashboard/:path*</text>
+  <text x="230" y="380" class="sub">只检查 admin_access_token cookie 是否存在</text>
+
+  <rect x="210" y="420" width="360" height="120" fill="#ffffff" class="box"/>
+  <text x="230" y="448" class="text">B) 未登录处理</text>
+  <text x="230" y="470" class="sub">无 cookie：302 → /login?next=...</text>
+  <text x="230" y="492" class="sub">登录成功：回跳 next 或默认 /dashboard</text>
+  <text x="230" y="514" class="sub">cookie 失效：由后端 401 触发重新登录</text>
+
+  <rect x="600" y="308" width="330" height="92" fill="#ffffff" class="box"/>
+  <text x="620" y="338" class="text">C) Admin BFF（/app/api/*）</text>
+  <text x="620" y="360" class="sub">读取 cookie → 拼 Authorization: Bearer</text>
+  <text x="620" y="380" class="sub">统一错误映射：401/403/422/500</text>
+
+  <rect x="960" y="308" width="340" height="92" fill="#f3fff8" class="box-strong"/>
+  <text x="980" y="338" class="text">D) Backend（NestJS）</text>
+  <text x="980" y="360" class="sub">JwtAuthGuard：校验 token 注入 request.user</text>
+  <text x="980" y="380" class="sub">Roles/Permissions Guard：RBAC 强校验</text>
+
+  <rect x="600" y="420" width="700" height="120" fill="#ffffff" class="box"/>
+  <text x="620" y="448" class="text">E) 前端展示层权限（UI 友好控制）</text>
+  <text x="620" y="470" class="sub">菜单过滤：routes-config 增加 roles/permissions 字段</text>
+  <text x="620" y="492" class="sub">按钮控制：RequireRole/RequirePermission 或禁用态</text>
+  <text x="620" y="514" class="sub">注意：仅用于体验，不能替代后端授权</text>
+
+  <rect x="210" y="568" width="1090" height="244" fill="#ffffff" class="dash"/>
+  <text x="232" y="598" class="text">接口调用结果（兜底逻辑）</text>
+
+  <rect x="232" y="616" width="520" height="72" fill="#ffffff" class="box"/>
+  <text x="252" y="644" class="text">401 Unauthorized（未登录/过期/无效）</text>
+  <text x="252" y="666" class="sub">BFF 返回 401 → 前端触发 logout（清 cookie）并跳转 /login?next=...</text>
+
+  <rect x="780" y="616" width="500" height="72" fill="#ffffff" class="box"/>
+  <text x="800" y="644" class="text">403 Forbidden（无权限）</text>
+  <text x="800" y="666" class="sub">后端 Guard 拒绝 → 前端提示“无权限”并引导联系管理员</text>
+
+  <rect x="232" y="706" width="520" height="82" fill="#ffffff" class="box"/>
+  <text x="252" y="736" class="text">422 Validation Error（参数校验失败）</text>
+  <text x="252" y="758" class="sub">后端 ValidationPipe → 前端按字段显示错误（表单体验）</text>
+  <text x="252" y="778" class="sub">建议：BFF 透传并统一错误结构</text>
+
+  <rect x="780" y="706" width="500" height="82" fill="#ffffff" class="box"/>
+  <text x="800" y="736" class="text">500 / 其他错误</text>
+  <text x="800" y="758" class="sub">统一 toast + 重试入口；必要时记录 requestId</text>
+  <text x="800" y="778" class="sub">建议：写接口落审计日志</text>
+
+  <!-- arrows -->
+  <path d="M390,200 L390,308" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="402" y="262" class="arrow-label">访问 /dashboard</text>
+
+  <path d="M570,354 L600,354" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="578" y="342" class="arrow-label">已登录 → 继续</text>
+
+  <path d="M930,354 L960,354" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="938" y="342" class="arrow-label">Authorization</text>
+
+  <path d="M390,400 L390,420" class="arrow-soft" marker-end="url(#arrowHead)"/>
+  <text x="402" y="416" class="arrow-label">未登录 → 302</text>
+
+  <path d="M765,420 C840,420 840,400 930,354" class="arrow-soft" marker-end="url(#arrowHead)"/>
+  <text x="850" y="412" class="arrow-label">请求前：UI 可见性/禁用</text>
+</svg>
+

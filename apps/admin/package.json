@@ -1,9 +1,9 @@
 {
   "name": "@snapmatch/admin",
-  "version": "0.5.0",
+  "version": "0.5.8",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1 -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."

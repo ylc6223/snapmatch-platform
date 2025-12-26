@@ -1,8 +1,11 @@
 import "reflect-metadata";
-import { ValidationPipe } from "@nestjs/common";
+import { BadRequestException, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
 import { AppModule } from "./app.module";
+import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
+import { ResponseEnvelopeInterceptor } from "./common/interceptors/response-envelope.interceptor";
+import type { ApiErrorItem } from "./common/types/api-response";
 
 async function bootstrap() {
   // 创建 Nest 应用实例（关闭默认 CORS，下面会按配置显式开启并限制来源）。
@@ -26,6 +29,21 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      exceptionFactory(errors) {
+        const formatted: ApiErrorItem[] = [];
+        for (const e of errors) {
+          const field = e.property;
+          const constraints = e.constraints ?? {};
+          for (const reason of Object.values(constraints)) {
+            formatted.push({ field, reason });
+          }
+        }
+        return new BadRequestException({
+          code: 400,
+          message: "Validation Failed",
+          errors: formatted,
+        });
+      },
     }),
   );
 
@@ -35,6 +53,11 @@ async function bootstrap() {
   if (nodeEnv === "production" && (jwtSecret === "change-me" || jwtSecret.trim().length < 16)) {
     throw new Error("Invalid JWT_SECRET: must be set to a strong value in production");
   }
+
+  // 统一错误响应结构：始终输出 `{ code, message, errors?, timestamp }`（严格 envelope，不对外暴露 detail）。
+  app.useGlobalFilters(new ApiExceptionFilter({ includeDetail: false }));
+  // 统一成功响应结构：输出 `{ code, message, data, timestamp }`。
+  app.useGlobalInterceptors(new ResponseEnvelopeInterceptor());
 
   // 监听端口：本地默认 3002；容器/CloudRun 部署时通常由平台注入 PORT。
   const port = Number(config.get<string>("PORT") ?? "3002");

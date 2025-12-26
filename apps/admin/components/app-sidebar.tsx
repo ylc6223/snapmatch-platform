@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import * as React from "react"
 import {
@@ -26,12 +26,10 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
+import type { AuthUser, Role } from "@/lib/auth/types";
+import { canAccess } from "@/lib/auth/can";
+
 const data = {
-  user: {
-    name: "Toby Belhome",
-    email: "m@example.com",
-    avatar: "https://www.tobybelhome.com/toby-belhome.png",
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -42,21 +40,12 @@ const data = {
       title: "Users",
       url: "/dashboard/users",
       icon: IconListDetails,
+      roles: ["admin"] satisfies Role[],
     },
     {
       title: "Settings",
       url: "/dashboard/settings",
       icon: IconChartBar,
-    },
-    {
-      title: "Login",
-      url: "/login",
-      icon: IconFolder,
-    },
-    {
-      title: "Register",
-      url: "/register",
-      icon: IconUsers,
     },
     {
       title: "404 Page",
@@ -136,7 +125,13 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  user,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { user: AuthUser }) {
+  const navMain = data.navMain.filter((item) => canAccess(user, item));
+  const rolesLabel = user.roles.length > 0 ? user.roles.join(", ") : "unknown";
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -155,11 +150,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: user.account,
+            email: rolesLabel,
+            avatar: ""
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   )

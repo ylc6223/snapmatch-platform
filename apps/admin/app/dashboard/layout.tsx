@@ -1,14 +1,29 @@
 import React from "react";
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
+import { redirect } from "next/navigation";
+
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 
+import { backendFetch, BackendError } from "@/lib/api/backend";
+import type { AuthUser } from "@/lib/auth/types";
 
 
-export default function Page({children}: { children: React.ReactNode}) {
+export default async function Page({ children }: { children: React.ReactNode }) {
+  let user: AuthUser;
+  try {
+    const result = await backendFetch<{ user: AuthUser }>("/auth/me");
+    user = result.user;
+  } catch (error) {
+    if (error instanceof BackendError && error.status === 401) {
+      redirect("/login?next=/dashboard");
+    }
+    throw error;
+  }
+
   return (
     <SidebarProvider
       style={
@@ -18,7 +33,7 @@ export default function Page({children}: { children: React.ReactNode}) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebar user={user} variant="inset" />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
