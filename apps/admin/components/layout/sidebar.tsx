@@ -75,29 +75,6 @@ export default function Sidebar() {
           </Fragment>
         ))}
         <div className="sticky bottom-0 mt-10">
-          <Card>
-            <CardHeader>
-              <CardTitle>Get Shadcn UI Kit Pro</CardTitle>
-              <CardDescription>
-                Need more pages and components? Then you can get the pro.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                size="sm"
-                className="w-full items-center bg-gradient-to-r from-indigo-700 via-purple-500 to-pink-700 hover:opacity-90"
-                asChild>
-                <Link href="https://shadcnuikit.com/pricing" target="_blank">
-                  <LockIcon className="me-2 h-4 w-4" /> Get Pro
-                </Link>
-              </Button>
-              <Button size="sm" className="w-full" variant="outline" asChild>
-                <Link href="https://shadcnuikit.com/" target="_blank">
-                  Learn More
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </ScrollArea>
     </div>

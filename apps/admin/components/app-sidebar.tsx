@@ -107,21 +107,6 @@ const data = {
     },
   ],
   navSecondary: [
-    {
-      title: "Get Pro",
-      url: "https://shadcnuikit.com/pricing",
-      icon: IconCircle,
-    },
-    {
-      title: "Shadcn UI Kit",
-      url: "https://shadcnuikit.com/",
-      icon: IconCircle,
-    },
-    {
-      title: "Bundui Component",
-      url: "https://bundui.io",
-      icon: IconCircle,
-    },
   ],
 }
 
