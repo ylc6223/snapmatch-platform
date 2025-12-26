@@ -1,11 +1,62 @@
 import { NextResponse } from "next/server";
 
 import { backendFetch, BackendError } from "@/lib/api/backend";
-import { clearAdminAccessToken, clearAdminRefreshToken } from "@/lib/auth/session";
+import {
+  clearAdminAccessToken,
+  clearAdminRefreshToken,
+  getAdminRefreshToken,
+  setAdminAccessToken,
+  setAdminRefreshToken,
+} from "@/lib/auth/session";
 import type { AuthUser } from "@/lib/auth/types";
 import { isApiResponse, makeErrorResponse, type ApiResponse } from "@/lib/api/response";
 
 export const runtime = "nodejs";
+
+function getBackendBaseUrl() {
+  return process.env.BACKEND_BASE_URL ?? "http://localhost:3002";
+}
+
+async function refreshSession(refreshToken: string) {
+  const backendBaseUrl = getBackendBaseUrl();
+  const response = await fetch(new URL("/auth/refresh", backendBaseUrl), {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken }),
+    cache: "no-store",
+  });
+  const payload = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    return { ok: false as const, payload };
+  }
+  const parsed = payload as ApiResponse<{ accessToken: string; refreshToken?: string }>;
+  const accessToken = parsed.data?.accessToken;
+  if (!accessToken) {
+    return { ok: false as const, payload };
+  }
+  return {
+    ok: true as const,
+    accessToken,
+    refreshToken: parsed.data?.refreshToken ?? null,
+  };
+}
+
+async function fetchMeWithAccessToken(accessToken: string) {
+  const backendBaseUrl = getBackendBaseUrl();
+  const response = await fetch(new URL("/auth/me", backendBaseUrl), {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+  const payload = (await response.json().catch(() => null)) as unknown;
+  return { ok: response.ok, status: response.status, payload };
+}
 
 /**
  * BFF：获取当前登录用户（同源）
@@ -31,10 +82,31 @@ export async function GET() {
   } catch (error) {
     if (error instanceof BackendError) {
       if (error.status === 401) {
-        // 401：未登录/过期/无效 → 清 cookie，前端收到 401 后跳转登录
+        // 401：优先尝试 refresh（静默续期），失败才清 cookie 并返回 401。
+        const refreshToken = await getAdminRefreshToken();
+        if (refreshToken) {
+          const refreshed = await refreshSession(refreshToken);
+          if (refreshed.ok) {
+            const me = await fetchMeWithAccessToken(refreshed.accessToken);
+            if (me.ok) {
+              const result = me.payload as ApiResponse<{ user: AuthUser }>;
+              const user = result.data?.user;
+              if (!user) {
+                return NextResponse.json(makeErrorResponse({ code: 502, message: "Bad Gateway" }), { status: 502 });
+              }
+              const response = NextResponse.json(result, { status: 200 });
+              setAdminAccessToken(response, refreshed.accessToken);
+              if (refreshed.refreshToken) {
+                setAdminRefreshToken(response, refreshed.refreshToken);
+              }
+              return response;
+            }
+          }
+        }
+
         const response = NextResponse.json(
           isApiResponse(error.payload) ? error.payload : makeErrorResponse({ code: 401, message: "未登录" }),
-          { status: 401 }
+          { status: 401 },
         );
         clearAdminAccessToken(response);
         clearAdminRefreshToken(response);

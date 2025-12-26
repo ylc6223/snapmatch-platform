@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1364"
+  height="900"
+  viewBox="0 0 1364 900"
+  role="img"
+  aria-label="SnapMatch Admin：auth_sessions 删除是否等同踢下线（代码实证架构图）"
+>
+  <defs>
+    <style>
+      .title { font: 700 18px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .label { font: 600 16px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .text { font: 500 14px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+      .sub { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #334155; }
+      .muted { font: 400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #475569; }
+      .box { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .18; stroke-width: 1; }
+      .box-strong { rx: 10; ry: 10; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; }
+      .dash { rx: 12; ry: 12; stroke: #0f172a; stroke-opacity: .28; stroke-width: 1.2; stroke-dasharray: 6 5; }
+      .layer-border { rx: 16; ry: 16; stroke: #0f172a; stroke-opacity: .22; stroke-width: 1.2; }
+      .arrow { stroke: #0f172a; stroke-opacity: .55; stroke-width: 1.5; fill: none; }
+      .arrow-label { font: 500 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #0f172a; opacity: .75; }
+      .danger { font: 600 12px -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; fill: #b42318; }
+      .danger-box { rx: 10; ry: 10; stroke: #b42318; stroke-opacity: .35; stroke-width: 1.2; }
+    </style>
+
+    <linearGradient id="g-client" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bfe3ff"/>
+      <stop offset="1" stop-color="#d8efff"/>
+    </linearGradient>
+    <linearGradient id="g-app" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#bff3d1"/>
+      <stop offset="1" stop-color="#ddffe9"/>
+    </linearGradient>
+    <linearGradient id="g-cloud" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d9f7c9"/>
+      <stop offset="1" stop-color="#f0ffe6"/>
+    </linearGradient>
+
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0f172a" opacity=".55"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1364" height="900" fill="#ffffff"/>
+
+  <text x="682" y="36" text-anchor="middle" class="title">Admin：删除 auth_sessions 是否等同“踢下线”（代码实证）</text>
+  <text x="682" y="58" text-anchor="middle" class="muted">
+    结论：后端每次请求都会用 JWT 的 sid 回查 auth_sessions；记录被删/过期即判定 401（会话失效）
+  </text>
+
+  <!-- Layer: Client -->
+  <rect x="20" y="90" width="120" height="160" fill="url(#g-client)" class="layer-border"/>
+  <text x="80" y="180" text-anchor="middle" class="label">客户端</text>
+
+  <rect x="150" y="90" width="1194" height="160" fill="#f8fbff" class="layer-border"/>
+  <rect x="170" y="120" width="560" height="110" fill="#ffffff" class="box"/>
+  <text x="190" y="150" class="text">运营/管理员浏览器</text>
+  <text x="190" y="172" class="sub">仅持有 HttpOnly Cookie（JS 不可读）</text>
+  <text x="190" y="194" class="sub">页面（Server Components）会调用后端 /auth/me 校验登录态</text>
+
+  <rect x="750" y="120" width="574" height="110" fill="#ffffff" class="box"/>
+  <text x="770" y="150" class="text">Cookie（同源）</text>
+  <text x="770" y="172" class="sub">admin_access_token：JWT（payload 含 sid=sessionId）</text>
+  <text x="770" y="194" class="sub">admin_refresh_token：refresh token（用于 logout；refresh 预留）</text>
+
+  <!-- Layer: Application -->
+  <rect x="20" y="270" width="120" height="360" fill="url(#g-app)" class="layer-border"/>
+  <text x="80" y="460" text-anchor="middle" class="label">应用层</text>
+
+  <rect x="150" y="270" width="1194" height="360" fill="#f7fff9" class="layer-border"/>
+  <rect x="170" y="300" width="1154" height="300" fill="#ffffff" class="dash"/>
+  <text x="192" y="328" class="text">apps/admin（Next.js） ⇄ apps/backend（NestJS）</text>
+
+  <rect x="210" y="360" width="350" height="170" fill="#f3fff8" class="box-strong"/>
+  <text x="230" y="392" class="text">Admin（Next.js Server）</text>
+  <text x="230" y="416" class="sub">读取 HttpOnly Cookie</text>
+  <text x="230" y="438" class="sub">后端请求：backendFetch() 自动拼 Authorization: Bearer</text>
+  <text x="230" y="460" class="sub">401 时 redirect(/login?next=...)</text>
+  <text x="230" y="482" class="sub">关键文件：apps/admin/lib/api/backend.ts</text>
+
+  <rect x="600" y="360" width="350" height="170" fill="#ffffff" class="box"/>
+  <text x="620" y="392" class="text">Backend API（NestJS）</text>
+  <text x="620" y="416" class="sub">JwtAuthGuard（passport-jwt）</text>
+  <text x="620" y="438" class="sub">JwtStrategy.validate(payload)：校验 sid 是否仍有效</text>
+  <text x="620" y="460" class="sub">无效则抛 40100「会话已失效」</text>
+  <text x="620" y="482" class="sub">关键文件：apps/backend/src/auth/strategies/jwt.strategy.ts</text>
+
+  <rect x="990" y="360" width="310" height="170" fill="#fff7f6" class="danger-box"/>
+  <text x="1010" y="392" class="danger">“踢下线”发生点</text>
+  <text x="1010" y="416" class="sub">任意后端受保护接口（含 /auth/me）</text>
+  <text x="1010" y="438" class="sub">JWT 校验通过后，仍会回查 sid</text>
+  <text x="1010" y="460" class="sub">若 auth_sessions 中无记录 → 401</text>
+  <text x="1010" y="482" class="sub">浏览器下一次请求即感知并被迫重新登录</text>
+
+  <!-- arrows within app layer -->
+  <path d="M560,432 L600,432" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="568" y="418" class="arrow-label">Authorization: Bearer &lt;JWT&gt;</text>
+
+  <path d="M950,432 L990,432" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="958" y="418" class="arrow-label">401</text>
+
+  <!-- Layer: CloudBase -->
+  <rect x="20" y="650" width="120" height="220" fill="url(#g-cloud)" class="layer-border"/>
+  <text x="80" y="770" text-anchor="middle" class="label">云开发</text>
+
+  <rect x="150" y="650" width="1194" height="220" fill="#fbfff7" class="layer-border"/>
+
+  <rect x="170" y="680" width="560" height="170" fill="#ffffff" class="dash"/>
+  <text x="192" y="708" class="text">CloudBase 数据模型：auth_sessions</text>
+  <text x="192" y="732" class="sub">存储：refreshTokenHash、expiresAt、userId …</text>
+  <text x="192" y="754" class="sub">撤销策略：delete session 记录（而非写 revokedAt）</text>
+  <text x="192" y="776" class="sub">会话校验：按 _id=sessionId 且 expiresAt &gt; now 查询是否存在</text>
+  <text x="192" y="798" class="sub">关键文件：apps/backend/src/auth/sessions/auth-sessions.repository.cloudbase.ts</text>
+
+  <rect x="760" y="680" width="564" height="170" fill="#ffffff" class="dash"/>
+  <text x="782" y="708" class="text">你在“表里删除”的效果</text>
+  <rect x="782" y="724" width="520" height="46" fill="#fff7f6" class="danger-box"/>
+  <text x="802" y="752" class="danger">删除 sessionId 对应记录 = 立即失效（下一次请求 401）</text>
+  <rect x="782" y="780" width="520" height="56" fill="#ffffff" class="box"/>
+  <text x="802" y="806" class="sub">只删一条：只踢掉该次登录/设备</text>
+  <text x="802" y="828" class="sub">按 userId 批量删：踢掉该用户所有登录会话</text>
+
+  <!-- arrows Backend -> CloudBase -->
+  <path d="M775,530 L455,680" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="590" y="608" class="arrow-label">sessions.isActive(sid)</text>
+
+  <!-- arrow: manual delete -->
+  <path d="M1080,850 C1080,820 980,820 980,770 C980,720 930,720 880,720" class="arrow" marker-end="url(#arrowHead)"/>
+  <text x="1012" y="862" class="arrow-label">控制台/管理端删除记录</text>
+</svg>
+

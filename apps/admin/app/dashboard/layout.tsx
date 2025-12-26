@@ -1,4 +1,5 @@
 import React from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -8,24 +9,37 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 
-import { backendFetch, BackendError } from "@/lib/api/backend";
+import { getAdminAccessToken } from "@/lib/auth/session";
 import type { AuthUser } from "@/lib/auth/types";
 import type { ApiResponse } from "@/lib/api/response";
-
 
 export default async function Page({ children }: { children: React.ReactNode }) {
   let user: AuthUser;
   try {
-    const result = await backendFetch<ApiResponse<{ user: AuthUser }>>("/auth/me");
+    const requestHeaders = await Promise.resolve(headers());
+    const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+    const proto = requestHeaders.get("x-forwarded-proto") ?? "http";
+    if (!host) throw new Error("Missing request host");
+    const origin = `${proto}://${host}`;
+
+    const accessToken =
+      requestHeaders.get("x-admin-access-token") ?? (await getAdminAccessToken());
+    if (!accessToken) redirect("/login?next=/dashboard");
+
+    const response = await fetch(new URL("/auth/me", process.env.BACKEND_BASE_URL ?? "http://localhost:3002"), {
+      method: "GET",
+      headers: { accept: "application/json", authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+
+    if (response.status === 401) redirect("/session-expired?next=/dashboard");
+    const result = (await response.json()) as ApiResponse<{ user: AuthUser }>;
     const current = result.data?.user;
     if (!current) {
       throw new Error("Invalid /auth/me response: missing user");
     }
     user = current;
   } catch (error) {
-    if (error instanceof BackendError && error.status === 401) {
-      redirect("/login?next=/dashboard");
-    }
     throw error;
   }
 
