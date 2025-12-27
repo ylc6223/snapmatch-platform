@@ -91,3 +91,19 @@ pnpm -C apps/admin dev
 
 - 变更记录：新增功能或修复请追加到 `CHANGELOG.md`（必须带版本号）
 - 代码风格：以仓库 ESLint/Prettier 为准，提交前建议运行 `pnpm -C apps/admin lint`
+
+## Dashboard 顶部多标签页（Tabbar）
+
+`/dashboard/*` 页面顶部会展示多标签页导航（类似 vben 的 tabbar）：
+
+- 自动加入：访问的 dashboard 页面会自动出现在 tabbar 中
+- 关闭策略：支持关闭当前/其他/左侧/右侧/全部
+- 固定标签：支持固定/取消固定（固定标签不可被关闭）
+- 右键菜单：刷新、关闭相关操作、固定切换
+- 拖拽排序：支持拖拽调整标签顺序（移动端禁用拖拽）
+- 持久化：顺序、关闭列表、固定列表会持久化到 `localStorage`
+
+配置入口：
+
+- `lib/navigation/dashboard-tabs.ts`：可按 `href` 配置 `hidden/label/order/affixTab/tabClosable/keepAlive`
+- `lib/store/app-store.ts`：全局 Zustand store（未来可承载更多全局状态）

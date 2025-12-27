@@ -8,6 +8,27 @@
 
 ---
 
+## 0.5.9 - 2025-12-27
+
+### 新增
+
+- Dashboard 顶部多标签页（Tabbar），提供 vben 风格能力（关闭/固定/右键菜单/拖拽/持久化）
+  - Tabbar 组件：`apps/admin/components/dashboard-tabbar.tsx`
+  - 路由 meta 配置：`apps/admin/lib/navigation/dashboard-tabs.ts`
+  - 全局状态：Zustand store（持久化）：`apps/admin/lib/store/app-store.ts`
+
+### 变更
+
+- Dashboard Header 结构对齐 shadcn sidebar 示例：面包屑 + Tabbar（同一风格体系）
+  - `apps/admin/components/site-header.tsx`
+  - `apps/admin/app/dashboard/layout.tsx`
+- Sidebar 折叠态二级菜单交互升级：折叠(icon) 时使用 dropdown，展开时保留 collapsible 层级
+  - `apps/admin/components/nav-main.tsx`
+
+### 验证
+
+- `pnpm -C apps/admin lint`（无 error，仅存在项目原有 warning）
+
 ## 0.5.1 - 2025-12-26
 
 ### 新增
