@@ -145,8 +145,8 @@ jobs:
             sudo docker logs snapmatch-backend
             exit 1
 
-  deploy-frontend:
-    name: 部署前端
+  deploy-web:
+    name: 部署 Web 官网
     needs: quality-check
     runs-on: ubuntu-latest
     steps:
@@ -164,17 +164,10 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      # ========== 前端构建与部署 ==========
-
       - name: 构建 Web 前端
         run: pnpm -C apps/web build
         env:
-          NEXT_PUBLIC_ADMIN_BASE_URL: https://www.thepexels.art/admin # 替换为实际域名
-
-      - name: 构建 Admin 后台
-        run: pnpm -C apps/admin build
-        env:
-          NEXT_PUBLIC_API_BASE_URL: https://www.thepexels.art/api # 替换为实际域名
+          NEXT_PUBLIC_ADMIN_BASE_URL: https://www.thepexels.art/admin
 
       - name: 准备服务器目录
         uses: appleboy/ssh-action@v1.0.3
@@ -185,13 +178,11 @@ jobs:
           script: |
             # 创建目标目录并设置临时写入权限
             sudo mkdir -p ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
-            sudo mkdir -p ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/admin
             sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
 
-            # 清理旧文件（保留 admin 目录）
+            # 清理旧的 Web 文件（保留 admin 目录）
             cd ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
             find . -maxdepth 1 ! -name '.' ! -name '..' ! -name 'admin' -exec rm -rf {} +
-            rm -rf admin/*
 
       - name: 部署 Web 文件到服务器
         uses: appleboy/scp-action@v0.1.7
@@ -203,17 +194,7 @@ jobs:
           target: '${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/'
           strip_components: 3
 
-      - name: 部署 Admin 文件到服务器
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: 'apps/admin/out/*'
-          target: '${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/admin/'
-          strip_components: 3
-
-      - name: 设置文件权限
+      - name: 设置 Web 文件权限
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -223,16 +204,126 @@ jobs:
             sudo chown -R www-data:www-data ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
             sudo chmod -R 755 ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
 
+  deploy-admin:
+    name: 部署 Admin 后台
+    needs: quality-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建 Admin (Standalone 模式)
+        run: pnpm -C apps/admin build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://www.thepexels.art/api
+
+      - name: 打包 Standalone 文件
+        run: |
+          cd apps/admin
+          # 复制必要的文件到 standalone 目录
+          cp -r .next/static .next/standalone/apps/admin/.next/
+          cp -r public .next/standalone/apps/admin/
+          # 打包整个 standalone 目录
+          cd .next/standalone
+          tar -czf /tmp/admin-standalone.tar.gz .
+
+      - name: 上传 Admin 到服务器
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: '/tmp/admin-standalone.tar.gz'
+          target: '/tmp/'
+
+      - name: 部署 Admin 服务
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # 创建 Admin 应用目录
+            mkdir -p /opt/1panel/apps/snapmatch/admin
+            cd /opt/1panel/apps/snapmatch/admin
+
+            # 解压新文件
+            tar -xzf /tmp/admin-standalone.tar.gz
+            rm /tmp/admin-standalone.tar.gz
+
+            # 创建 PM2 配置文件（如果不存在）
+            if [ ! -f ecosystem.config.js ]; then
+              cat > ecosystem.config.js << 'EOFPM2'
+            module.exports = {
+              apps: [{
+                name: 'snapmatch-admin',
+                script: 'apps/admin/server.js',
+                cwd: '/opt/1panel/apps/snapmatch/admin',
+                instances: 1,
+                exec_mode: 'cluster',
+                env: {
+                  NODE_ENV: 'production',
+                  PORT: 3001,
+                  HOSTNAME: '0.0.0.0',
+                },
+                error_file: '/opt/1panel/apps/snapmatch/admin/logs/error.log',
+                out_file: '/opt/1panel/apps/snapmatch/admin/logs/out.log',
+                log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+              }]
+            };
+            EOFPM2
+            fi
+
+            # 创建日志目录
+            mkdir -p logs
+
+            # 使用 PM2 启动或重启服务
+            if pm2 describe snapmatch-admin > /dev/null 2>&1; then
+              echo "重启 Admin 服务..."
+              pm2 restart snapmatch-admin
+            else
+              echo "首次启动 Admin 服务..."
+              pm2 start ecosystem.config.js
+              pm2 save
+            fi
+
+            # 等待服务启动
+            sleep 3
+
+            # 检查服务状态
+            pm2 status snapmatch-admin
+
+            # 验证服务是否可访问
+            if curl -f http://localhost:3001/admin/ > /dev/null 2>&1; then
+              echo "✅ Admin 服务启动成功"
+            else
+              echo "❌ Admin 服务启动失败，查看日志:"
+              pm2 logs snapmatch-admin --lines 50 --nostream
+              exit 1
+            fi
+
   notify:
     name: 部署通知
-    needs: [deploy-backend, deploy-frontend]
+    needs: [deploy-backend, deploy-web, deploy-admin]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: 发送通知
         run: |
           echo "Backend 部署状态: ${{ needs.deploy-backend.result }}"
-          echo "Frontend 部署状态: ${{ needs.deploy-frontend.result }}"
+          echo "Web 部署状态: ${{ needs.deploy-web.result }}"
+          echo "Admin 部署状态: ${{ needs.deploy-admin.result }}"
           echo "Tag: ${{ github.ref_name }}"
           echo "提交: ${{ github.sha }}"
           # TODO: 可以添加 Slack/钉钉通知

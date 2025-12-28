@@ -20,13 +20,20 @@
 
 - **对外单域名同源**：浏览器始终访问一个 Origin，例如 `https://admin.example.com`
 - **网关/反向代理按路径分流**：
-  - `/` → Next.js Admin（`apps/admin`）
+  - `/` → Next.js Admin（`apps/admin`）**⚠️ 需要 Node.js 运行时**
   - `/api/*` → Nest API（`apps/backend`）
 - **鉴权模型**：
   - `accessToken`：JWT（短有效期），前端通过 `Authorization: Bearer <token>` 携带
   - `refreshToken`：`httpOnly Cookie`（仅刷新接口使用），后端支持旋转（rotation）与失效策略
 
 这套组合的核心收益是：**同源请求 + httpOnly refresh**，最大限度降低 XSS/跨域/Cookie 策略的复杂度。
+
+**⚠️ 重要提示：Admin 运行环境要求**
+
+- Admin 使用 Next.js Standalone 模式（而非静态导出）
+- **必须在 Node.js 环境中运行**（推荐 Node.js 20+）
+- 原因：Admin 实现了 BFF 层（`/api/auth/*` 路由需要服务器运行时处理）
+- 推荐使用 PM2 进行进程管理
 
 ---
 
@@ -123,45 +130,140 @@ refresh token 存在 `HttpOnly Cookie`，理论上会引入 CSRF 风险。推荐
 - `https://admin.example.com/` → 由 `gateway` 转发到 `admin`
 - `https://admin.example.com/api/*` → 由 `gateway` 转发到 `backend`
 
-### 6.2 CloudRun（CloudBase 云托管）推荐
+### 6.2 部署方式选择
+
+#### 方式 A：CloudRun（CloudBase 云托管）推荐
 
 你可以将三者都部署到 CloudRun 容器模式：
 
-- `snapmatch-admin`：Next 容器
+- `snapmatch-admin`：Next Standalone 容器
 - `snapmatch-backend`：Nest 容器
 - `snapmatch-gateway`：Nginx 容器（public）
 
 并让 `snapmatch-admin`、`snapmatch-backend` 仅内网访问（或不绑定公网域名），由 `gateway` 统一对外。
 
-### 6.3 Nginx（网关）示例配置
+#### 方式 B：VPS + PM2（当前项目使用）
+
+在自有服务器上使用 PM2 管理 Node.js 服务：
+
+**环境要求：**
+- Node.js 20+
+- PM2 (进程管理)
+- OpenResty/Nginx (反向代理)
+
+**Admin 部署步骤：**
+
+1. **安装 Node.js 和 PM2**
+   ```bash
+   # 使用 nvm 或直接安装 Node.js 20
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+
+   # 安装 PM2
+   npm install -g pm2
+   pm2 startup  # 配置开机自启
+   ```
+
+2. **创建 PM2 配置**
+
+   在 `/opt/1panel/apps/snapmatch/admin/ecosystem.config.js`：
+   ```javascript
+   module.exports = {
+     apps: [{
+       name: 'snapmatch-admin',
+       script: 'apps/admin/server.js',
+       cwd: '/opt/1panel/apps/snapmatch/admin',
+       instances: 1,
+       exec_mode: 'cluster',
+       env: {
+         NODE_ENV: 'production',
+         PORT: 3001,
+         HOSTNAME: '0.0.0.0',
+       },
+       error_file: 'logs/error.log',
+       out_file: 'logs/out.log',
+     }]
+   };
+   ```
+
+3. **启动服务**
+   ```bash
+   cd /opt/1panel/apps/snapmatch/admin
+   pm2 start ecosystem.config.js
+   pm2 save
+   ```
+
+4. **常用管理命令**
+   ```bash
+   pm2 status snapmatch-admin    # 查看状态
+   pm2 logs snapmatch-admin       # 查看日志
+   pm2 restart snapmatch-admin    # 重启服务
+   pm2 stop snapmatch-admin       # 停止服务
+   ```
+
+### 6.3 Nginx/OpenResty 反向代理配置
 
 核心目标：**同域名路径分流**。
 
+#### 示例配置（适用于 1Panel + OpenResty）
+
+编辑 `/opt/1panel/apps/openresty/openresty/conf/conf.d/www.thepexels.art.conf`：
+
 ```nginx
 server {
-  listen 80;
-  server_name admin.example.com;
+    listen 80;
+    server_name www.thepexels.art;
 
-  # 后端 API：/api/*
-  location /api/ {
-    proxy_pass http://snapmatch-backend:3002/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
+    # SSL 配置（如果启用 HTTPS）
+    # listen 443 ssl;
+    # ssl_certificate /path/to/cert.pem;
+    # ssl_certificate_key /path/to/key.pem;
 
-  # 管理后台：/
-  location / {
-    proxy_pass http://snapmatch-admin:3001/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
+    # Admin 后台 - 反向代理到 PM2 管理的 Node.js 服务
+    location /admin {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Backend API - 反向代理到 Backend Docker 容器
+    location /api {
+        proxy_pass http://localhost:3002;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Web 官网 - 静态文件
+    location / {
+        root /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art;
+        try_files $uri $uri.html $uri/ /index.html;
+    }
 }
 ```
 
-> 说明：上面 `snapmatch-backend` / `snapmatch-admin` 的可达地址取决于你实际的云托管网络与服务发现方式。
-> 在 CloudRun 中通常会有“内网域名/内网访问”能力；若你使用 CLB/Nginx 在 VPC 内，也可通过内网 IP/域名转发。
+#### 重载配置
+
+```bash
+# 测试配置
+sudo docker exec 1panel-openresty openresty -t
+
+# 重载配置
+sudo docker exec 1panel-openresty openresty -s reload
+```
+
+> **说明：**
+> - Admin 运行在 `localhost:3001`（PM2 管理的 Node.js 进程）
+> - Backend 运行在 `localhost:3002`（Docker 容器）
+> - Web 直接从静态文件目录服务
 
 ---
 

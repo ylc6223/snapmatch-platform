@@ -1,5 +1,52 @@
 # Changelog
 
+## [v1.0.8] - 2025-12-29
+
+### 🔧 架构调整
+
+#### Admin 后台部署模式变更
+
+- **从静态导出改为 Standalone 模式**:
+  - `apps/admin/next.config.ts`: `output: 'export'` → `output: 'standalone'`
+  - Admin 现在**需要 Node.js 运行时环境**（推荐 Node.js 20+）
+  - 使用 PM2 进行进程管理
+  - 原因：Admin 使用 BFF 架构（`/api/auth/*` 路由需要服务器运行时处理）
+
+#### GitHub Actions Workflow 优化
+
+- **拆分 Frontend 部署为两个独立 Job**:
+  - `deploy-web`: 部署 Web 官网（静态文件）
+  - `deploy-admin`: 部署 Admin 后台（Node.js 服务 + PM2）
+  - 三个部署 Job 完全独立（Backend、Web、Admin）
+  - 一个失败不影响其他部署
+
+### 📝 文档更新
+
+#### 新增/更新文档
+
+- **[admin-architecture-and-deployment.md](./docs/admin-architecture-and-deployment.md)**:
+  - 添加 Admin Node.js 运行时环境要求说明
+  - 添加 PM2 部署完整流程
+  - 添加 OpenResty 反向代理配置示例
+
+- **[DEPLOYMENT_ACCESS.md](./docs/DEPLOYMENT_ACCESS.md)**:
+  - 添加 Admin PM2 服务状态检查步骤
+  - 添加端口 3001 验证流程
+
+- **[DEPLOYMENT_TROUBLESHOOTING.md](./docs/DEPLOYMENT_TROUBLESHOOTING.md)**:
+  - 添加 "问题 3: Admin 服务部署失败或无法访问" 完整排查流程
+  - 更新 Workflow 架构依赖关系图（v1.0.8+）
+  - 更新部署检查清单（新增 Admin PM2 检查项）
+
+### ⚠️ 重要变更
+
+- **服务器环境要求**:
+  - 需要安装 Node.js 20+
+  - 需要安装 PM2 进程管理器
+  - 需要配置 OpenResty/Nginx 反向代理 `/admin` → `localhost:3001`
+
+---
+
 ## [v1.0.7] - 2025-12-29
 
 ### 🚀 重大改进
