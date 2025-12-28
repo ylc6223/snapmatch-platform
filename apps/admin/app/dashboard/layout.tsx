@@ -98,6 +98,7 @@ export default async function Page({ children }: { children: React.ReactNode }) 
 
   return (
     <SidebarProvider
+      className="h-svh overflow-hidden"
       style={
         {
           "--sidebar-width": "16rem",
@@ -106,9 +107,11 @@ export default async function Page({ children }: { children: React.ReactNode }) 
       }
     >
       <AppSidebar user={user} variant="inset" />
-      <SidebarInset>
+      <SidebarInset className="flex-1 min-h-0 overflow-hidden">
         <SiteHeader tabbarRoutes={tabs} />
-        <main className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</main>
+        <div className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain">
+          <main className="flex flex-col gap-4 p-4 pt-0">{children}</main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

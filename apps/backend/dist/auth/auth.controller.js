@@ -18,20 +18,45 @@ const public_decorator_1 = require("./decorators/public.decorator");
 const current_user_decorator_1 = require("./decorators/current-user.decorator");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
+const refresh_dto_1 = require("./dto/refresh.dto");
+const logout_dto_1 = require("./dto/logout.dto");
+const error_codes_1 = require("./error-codes");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    async login(dto) {
-        const result = await this.authService.login(dto.account, dto.password);
+    async login(dto, request) {
+        const ip = request.ip ?? null;
+        const userAgent = request.headers["user-agent"] ?? null;
+        const result = await this.authService.login(dto.account, dto.password, { ip, userAgent });
         if (!result) {
-            throw new common_1.UnauthorizedException("Invalid credentials");
+            throw new common_1.UnauthorizedException({
+                code: error_codes_1.AUTH_ERROR_CODE.InvalidCredentials,
+                message: "账号或密码错误",
+            });
         }
         return result;
     }
+    async refresh(dto) {
+        const result = await this.authService.refresh(dto.refreshToken);
+        if (!result) {
+            throw new common_1.UnauthorizedException({
+                code: error_codes_1.AUTH_ERROR_CODE.Unauthorized,
+                message: "refresh token 无效或已过期",
+            });
+        }
+        return result;
+    }
+    async logout(dto) {
+        await this.authService.logoutByRefreshToken(dto.refreshToken);
+        return null;
+    }
     me(user) {
         if (!user) {
-            throw new common_1.UnauthorizedException();
+            throw new common_1.UnauthorizedException({
+                code: error_codes_1.AUTH_ERROR_CODE.Unauthorized,
+                message: "未登录",
+            });
         }
         return { user };
     }
@@ -41,10 +66,27 @@ __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)("login"),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)("refresh"),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [refresh_dto_1.RefreshDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "refresh", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)("logout"),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [logout_dto_1.LogoutDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
 __decorate([
     (0, common_1.Get)("me"),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

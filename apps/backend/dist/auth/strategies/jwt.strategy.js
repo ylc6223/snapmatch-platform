@@ -14,15 +14,23 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const passport_1 = require("@nestjs/passport");
 const passport_jwt_1 = require("passport-jwt");
+const auth_sessions_service_1 = require("../sessions/auth-sessions.service");
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
-    constructor(config) {
+    constructor(config, sessions) {
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
             secretOrKey: config.get("JWT_SECRET") ?? "change-me",
         });
+        this.sessions = sessions;
     }
-    validate(payload) {
+    async validate(payload) {
+        if (payload.sid) {
+            const active = await this.sessions.isSessionActive(payload.sid);
+            if (!active) {
+                throw new common_1.UnauthorizedException({ code: 40100, message: "会话已失效" });
+            }
+        }
         return {
             id: payload.sub,
             account: payload.account,
@@ -34,6 +42,6 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
 exports.JwtStrategy = JwtStrategy;
 exports.JwtStrategy = JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService])
+    __metadata("design:paramtypes", [config_1.ConfigService, auth_sessions_service_1.AuthSessionsService])
 ], JwtStrategy);
 //# sourceMappingURL=jwt.strategy.js.map

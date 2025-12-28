@@ -9,24 +9,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginDto = void 0;
-const class_transformer_1 = require("class-transformer");
+exports.LogoutDto = void 0;
 const class_validator_1 = require("class-validator");
-class LoginDto {
+class LogoutDto {
 }
-exports.LoginDto = LoginDto;
+exports.LogoutDto = LogoutDto;
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_transformer_1.Transform)(({ value }) => (typeof value === "string" ? value.trim() : value)),
-    (0, class_validator_1.MinLength)(1),
-    (0, class_validator_1.MaxLength)(128),
+    (0, class_validator_1.MinLength)(10),
     __metadata("design:type", String)
-], LoginDto.prototype, "account", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_transformer_1.Transform)(({ value }) => (typeof value === "string" ? value.trim() : value)),
-    (0, class_validator_1.MinLength)(6),
-    (0, class_validator_1.MaxLength)(128),
-    __metadata("design:type", String)
-], LoginDto.prototype, "password", void 0);
-//# sourceMappingURL=login.dto.js.map
+], LogoutDto.prototype, "refreshToken", void 0);
+//# sourceMappingURL=logout.dto.js.map

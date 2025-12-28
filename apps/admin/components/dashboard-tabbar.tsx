@@ -334,7 +334,7 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
                           <button
                             type="button"
                             aria-label="Close tab"
-                            className="text-muted-foreground hover:text-foreground hidden rounded-sm p-1 group-hover/tab:block"
+                            className="text-muted-foreground hover:text-foreground rounded-sm p-1"
                             onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()

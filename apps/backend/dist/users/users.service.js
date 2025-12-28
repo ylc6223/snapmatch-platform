@@ -22,6 +22,9 @@ let UsersService = class UsersService {
     findByAccount(account) {
         return this.repo.findByAccount(account);
     }
+    findById(id) {
+        return this.repo.findById(id);
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

@@ -40,7 +40,7 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
   }, [pathname])
 
   return (
-    <header className="flex shrink-0 flex-col gap-2 border-b py-3">
+    <header className="sticky top-0 z-20 flex shrink-0 flex-col gap-2 border-b bg-background py-3">
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
