@@ -31,8 +31,14 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: Lint 检查
-        run: pnpm lint
+      - name: Lint 检查 - Admin
+        run: pnpm -C apps/admin lint
+
+      - name: Lint 检查 - Backend
+        run: pnpm -C apps/backend lint
+
+      - name: Lint 检查 - Web
+        run: pnpm -C apps/web lint
 
       - name: TypeScript 类型检查 - Web
         run: pnpm -C apps/web tsc --noEmit
