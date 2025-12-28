@@ -18,6 +18,26 @@
     "build:backend": "pnpm -C apps/backend build",
     "lint:web": "pnpm -C apps/web lint",
     "lint:admin": "pnpm -C apps/admin lint",
-    "lint:backend": "pnpm -C apps/backend lint"
+    "lint:backend": "pnpm -C apps/backend lint",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/web/**/*.{js,jsx,ts,tsx}": [
+      "pnpm -C apps/web lint --fix"
+    ],
+    "apps/admin/**/*.{js,jsx,ts,tsx}": [
+      "pnpm -C apps/admin lint --fix"
+    ],
+    "apps/backend/**/*.{js,ts}": [
+      "pnpm -C apps/backend lint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.4.2"
   }
 }
