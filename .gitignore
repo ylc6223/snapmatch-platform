@@ -5,6 +5,9 @@
 **/.next/
 **/out/
 
+# Build outputs
+**/dist/
+
 # Logs
 **/*.log
 
@@ -12,6 +15,9 @@
 .DS_Store
 .idea/
 .vscode/
+
+# AI / Claude
+.claude/
 
 # Environment variables
 .env
