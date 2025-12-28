@@ -8,6 +8,9 @@ on:
 env:
   NODE_VERSION: 20
   PNPM_VERSION: 10
+  # ⚠️ 1Panel 部署路径配置 - 请根据实际域名修改
+  SITE_DOMAIN: www.thepexels.art  # 替换为你的实际域名
+  PANEL_BASE_PATH: /opt/1panel/apps/openresty/openresty/www/sites
 
 jobs:
   quality-check:
@@ -103,7 +106,7 @@ jobs:
               --name snapmatch-backend \
               --restart unless-stopped \
               -p 3002:3000 \
-              --env-file /var/www/snapmatch/backend/.env.production \
+              --env-file /opt/1panel/apps/snapmatch/backend/.env.production \
               snapmatch-backend:latest
 
             # 等待健康检查
@@ -138,7 +141,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "apps/web/out/*"
-          target: "/var/www/snapmatch/web/"
+          target: "${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/"
           strip_components: 3  # 去掉 apps/web/out 前缀
           rm: true  # 清除旧文件
 
@@ -149,7 +152,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "apps/admin/out/*"
-          target: "/var/www/snapmatch/admin/"
+          target: "${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/admin/"
           strip_components: 3
           rm: true
 

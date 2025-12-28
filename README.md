@@ -8,24 +8,96 @@
 - `apps/admin`：管理后台（Next.js）
 - `apps/backend`：后台 API（NestJS，JWT + 权限控制）
 - `packages/*`：预留给共享组件/工具库
-- `docs/deployment.md`：部署指南
-- `docs/admin-api-strategy.md`：后台 API/数据流方案
-- `docs/backend.md`：后端（NestJS）开发说明
+- `docs/`：项目文档
+  - 📚 **[部署文档导航](docs/README.md)** - 部署相关的所有文档入口
+  - 📖 [部署完整指南](docs/deployment-guide.md) - 详细的部署教程
+  - ✅ [部署检查清单](docs/deployment-checklist.md) - 配置核对清单
+  - 📄 [部署策略](docs/deployment.md) - 原部署方案说明
+  - 🔧 [Admin API 策略](docs/admin-api-strategy.md) - 后台 API/数据流方案
+  - 💻 [Backend 说明](docs/backend.md) - 后端开发文档
+- `scripts/server-setup.sh`：服务器环境一键配置脚本
 
 ## 本地开发
 
 > 推荐使用 `pnpm`。
 
 ```bash
+# 启动 Web 官网（端口 3000）
 pnpm -C apps/web dev
-pnpm -C apps/admin dev
+
+# 启动 Admin 后台（端口 3001）
+PORT=3001 pnpm -C apps/admin dev
+
+# 启动 Backend API（端口 3002）
+pnpm -C apps/backend dev
 ```
 
 也可以在仓库根目录运行：
 
 ```bash
+# 同时启动所有应用
 pnpm dev
 ```
+
+## 🚀 部署指南
+
+### 部署方式选择
+
+本项目支持两种部署方式，**部署目录保持一致**（`/var/www/snapmatch`），主要区别在于 Nginx 配置方式：
+
+#### 📋 标准 Nginx 部署（推荐新用户）
+- **适用**: 全新服务器，未安装任何面板
+- **配置方式**: 手动编辑 Nginx 配置文件
+- **文档**: [deployment-guide.md](docs/deployment-guide.md)
+
+#### 🎨 1Panel 面板部署（推荐已有 1Panel 用户）
+- **适用**: 服务器已安装 [1Panel](https://1panel.cn/) 面板
+- **配置方式**: 通过 Web 界面配置（无需编辑文件）
+- **优势**: 一键 SSL、可视化管理、自动续期
+- **文档**: [deployment-1panel.md](docs/deployment-1panel.md) 🆕
+
+### 快速开始
+
+**选择标准 Nginx 部署**:
+1. **阅读部署文档** → [docs/deployment-guide.md](docs/deployment-guide.md)
+2. **核对配置清单** → [docs/deployment-checklist.md](docs/deployment-checklist.md)
+3. **配置服务器环境** → 使用 [scripts/server-setup.sh](scripts/server-setup.sh)
+4. **触发自动部署** → 推送版本标签
+
+**选择 1Panel 部署**:
+1. **阅读 1Panel 指南** → [docs/deployment-1panel.md](docs/deployment-1panel.md) ⭐
+2. **核对配置清单** → [docs/deployment-checklist.md](docs/deployment-checklist.md)（选择 1Panel 选项）
+3. **配置服务器环境** → 创建部署目录和环境变量
+4. **通过 1Panel 配置** → Web 界面配置网站、反向代理、SSL
+5. **触发自动部署** → 推送版本标签
+
+### 自动部署流程
+
+```bash
+# 1. 开发完成后提交代码
+git add .
+git commit -m "feat: 新功能"
+git push origin main
+
+# 2. 创建版本标签触发自动部署
+git tag v1.0.0
+git push origin v1.0.0
+
+# 3. GitHub Actions 自动执行部署
+# 访问 https://github.com/你的用户名/snapmatch-platform/actions 查看进度
+```
+
+### 部署架构
+
+- **前端**: Nginx / 1Panel 静态托管（Web + Admin）
+- **后端**: Docker 容器化（NestJS）
+- **CI/CD**: GitHub Actions 自动部署
+- **触发条件**: 推送版本标签（如 `v1.0.0`）
+- **部署目录**:
+  - **标准 Nginx**: `/var/www/snapmatch`
+  - **1Panel**: `/opt/1panel/apps/openresty/openresty/www/sites/{域名}/`
+
+详细信息请查看 [部署文档](docs/README.md)。
 
 ## Web → Admin 跳转配置
 
