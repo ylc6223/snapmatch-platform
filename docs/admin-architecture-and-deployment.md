@@ -121,9 +121,9 @@ refresh token 存在 `HttpOnly Cookie`，理论上会引入 CSRF 风险。推荐
 
 建议分 2～3 个服务（容器）：
 
-1) `admin`（Next.js，`apps/admin`）
-2) `backend`（NestJS，`apps/backend`）
-3) `gateway`（Nginx，路径分流；可选但推荐）
+1. `admin`（Next.js，`apps/admin`）
+2. `backend`（NestJS，`apps/backend`）
+3. `gateway`（Nginx，路径分流；可选但推荐）
 
 对外只暴露 `gateway` 一个入口域名：
 
@@ -147,6 +147,7 @@ refresh token 存在 `HttpOnly Cookie`，理论上会引入 CSRF 风险。推荐
 在自有服务器上使用 PM2 管理 Node.js 服务：
 
 **环境要求：**
+
 - Node.js 20+
 - PM2 (进程管理)
 - OpenResty/Nginx (反向代理)
@@ -154,6 +155,7 @@ refresh token 存在 `HttpOnly Cookie`，理论上会引入 CSRF 风险。推荐
 **Admin 部署步骤：**
 
 1. **安装 Node.js 和 PM2**
+
    ```bash
    # 使用 nvm 或直接安装 Node.js 20
    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -167,26 +169,30 @@ refresh token 存在 `HttpOnly Cookie`，理论上会引入 CSRF 风险。推荐
 2. **创建 PM2 配置**
 
    在 `/opt/1panel/apps/snapmatch/admin/ecosystem.config.js`：
+
    ```javascript
    module.exports = {
-     apps: [{
-       name: 'snapmatch-admin',
-       script: 'apps/admin/server.js',
-       cwd: '/opt/1panel/apps/snapmatch/admin',
-       instances: 1,
-       exec_mode: 'cluster',
-       env: {
-         NODE_ENV: 'production',
-         PORT: 3001,
-         HOSTNAME: '0.0.0.0',
+     apps: [
+       {
+         name: 'snapmatch-admin',
+         script: 'apps/admin/server.js',
+         cwd: '/opt/1panel/apps/snapmatch/admin',
+         instances: 1,
+         exec_mode: 'cluster',
+         env: {
+           NODE_ENV: 'production',
+           PORT: 3001,
+           HOSTNAME: '0.0.0.0',
+         },
+         error_file: 'logs/error.log',
+         out_file: 'logs/out.log',
        },
-       error_file: 'logs/error.log',
-       out_file: 'logs/out.log',
-     }]
+     ],
    };
    ```
 
 3. **启动服务**
+
    ```bash
    cd /opt/1panel/apps/snapmatch/admin
    pm2 start ecosystem.config.js
@@ -208,6 +214,12 @@ refresh token 存在 `HttpOnly Cookie`，理论上会引入 CSRF 风险。推荐
 #### 示例配置（适用于 1Panel + OpenResty）
 
 编辑 `/opt/1panel/apps/openresty/openresty/conf/conf.d/www.thepexels.art.conf`：
+
+> **路径说明（1Panel 常见目录映射）：**
+>
+> - OpenResty 容器内站点目录通常是：`/www/sites/<domain>/`
+> - 宿主机对应目录通常是：`/opt/1panel/apps/openresty/openresty/www/sites/<domain>/`
+> - 其中 Web 官网静态文件根目录为：`.../<domain>/index/`
 
 ```nginx
 server {
@@ -244,7 +256,7 @@ server {
 
     # Web 官网 - 静态文件
     location / {
-        root /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art;
+        root /www/sites/www.thepexels.art/index;
         try_files $uri $uri.html $uri/ /index.html;
     }
 }
@@ -261,6 +273,7 @@ sudo docker exec 1panel-openresty openresty -s reload
 ```
 
 > **说明：**
+>
 > - Admin 运行在 `localhost:3001`（PM2 管理的 Node.js 进程）
 > - Backend 运行在 `localhost:3002`（Docker 容器）
 > - Web 直接从静态文件目录服务

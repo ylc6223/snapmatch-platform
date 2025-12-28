@@ -111,19 +111,19 @@ server {
     listen 80;
     server_name 123.45.67.89;
 
-    # Web 官网
-    location / {
-        root /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89;
-        index index.html;
-        try_files $uri $uri.html $uri/ /index.html;
-    }
+	# Web 官网
+	location / {
+	    root /www/sites/123.45.67.89/index;
+	    index index.html;
+	    try_files $uri $uri.html $uri/ /index.html;
+	}
 
-    # Admin 后台
-    location /admin {
-        alias /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/admin;
-        index index.html;
-        try_files $uri $uri.html $uri/ /admin/index.html;
-    }
+	# Admin 后台
+	location /admin {
+	    alias /www/sites/123.45.67.89/admin;
+	    index index.html;
+	    try_files $uri $uri.html $uri/ /admin/index.html;
+	}
 
     # Backend API
     location /api/ {
@@ -299,9 +299,9 @@ curl http://localhost:3002/health
 ### 2. 检查静态文件
 
 ```bash
-# 1Panel 默认路径
-ls -la /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/
-ls -la /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/admin/
+	# 1Panel 默认路径
+	ls -la /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/index/
+	ls -la /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/admin/
 
 # 自定义路径
 ls -la /var/www/snapmatch/web/
@@ -361,9 +361,9 @@ netstat -tlnp | grep :80
 **解决:**
 
 ```bash
-# 设置正确的文件权限
-sudo chown -R www-data:www-data /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/
-sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/
+	# 设置正确的文件权限
+	sudo chown -R www-data:www-data /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/index/
+	sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/123.45.67.89/index/
 ```
 
 ### 问题 3: 502 Bad Gateway (API)

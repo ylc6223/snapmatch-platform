@@ -20,6 +20,7 @@ NC='\033[0m'
 SERVER_HOST="${SERVER_HOST:-}"
 SERVER_USER="${SERVER_USER:-root}"
 DEPLOY_PATH="/opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art"
+WEB_DEPLOY_PATH="$DEPLOY_PATH/index"
 
 # 检查必需的环境变量
 if [ -z "$SERVER_HOST" ]; then
@@ -34,6 +35,7 @@ echo -e "${YELLOW}========================================${NC}"
 echo ""
 echo "服务器: $SERVER_USER@$SERVER_HOST"
 echo "部署路径: $DEPLOY_PATH"
+echo "Web 根目录: $WEB_DEPLOY_PATH"
 echo ""
 
 # 1. 构建 Web 前端
@@ -50,17 +52,23 @@ echo ""
 
 # 3. 部署 Web
 echo -e "${YELLOW}步骤 3/4: 部署 Web 到服务器...${NC}"
-echo "目标：$SERVER_USER@$SERVER_HOST:$DEPLOY_PATH"
+echo "目标：$SERVER_USER@$SERVER_HOST:$WEB_DEPLOY_PATH"
 
-# 清空远程目录（保留 admin 子目录）
+# 确保远程 Web 根目录存在
 ssh "$SERVER_USER@$SERVER_HOST" "
-  cd $DEPLOY_PATH && \
-  find . -maxdepth 1 ! -name '.' ! -name '..' ! -name 'admin' -exec rm -rf {} + && \
-  echo '远程目录已清理'
+  mkdir -p $WEB_DEPLOY_PATH && \
+  echo '远程 Web 根目录已准备'
+"
+
+# 仅清空远程 Web 根目录内容（不动站点其他目录：admin/log/rewrite/proxy 等）
+ssh "$SERVER_USER@$SERVER_HOST" "
+  cd $WEB_DEPLOY_PATH && \
+  find . -mindepth 1 -maxdepth 1 -exec rm -rf {} + && \
+  echo '远程 Web 根目录已清理'
 "
 
 # 上传 Web 文件
-rsync -avz --progress apps/web/out/ "$SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/"
+rsync -avz --progress apps/web/out/ "$SERVER_USER@$SERVER_HOST:$WEB_DEPLOY_PATH/"
 echo -e "${GREEN}✓ Web 文件部署完成${NC}"
 echo ""
 
@@ -82,8 +90,8 @@ echo ""
 # 5. 设置文件权限
 echo -e "${YELLOW}设置文件权限...${NC}"
 ssh "$SERVER_USER@$SERVER_HOST" "
-  chown -R www-data:www-data $DEPLOY_PATH && \
-  chmod -R 755 $DEPLOY_PATH && \
+  chown -R www-data:www-data $WEB_DEPLOY_PATH && \
+  chmod -R 755 $WEB_DEPLOY_PATH && \
   echo '权限设置完成'
 "
 echo -e "${GREEN}✓ 权限设置完成${NC}"
@@ -99,4 +107,4 @@ echo "  Admin 后台: https://www.thepexels.art/admin/"
 echo "  健康检查: https://www.thepexels.art/health"
 echo ""
 echo -e "${YELLOW}检查文件：${NC}"
-echo "  ssh $SERVER_USER@$SERVER_HOST 'ls -la $DEPLOY_PATH'"
+echo "  ssh $SERVER_USER@$SERVER_HOST 'ls -la $WEB_DEPLOY_PATH'"

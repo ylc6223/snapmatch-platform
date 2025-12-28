@@ -13,6 +13,12 @@
 
 ## ⚙️ OpenResty 反向代理配置
 
+> **路径说明（1Panel 常见目录映射）：**
+>
+> - OpenResty 容器内站点目录通常是：`/www/sites/<domain>/`
+> - 宿主机对应目录通常是：`/opt/1panel/apps/openresty/openresty/www/sites/<domain>/`
+> - Web 官网静态文件根目录为：`.../<domain>/index/`
+
 ### 方法 1：通过 1Panel 面板配置（推荐）
 
 1. **登录 1Panel 面板**
@@ -40,7 +46,7 @@ server {
     # Web 官网 (根路径)
     # ========================================
     location / {
-        root /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art;
+        root /www/sites/www.thepexels.art/index;
         index index.html;
         try_files $uri $uri.html $uri/ /index.html;
         add_header Cache-Control "public, max-age=3600";
@@ -49,8 +55,8 @@ server {
     # ========================================
     # Admin 后台 (/admin 路径)
     # ========================================
-    location /admin {
-        alias /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/admin;
+	   location /admin {
+        alias /www/sites/www.thepexels.art/admin;
         index index.html;
         try_files $uri $uri.html $uri/ /admin/index.html;
         add_header Cache-Control "no-cache, must-revalidate";
@@ -155,6 +161,7 @@ curl http://localhost:3001/admin/
 ```
 
 **预期 PM2 状态:**
+
 ```
 ┌─────┬──────────────────┬─────────┬─────────┬──────────┬────────┐
 │ id  │ name             │ status  │ restart │ uptime   │ cpu    │
@@ -164,6 +171,7 @@ curl http://localhost:3001/admin/
 ```
 
 **如果服务未启动:**
+
 ```bash
 cd /opt/1panel/apps/snapmatch/admin
 pm2 start ecosystem.config.js
@@ -174,10 +182,10 @@ pm2 save
 
 ```bash
 # 检查 Web 文件
-ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
+ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
 
 # 验证关键文件存在
-test -f /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index.html && echo "✅ Web 文件存在"
+test -f /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/index.html && echo "✅ Web 文件存在"
 ```
 
 ### 4. 测试访问
@@ -208,11 +216,11 @@ curl https://www.thepexels.art/health
 
 ```bash
 # 检查文件是否存在
-ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
+ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
 
 # 检查文件权限
-sudo chown -R www-data:www-data /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
-sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
+sudo chown -R www-data:www-data /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
+sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
 ```
 
 ### 问题 2: 502 Bad Gateway (API 请求)
@@ -296,9 +304,9 @@ tail -f /opt/1panel/apps/openresty/openresty/logs/www.thepexels.art.error.log
        # allow 你的IP;
        # deny all;
 
-       alias /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/admin;
-       try_files $uri $uri.html $uri/ /admin/index.html;
-   }
+          alias /www/sites/www.thepexels.art/admin;
+          try_files $uri $uri.html $uri/ /admin/index.html;
+      }
    ```
 
 ---

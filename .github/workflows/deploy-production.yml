@@ -176,13 +176,17 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # 创建目标目录并设置临时写入权限
-            sudo mkdir -p ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
-            sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
+            # 1Panel + OpenResty 默认站点根目录为：/www/sites/<domain>/index（容器内路径）
+            # 对应宿主机目录通常为：${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/index
+            WEB_ROOT_DIR="${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/index"
 
-            # 清理旧的 Web 文件（保留 admin 目录）
-            cd ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
-            find . -maxdepth 1 ! -name '.' ! -name '..' ! -name 'admin' -exec rm -rf {} +
+            # 创建 Web 根目录并设置临时写入权限
+            sudo mkdir -p "$WEB_ROOT_DIR"
+            sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} "$WEB_ROOT_DIR"
+
+            # 仅清理 Web 根目录内容（不动站点其他目录：admin/log/rewrite/proxy 等）
+            cd "$WEB_ROOT_DIR"
+            find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
       - name: 部署 Web 文件到服务器
         uses: appleboy/scp-action@v0.1.7
@@ -191,7 +195,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: 'apps/web/out/*'
-          target: '${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/'
+          target: '${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/index/'
           strip_components: 3
 
       - name: 设置 Web 文件权限
@@ -201,8 +205,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            sudo chown -R www-data:www-data ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
-            sudo chmod -R 755 ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
+            WEB_ROOT_DIR="${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/index"
+            sudo chown -R www-data:www-data "$WEB_ROOT_DIR"
+            sudo chmod -R 755 "$WEB_ROOT_DIR"
 
   deploy-admin:
     name: 部署 Admin 后台

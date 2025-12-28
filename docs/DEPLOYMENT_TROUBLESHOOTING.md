@@ -94,7 +94,7 @@ curl: (7) Failed to connect to localhost port 3002
 **症状：**
 
 - GitHub Actions 显示成功
-- 服务器上 `/opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/` 目录为空或内容不正确
+- 服务器上 `/opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/` 目录为空或内容不正确
 
 **排查步骤：**
 
@@ -105,13 +105,13 @@ curl: (7) Failed to connect to localhost port 3002
 ssh your-user@your-server
 
 # 检查 Web 文件
-ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
+ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
 
 # 检查 Admin 文件
 ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/admin/
 
 # 统计文件数量
-find /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/ -type f | wc -l
+find /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/ -type f | wc -l
 ```
 
 **预期输出：**
@@ -126,7 +126,7 @@ find /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/ -type f |
 
 ```bash
 # 检查目录所有权
-ls -ld /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
+ls -ld /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
 
 # 应该显示：
 # drwxr-xr-x ... www-data www-data ... www.thepexels.art/
@@ -136,8 +136,8 @@ ls -ld /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
 
 ```bash
 # 修复权限
-sudo chown -R www-data:www-data /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
-sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/
+sudo chown -R www-data:www-data /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
+sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
 ```
 
 **错误 B: 上传路径错误**
@@ -146,7 +146,7 @@ sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.a
 
 ```
 source: 'apps/web/out/*'
-target: '/opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/'
+target: '/opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/'
 ```
 
 **错误 C: SSH 密钥权限问题**
@@ -166,7 +166,7 @@ Permission denied (publickey)
 
 ```bash
 # 检查 index.html 是否包含正确内容
-head -30 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index.html | grep "光影工作室"
+head -30 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/index.html | grep "光影工作室"
 
 # 应该输出包含 "光影工作室" 的行
 ```
@@ -210,6 +210,7 @@ Process snapmatch-admin not found
 ```
 
 **解决方案：**
+
 ```bash
 cd /opt/1panel/apps/snapmatch/admin
 pm2 start ecosystem.config.js
@@ -221,6 +222,7 @@ pm2 save
 PM2 状态显示 `errored` 或 `stopped`。
 
 **解决方案：**
+
 ```bash
 # 查看详细错误
 pm2 logs snapmatch-admin --err --lines 50
@@ -241,6 +243,7 @@ ls -la /opt/1panel/apps/snapmatch/admin/apps/admin/.next/
 日志显示：`Error: listen EADDRINUSE: address already in use :::3001`
 
 **解决方案：**
+
 ```bash
 # 查找占用端口的进程
 netstat -tlnp | grep 3001
@@ -268,6 +271,7 @@ tail -f /opt/1panel/apps/openresty/openresty/logs/www.thepexels.art.error.log
 ```
 
 **预期配置：**
+
 ```nginx
 location /admin {
     proxy_pass http://localhost:3001;
@@ -322,12 +326,12 @@ server {
 
     # 检查 root 或 alias 路径是否正确
     location / {
-        root /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art;
+        root /www/sites/www.thepexels.art/index;
         try_files $uri $uri.html $uri/ /index.html;
     }
 
     location /admin {
-        alias /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/admin;
+        alias /www/sites/www.thepexels.art/admin;
         try_files $uri $uri.html $uri/ /admin/index.html;
     }
 }
@@ -421,10 +425,10 @@ build-and-deploy (单个 job)
 
 ```bash
 # 查看最近上传的文件
-find /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/ -type f -mmin -10
+find /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/ -type f -mmin -10
 
 # 查看文件时间戳
-ls -lt /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/ | head -20
+ls -lt /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/ | head -20
 ```
 
 ### 3. 测试 SSH 连接
@@ -448,8 +452,8 @@ ssh -i ~/.ssh/your-key your-user@your-server "ls -la /opt/1panel/apps/openresty/
 
 ### Web 官网
 
-- [ ] 文件已部署：`ls -la /opt/.../www.thepexels.art/index.html`
-- [ ] 内容正确：`grep "光影工作室" /opt/.../index.html`
+- [ ] 文件已部署：`ls -la /opt/.../www.thepexels.art/index/index.html`
+- [ ] 内容正确：`grep "光影工作室" /opt/.../www.thepexels.art/index/index.html`
 - [ ] 可访问：`curl https://www.thepexels.art/`
 
 ### Admin 后台（Node.js 服务）
