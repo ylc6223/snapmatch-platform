@@ -82,4 +82,7 @@ async function bootstrap() {
   }
 }
 
-void bootstrap();
+bootstrap().catch((err) => {
+  console.error("Failed to start NestJS application:", err);
+  process.exit(1);
+});

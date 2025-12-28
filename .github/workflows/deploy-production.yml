@@ -157,7 +157,24 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE_URL: https://www.thepexels.art/api # 替换为实际域名
 
-      - name: 部署 Web 到服务器
+      - name: 准备服务器目录
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # 创建目标目录并设置临时写入权限
+            sudo mkdir -p ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
+            sudo mkdir -p ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/admin
+            sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
+
+            # 清理旧文件（保留 admin 目录）
+            cd ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
+            find . -maxdepth 1 ! -name '.' ! -name '..' ! -name 'admin' -exec rm -rf {} +
+            rm -rf admin/*
+
+      - name: 部署 Web 文件到服务器
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -165,22 +182,9 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: 'apps/web/out/*'
           target: '${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/'
-          strip_components: 3 # 去掉 apps/web/out 前缀
-          overwrite: true # 覆盖文件而非先删除
+          strip_components: 3
 
-      - name: 清理 Web 旧文件（保留 admin 目录）
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd ${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}
-            # 保留 admin 目录，删除其他旧文件
-            sudo find . -maxdepth 1 ! -name '.' ! -name '..' ! -name 'admin' -type f -delete
-            sudo find . -maxdepth 1 ! -name '.' ! -name '..' ! -name 'admin' -type d -exec rm -rf {} +
-
-      - name: 部署 Admin 到服务器
+      - name: 部署 Admin 文件到服务器
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -189,7 +193,6 @@ jobs:
           source: 'apps/admin/out/*'
           target: '${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/admin/'
           strip_components: 3
-          overwrite: true
 
       - name: 设置文件权限
         uses: appleboy/ssh-action@v1.0.3

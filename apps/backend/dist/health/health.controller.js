@@ -14,7 +14,11 @@ const common_1 = require("@nestjs/common");
 const public_decorator_1 = require("../auth/decorators/public.decorator");
 let HealthController = class HealthController {
     health() {
-        return { ok: true };
+        return {
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+        };
     }
 };
 exports.HealthController = HealthController;

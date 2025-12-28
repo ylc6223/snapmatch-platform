@@ -63,5 +63,8 @@ async function bootstrap() {
         console.log(`   - Network:       ${networkUrls[0]}`);
     }
 }
-void bootstrap();
+bootstrap().catch((err) => {
+    console.error("Failed to start NestJS application:", err);
+    process.exit(1);
+});
 //# sourceMappingURL=main.js.map
