@@ -14,6 +14,13 @@
   - 1Panel 快速配置
   - 从 IP 切换到域名的步骤
 
+- **[DEPLOYMENT_TROUBLESHOOTING.md](./DEPLOYMENT_TROUBLESHOOTING.md)** - 部署问题排查指南 ⭐
+  - Backend 部署失败排查
+  - 前端文件未部署排查
+  - 网站访问问题排查
+  - 手动部署脚本使用
+  - GitHub Actions workflow 依赖关系说明
+
 ### 架构设计文档
 
 #### Admin 后台

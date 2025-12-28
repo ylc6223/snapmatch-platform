@@ -1,5 +1,43 @@
 # Changelog
 
+## [v1.0.7] - 2025-12-29
+
+### 🚀 重大改进
+
+#### Workflow 架构优化
+
+- **拆分 Backend 和 Frontend 部署为独立 Job**:
+  - Backend 失败不再阻止 Frontend 部署
+  - 前后端可以独立部署和验证
+  - 提高部署成功率和可靠性
+
+#### 新增部署排查文档
+
+- **[DEPLOYMENT_TROUBLESHOOTING.md](./docs/DEPLOYMENT_TROUBLESHOOTING.md)**:
+  - Backend 部署失败完整排查流程
+  - 前端文件未部署问题诊断
+  - 网站访问问题调试技巧
+  - Workflow 依赖关系详细说明
+  - 手动部署脚本使用指南
+  - 紧急恢复方案
+
+### 📝 文档更新
+
+- 更新 docs/README.md 添加排查文档索引
+- 完善部署文档体系
+
+---
+
+## [v1.0.6] - 2025-12-29
+
+### 🧹 维护
+
+- 删除过时的部署文档
+- 添加 @types/bcryptjs 类型定义
+- 创建文档索引
+
+---
+
 ## [v1.0.5] - 2025-12-29
 
 ### 🐛 Bug Fixes

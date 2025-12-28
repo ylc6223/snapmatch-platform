@@ -52,8 +52,8 @@ jobs:
       - name: Backend 单元测试
         run: pnpm -C apps/backend test
 
-  build-and-deploy:
-    name: 构建并部署
+  deploy-backend:
+    name: 部署 Backend
     needs: quality-check
     runs-on: ubuntu-latest
     steps:
@@ -145,6 +145,25 @@ jobs:
             sudo docker logs snapmatch-backend
             exit 1
 
+  deploy-frontend:
+    name: 部署前端
+    needs: quality-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
       # ========== 前端构建与部署 ==========
 
       - name: 构建 Web 前端
@@ -206,13 +225,14 @@ jobs:
 
   notify:
     name: 部署通知
-    needs: build-and-deploy
+    needs: [deploy-backend, deploy-frontend]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: 发送通知
         run: |
-          echo "部署状态: ${{ needs.build-and-deploy.result }}"
+          echo "Backend 部署状态: ${{ needs.deploy-backend.result }}"
+          echo "Frontend 部署状态: ${{ needs.deploy-frontend.result }}"
           echo "Tag: ${{ github.ref_name }}"
           echo "提交: ${{ github.sha }}"
           # TODO: 可以添加 Slack/钉钉通知
