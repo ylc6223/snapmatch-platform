@@ -160,58 +160,55 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # 复制输出结果
 ```
 
-**步骤 2: 创建环境变量文件**
+**步骤 2: 创建并上传环境变量文件**
 
+**⚠️ 安全提示**: 环境变量文件包含敏感信息，**永远不要**提交到 Git 仓库。
+
+**操作流程**:
+
+1. **在本地创建配置文件**（基于模板）:
+   ```bash
+   # 在项目根目录执行
+   cp apps/backend/.env.example apps/backend/.env.production
+   ```
+
+2. **编辑配置文件**（本地）:
+   ```bash
+   # 使用编辑器打开
+   nano apps/backend/.env.production
+   # 或使用 VS Code
+   code apps/backend/.env.production
+   ```
+
+3. **填写关键配置**（其他保持默认）:
+   - **JWT_SECRET**: 填写步骤 1 生成的 64 字符密钥（替换 `change-me`）
+   - **ADMIN_ORIGIN**: `https://www.thepexels.art`（替换为你的实际域名）
+   - **CLOUDBASE_ENV**: CloudBase 环境 ID（从控制台获取）
+   - **CLOUDBASE_SECRET_ID**: 腾讯云 API 密钥 ID
+   - **CLOUDBASE_SECRET_KEY**: 腾讯云 API 密钥 Key
+
+4. **上传到服务器**:
+   ```bash
+   # 方式 1: 使用 scp 上传
+   scp apps/backend/.env.production user@server-ip:/tmp/
+
+   # 然后 SSH 登录服务器
+   ssh user@server-ip
+   sudo mkdir -p /opt/1panel/apps/snapmatch/backend
+   sudo mv /tmp/.env.production /opt/1panel/apps/snapmatch/backend/
+   sudo chmod 600 /opt/1panel/apps/snapmatch/backend/.env.production
+   exit
+   ```
+
+   或使用 1Panel 文件管理功能、SFTP 工具上传到 `/opt/1panel/apps/snapmatch/backend/`
+
+**✅ 验证配置**（在服务器上）:
 ```bash
-# 创建环境变量文件
-nano /opt/1panel/apps/snapmatch/backend/.env.production
-```
+# 检查文件是否存在
+ls -la /opt/1panel/apps/snapmatch/backend/.env.production
 
-**内容**:
-```bash
-# ========================================
-# SnapMatch Backend 生产环境配置
-# ========================================
-
-NODE_ENV=production
-PORT=3002
-
-# ========================================
-# JWT 认证配置
-# ========================================
-# 使用上面生成的密钥替换下面的值
-JWT_SECRET=你的32字节随机密钥
-
-JWT_EXPIRES_IN=12h
-AUTH_REFRESH_TOKEN_TTL_DAYS=30
-
-# ========================================
-# CORS 配置
-# ========================================
-ADMIN_ORIGIN=https://www.thepexels.art  # 替换为你的域名
-
-# ========================================
-# CloudBase 配置
-# ========================================
-CLOUDBASE_ENV=你的环境ID
-CLOUDBASE_REGION=ap-shanghai
-CLOUDBASE_SECRET_ID=你的密钥ID
-CLOUDBASE_SECRET_KEY=你的密钥Key
-
-# ========================================
-# RBAC 数据模型（保持默认）
-# ========================================
-CLOUDBASE_MODEL_USERS=rbac_users
-CLOUDBASE_MODEL_AUTH_SESSIONS=auth_sessions
-CLOUDBASE_MODEL_RBAC_ROLES=rbac_roles
-CLOUDBASE_MODEL_RBAC_PERMISSIONS=rbac_permissions
-CLOUDBASE_MODEL_RBAC_ROLE_PERMISSIONS=rbac_role_permissions
-CLOUDBASE_MODEL_RBAC_USER_ROLES=rbac_user_roles
-```
-
-**设置权限**:
-```bash
-chmod 600 /opt/1panel/apps/snapmatch/backend/.env.production
+# 检查 JWT_SECRET 是否已填写
+sudo cat /opt/1panel/apps/snapmatch/backend/.env.production | grep "JWT_SECRET="
 ```
 
 ---

@@ -199,91 +199,98 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io
 
 ### 2.2 Backend 环境变量配置
 
-**文件路径**（根据部署方式选择）:
-- **1Panel 部署**: `/opt/1panel/apps/snapmatch/backend/.env.production`
-- **标准 Nginx 部署**: `/var/www/snapmatch/backend/.env.production`
+**⚠️ 安全提示**: 环境变量文件包含敏感信息，**永远不要**提交到 Git 仓库。
 
-**创建目录**（如不存在）:
-```bash
-# 1Panel 用户
-sudo mkdir -p /opt/1panel/apps/snapmatch/backend
+**文件位置**: `/opt/1panel/apps/snapmatch/backend/.env.production`
 
-# 标准 Nginx 用户
-sudo mkdir -p /var/www/snapmatch/backend
-```
+**配置步骤**:
 
-- [ ] **NODE_ENV** - 运行环境
-  - 值: `production`
-  - [ ] 已设置
+1. **在本地创建环境变量文件**（基于模板）:
+   ```bash
+   # 在项目根目录执行
+   cp apps/backend/.env.example apps/backend/.env.production
+   ```
 
-- [ ] **PORT** - 端口号
-  - 值: `3002`
-  - [ ] 已设置
+2. **编辑配置文件**（本地）:
+   ```bash
+   # 使用你喜欢的编辑器打开
+   nano apps/backend/.env.production
+   # 或
+   code apps/backend/.env.production
+   ```
 
-- [ ] **JWT_SECRET** - JWT 密钥
-  - [ ] 已生成（选择任一方式）:
-    - **推荐**: `openssl rand -hex 32`（无需 Node.js）
-    - 或: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-  - [ ] 已替换占位符 `TODO_替换为生成的32字节随机密钥`
-  - [ ] 值长度: 64 个字符（32 字节的十六进制）
+3. **填写以下关键配置**:
 
-- [ ] **JWT_EXPIRES_IN** - JWT 过期时间
-  - 值: `12h`（可调整）
-  - [ ] 已设置
+   - [ ] **JWT_SECRET** - JWT 签名密钥
+     ```bash
+     # 生成密钥（本地执行）
+     openssl rand -hex 32
+     ```
+     - [ ] 已生成 64 字符的随机密钥
+     - [ ] 已替换文件中的 `change-me`
 
-- [ ] **AUTH_REFRESH_TOKEN_TTL_DAYS** - 刷新令牌有效期
-  - 值: `30`（可调整）
-  - [ ] 已设置
+   - [ ] **ADMIN_ORIGIN** - 管理后台域名
+     - [ ] 已修改为: `https://www.thepexels.art`（替换为你的实际域名）
 
-- [ ] **ADMIN_ORIGIN** - CORS 配置
-  - [ ] 已替换占位符 `https://TODO_替换为你的域名`
-  - [ ] 值格式: `https://www.example.com`（替换为实际域名）
+   - [ ] **CLOUDBASE_ENV** - CloudBase 环境 ID
+     - [ ] 已从 [CloudBase 控制台](https://console.cloud.tencent.com/tcb) 获取
+     - [ ] 已填写（格式: `env-xxxxxxxx`）
 
-- [ ] **CLOUDBASE_ENV** - CloudBase 环境 ID
-  - [ ] 已从[腾讯云 CloudBase 控制台](https://console.cloud.tencent.com/tcb)获取
-  - [ ] 已替换占位符 `TODO_替换为环境ID`
-  - [ ] 值格式: `env-xxxxxxxx`
+   - [ ] **CLOUDBASE_SECRET_ID** - 腾讯云 API 密钥 ID
+     - [ ] 已从 [腾讯云访问管理](https://console.cloud.tencent.com/cam/capi) 获取
+     - [ ] 已填写（格式: `AKIDxxxxxxxxxxxxxxxx`）
 
-- [ ] **CLOUDBASE_REGION** - CloudBase 区域
-  - 值: `ap-shanghai`（通常不需修改）
-  - [ ] 已设置
+   - [ ] **CLOUDBASE_SECRET_KEY** - 腾讯云 API 密钥 Key
+     - [ ] 已从 [腾讯云访问管理](https://console.cloud.tencent.com/cam/capi) 获取
+     - [ ] 已填写（40 字符）
 
-- [ ] **CLOUDBASE_SECRET_ID** - 腾讯云密钥 ID
-  - [ ] 已从 腾讯云 → 访问管理 → 访问密钥 获取
-  - [ ] 已替换占位符 `TODO_替换为密钥ID`
-  - [ ] 值格式: `AKIDxxxxxxxxxxxxxxxx`
+4. **上传到服务器**:
+   ```bash
+   # SSH 上传方式 1: 使用 scp
+   scp apps/backend/.env.production user@server-ip:/tmp/
 
-- [ ] **CLOUDBASE_SECRET_KEY** - 腾讯云密钥 Key
-  - [ ] 已从 腾讯云 → 访问管理 → 访问密钥 获取
-  - [ ] 已替换占位符 `TODO_替换为密钥Key`
-  - [ ] 值长度: 40 个字符
+   # 然后 SSH 登录服务器移动文件
+   ssh user@server-ip
+   sudo mkdir -p /opt/1panel/apps/snapmatch/backend
+   sudo mv /tmp/.env.production /opt/1panel/apps/snapmatch/backend/
+   sudo chmod 600 /opt/1panel/apps/snapmatch/backend/.env.production
+   ```
 
-- [ ] **RBAC 数据模型配置**（保持默认即可）
-  - [ ] `CLOUDBASE_MODEL_USERS=rbac_users`
-  - [ ] `CLOUDBASE_MODEL_AUTH_SESSIONS=auth_sessions`
-  - [ ] `CLOUDBASE_MODEL_RBAC_ROLES=rbac_roles`
-  - [ ] `CLOUDBASE_MODEL_RBAC_PERMISSIONS=rbac_permissions`
-  - [ ] `CLOUDBASE_MODEL_RBAC_ROLE_PERMISSIONS=rbac_role_permissions`
-  - [ ] `CLOUDBASE_MODEL_RBAC_USER_ROLES=rbac_user_roles`
+   或使用 SFTP/FTP 工具上传到 `/opt/1panel/apps/snapmatch/backend/.env.production`
 
-- [ ] **文件权限已设置**
-  - [ ] 1Panel 用户执行: `chmod 600 /opt/1panel/apps/snapmatch/backend/.env.production`
-  - [ ] 标准 Nginx 用户执行: `chmod 600 /var/www/snapmatch/backend/.env.production`
+5. **验证配置**（在服务器上）:
+   ```bash
+   # 检查文件是否存在
+   ls -la /opt/1panel/apps/snapmatch/backend/.env.production
+
+   # 检查关键配置是否已填写
+   sudo cat /opt/1panel/apps/snapmatch/backend/.env.production | grep "JWT_SECRET="
+   ```
+
+**✅ 配置检查清单**:
+- [ ] 已基于 .env.example 创建 .env.production
+- [ ] JWT_SECRET 已填写（64 字符）
+- [ ] ADMIN_ORIGIN 已填写（https://你的域名）
+- [ ] CLOUDBASE_ENV 已填写（env-xxxxxxxx）
+- [ ] CLOUDBASE_SECRET_ID 已填写（AKID 开头）
+- [ ] CLOUDBASE_SECRET_KEY 已填写（40 字符）
+- [ ] 已上传到服务器指定路径
+- [ ] 文件权限已设置（chmod 600）
+- [ ] ❗ .env.production 未提交到 Git（已在 .gitignore 中）
 
 ---
 
-### 2.3 Nginx 配置
+### 2.3 Nginx / 反向代理配置
 
-**文件**: `/etc/nginx/sites-available/snapmatch`（服务器上）
+**⚠️ 根据部署方式选择**:
 
-- [ ] **server_name** - 域名配置
-  - [ ] 已替换所有 `TODO_替换为你的域名`
-  - [ ] 值格式: `www.example.com`（替换为实际域名）
+- **1Panel 用户**:
+  - ✅ 通过 1Panel Web 界面配置（无需手动编辑文件）
+  - 📖 参考: [deployment-1panel.md](./deployment-1panel.md) - "步骤 3: 配置网站和反向代理"
 
-- [ ] **配置已启用**
-  - [ ] 执行: `sudo ln -s /etc/nginx/sites-available/snapmatch /etc/nginx/sites-enabled/`
-  - [ ] 执行: `sudo nginx -t`（测试配置）
-  - [ ] 执行: `sudo systemctl restart nginx`
+- **标准 Nginx 用户**:
+  - 📝 需要手动编辑 Nginx 配置文件
+  - 📖 参考: [deployment-guide.md](./deployment-guide.md) - 完整 Nginx 配置示例
 
 ---
 
