@@ -32,13 +32,18 @@
 
 **文件**: `.github/workflows/deploy-production.yml`
 
-- [ ] **第 125 行** - Web 前端构建环境变量
-  - 原值: `NEXT_PUBLIC_ADMIN_BASE_URL: https://www.example.com/admin`
+- [ ] **第 12 行** - 站点域名配置
+  - 原值: `SITE_DOMAIN: www.thepexels.art`
+  - 替换为: `SITE_DOMAIN: 你的域名`
+  - [ ] 已替换并保存
+
+- [ ] **第 145 行** - Web 前端构建环境变量
+  - 原值: `NEXT_PUBLIC_ADMIN_BASE_URL: https://www.thepexels.art/admin`
   - 替换为: `NEXT_PUBLIC_ADMIN_BASE_URL: https://你的域名/admin`
   - [ ] 已替换并保存
 
-- [ ] **第 129 行** - Admin 后台构建环境变量
-  - 原值: `NEXT_PUBLIC_API_BASE_URL: https://www.example.com/api`
+- [ ] **第 150 行** - Admin 后台构建环境变量
+  - 原值: `NEXT_PUBLIC_API_BASE_URL: https://www.thepexels.art/api`
   - 替换为: `NEXT_PUBLIC_API_BASE_URL: https://你的域名/api`
   - [ ] 已替换并保存
 
@@ -66,14 +71,20 @@
 - [ ] **选项 B: 1Panel 面板部署**（推荐已有 1Panel 用户）
   - 适用: 服务器已安装 1Panel 面板
   - 优势: 可视化配置，操作简单，一键 SSL
-  - **部署目录**: 仍使用 `/var/www/snapmatch`（无需更改）
+  - **部署目录**: `/opt/1panel/apps/openresty/openresty/www/sites/{域名}/`
+  - **Backend 配置**: `/opt/1panel/apps/snapmatch/backend/.env.production`
   - **Nginx 配置**: 通过 1Panel Web 界面配置（无需手动编辑配置文件）
   - **专属文档**: 📖 [deployment-1panel.md](./deployment-1panel.md) ⭐ **推荐阅读**
 
 **⚠️ 重要说明**:
-- **部署目录不变**: 无论选择哪种方式，部署目录都是 `/var/www/snapmatch`
-- **GitHub Actions 不变**: 自动部署流程完全相同
-- **主要区别**: 仅在 Nginx 配置方式上不同（手动编辑 vs Web 界面）
+- **部署路径不同**:
+  - 标准 Nginx: `/var/www/snapmatch/{web,admin}`
+  - 1Panel: `/opt/1panel/apps/openresty/openresty/www/sites/{域名}/`
+- **Backend 配置路径不同**:
+  - 标准 Nginx: `/var/www/snapmatch/backend/.env.production`
+  - 1Panel: `/opt/1panel/apps/snapmatch/backend/.env.production`
+- **GitHub Actions**: 自动部署流程完全相同，会根据配置自动适配
+- **主要区别**: 部署路径和 Nginx 配置方式不同
 
 **如果您选择了"选项 B: 1Panel 部署"，请跳转到**:
 👉 [deployment-1panel.md](./deployment-1panel.md) - 1Panel 专属部署指南
@@ -201,7 +212,9 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io
 
 **⚠️ 安全提示**: 环境变量文件包含敏感信息，**永远不要**提交到 Git 仓库。
 
-**文件位置**: `/opt/1panel/apps/snapmatch/backend/.env.production`
+**文件位置**（根据部署方式选择）:
+- **标准 Nginx**: `/var/www/snapmatch/backend/.env.production`
+- **1Panel**: `/opt/1panel/apps/snapmatch/backend/.env.production`
 
 **配置步骤**:
 
@@ -246,24 +259,33 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io
 
 4. **上传到服务器**:
    ```bash
-   # SSH 上传方式 1: 使用 scp
+   # SSH 上传方式: 使用 scp
    scp apps/backend/.env.production user@server-ip:/tmp/
 
    # 然后 SSH 登录服务器移动文件
    ssh user@server-ip
+
+   # 标准 Nginx 用户
+   sudo mkdir -p /var/www/snapmatch/backend
+   sudo mv /tmp/.env.production /var/www/snapmatch/backend/
+   sudo chmod 600 /var/www/snapmatch/backend/.env.production
+
+   # 1Panel 用户
    sudo mkdir -p /opt/1panel/apps/snapmatch/backend
    sudo mv /tmp/.env.production /opt/1panel/apps/snapmatch/backend/
    sudo chmod 600 /opt/1panel/apps/snapmatch/backend/.env.production
    ```
 
-   或使用 SFTP/FTP 工具上传到 `/opt/1panel/apps/snapmatch/backend/.env.production`
+   或使用 SFTP/FTP 工具上传到对应路径
 
 5. **验证配置**（在服务器上）:
    ```bash
-   # 检查文件是否存在
-   ls -la /opt/1panel/apps/snapmatch/backend/.env.production
+   # 标准 Nginx 用户 - 检查文件是否存在
+   ls -la /var/www/snapmatch/backend/.env.production
+   sudo cat /var/www/snapmatch/backend/.env.production | grep "JWT_SECRET="
 
-   # 检查关键配置是否已填写
+   # 1Panel 用户 - 检查文件是否存在
+   ls -la /opt/1panel/apps/snapmatch/backend/.env.production
    sudo cat /opt/1panel/apps/snapmatch/backend/.env.production | grep "JWT_SECRET="
    ```
 
