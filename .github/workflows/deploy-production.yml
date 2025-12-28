@@ -41,13 +41,13 @@ jobs:
         run: pnpm -C apps/web lint
 
       - name: TypeScript 类型检查 - Web
-        run: pnpm -C apps/web tsc --noEmit
+        run: pnpm -C apps/web type-check
 
       - name: TypeScript 类型检查 - Admin
-        run: pnpm -C apps/admin tsc --noEmit
+        run: pnpm -C apps/admin type-check
 
       - name: TypeScript 类型检查 - Backend
-        run: pnpm -C apps/backend tsc --noEmit
+        run: pnpm -C apps/backend type-check
 
       - name: Backend 单元测试
         run: pnpm -C apps/backend test

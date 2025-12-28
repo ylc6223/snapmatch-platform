@@ -8,6 +8,7 @@
     "start": "node dist/main.js",
     "lint": "eslint .",
     "test": "jest",
+    "type-check": "tsc --noEmit",
     "hash:password": "ts-node --files ./src/scripts/hash-password.ts",
     "seed:rbac": "ts-node --files ./src/scripts/seed-rbac.ts"
   },
