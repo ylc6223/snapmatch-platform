@@ -245,8 +245,9 @@ jobs:
           # 打包到仓库根目录，供 scp-action 读取
           tar -czf admin-standalone.tar.gz -C apps/admin/.next/standalone .
 
-          # 兜底检查：确保归档非空
+          # 兜底检查：确保归档非空，并输出大小（排查 scp 卡住时很关键）
           ls -lah admin-standalone.tar.gz
+          du -h admin-standalone.tar.gz
 
       - name: 上传 Admin 到服务器
         uses: appleboy/scp-action@v0.1.7
@@ -256,6 +257,9 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: 'admin-standalone.tar.gz'
           target: '/tmp/'
+          timeout: 120s
+          command_timeout: 30m
+          debug: true
 
       - name: 部署 Admin 服务
         uses: appleboy/ssh-action@v1.0.3
