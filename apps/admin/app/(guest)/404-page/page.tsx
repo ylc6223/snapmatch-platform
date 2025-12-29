@@ -32,7 +32,7 @@ export default function Error404() {
 
       <div className="hidden lg:block">
         <img
-          src={`/images/404.svg`}
+          src="/admin/images/404.svg"
           alt="Login visual"
           className="object-contain"
         />

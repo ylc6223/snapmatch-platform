@@ -73,11 +73,11 @@ export default function Header() {
           <Search />
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <figure className="cursor-pointer">
-              <img src={`/images/avatars/1.png`} className="h-10 w-10" alt="..." />
-            </figure>
-          </DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
+              <figure className="cursor-pointer">
+              <img src="/admin/images/avatars/1.png" className="h-10 w-10" alt="..." />
+              </figure>
+            </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />

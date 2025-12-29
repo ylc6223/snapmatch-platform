@@ -56,7 +56,7 @@ export default function SessionExpiredPage({
       </div>
 
       <div className="hidden lg:block">
-        <img src={`/images/404.svg`} alt="Session expired visual" className="object-contain" />
+        <img src="/admin/images/404.svg" alt="Session expired visual" className="object-contain" />
       </div>
 
       {/* A+B1：在 SSR/刷新场景也能出现交互式提示（而不是直接跳登录页） */}
@@ -70,4 +70,3 @@ export default function SessionExpiredPage({
     </div>
   );
 }
-

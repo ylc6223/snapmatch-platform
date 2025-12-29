@@ -24,7 +24,7 @@ export default function Error404() {
 
       <div className="col-span-1 hidden lg:block">
         <img
-          src={`/images/500.svg`}
+          src="/admin/images/500.svg"
           alt="Login visual"
           className="object-contain"
         />

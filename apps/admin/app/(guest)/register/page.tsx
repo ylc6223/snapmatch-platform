@@ -15,9 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function LoginPageV1() {
   return (
-    <div className="flex pb-8 lg:h-screen lg:pb-0">
+      <div className="flex pb-8 lg:h-screen lg:pb-0">
       <div className="hidden w-1/2 bg-gray-100 lg:block">
-        <img src={`/images/cover.png`} alt="Login visual" className="h-full w-full object-cover" />
+        <img src="/admin/images/cover.png" alt="Login visual" className="h-full w-full object-cover" />
       </div>
 
       <div className="flex w-full items-center justify-center lg:w-1/2">
