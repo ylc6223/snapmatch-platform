@@ -4,7 +4,7 @@
 
 > 背景现状（来自仓库已有实现/文档）
 >
-> - 后端已具备：`POST /auth/login`、`GET /auth/me`、全局 JWT Guard + `@Roles/@Permissions` RBAC（见 `docs/backend.md`）。
+> - 后端已具备：`POST /auth/login`、`GET /auth/me`、全局 JWT Guard + `@Roles/@Permissions` RBAC（见 `docs/backend/README.md`）。
 > - Admin 目前登录是前端假逻辑（`apps/admin/app/(guest)/login/login-form.tsx`），尚未定义统一 API 封装与鉴权收口。
 > - 仓库文档建议：写操作/权限校验放服务端（Server Actions 或 Route Handlers）（见 `docs/admin-api-strategy.md`）。
 
@@ -43,15 +43,13 @@
 - 同域请求天然携带 cookie，前端调用简单统一（`fetch("/api/...")`）。
 - 写入类逻辑可以放在服务端（Route Handler/Server Action），更贴合仓库已有“写入放服务端”的建议。
 
-### 2.3 总体架构图（参考 `docs/admin-system-architecture.svg` 风格）
+### 2.3 总体架构图（参考 `docs/admin/assets/system-architecture.svg` 风格）
 
 > 本图基于当前落地方案：`admin_access_token` 与 `admin_refresh_token` 均存在 `HttpOnly Cookie`，
 > 由 Admin BFF 读取并转发到后端。后端已提供 `/auth/refresh`（旋转 refresh token）与 `/auth/logout`（撤销会话），
 > 且 `accessToken` 绑定会话 `sid`，被撤销后会立即失效。
 
-![SnapMatch Admin 登录与 RBAC 总体架构图](./admin-auth-rbac-architecture.svg)
-
-
+![SnapMatch Admin 登录与 RBAC 总体架构图](./assets/auth-rbac-architecture.svg)
 
 ---
 
@@ -59,7 +57,7 @@
 
 ### 3.1 登录流程（推荐实现）
 
-![Admin 登录流程（BFF + HttpOnly Cookie）](./admin-auth-login-flow.svg)
+![Admin 登录流程（BFF + HttpOnly Cookie）](./assets/auth-login-flow.svg)
 
 1. Admin 登录页提交 `{ account, password }`
 2. `POST /api/auth/login`（Admin Route Handler）调用后端 `POST /auth/login`
@@ -88,7 +86,7 @@
 
 ### 4.1 路由级保护：`middleware.ts`
 
-![权限控制流程（路由保护 + 后端 RBAC）](./admin-authz-rbac-flow.svg)
+![权限控制流程（路由保护 + 后端 RBAC）](./assets/authz-rbac-flow.svg)
 
 建议在 `apps/admin/middleware.ts`：
 
@@ -157,8 +155,7 @@
 - `apps/admin/app/api/auth/me/route.ts`
 - `apps/admin/app/api/auth/logout/route.ts`
 - `apps/admin/lib/api/server-request.ts`（仅服务端用）
-- `apps/admin/middleware.ts`
--（可选）`apps/admin/lib/auth/permissions.ts`（前端权限工具与类型）
+- `apps/admin/middleware.ts` -（可选）`apps/admin/lib/auth/permissions.ts`（前端权限工具与类型）
 
 后续每个资源一个 proxy：
 
@@ -182,7 +179,7 @@
 
 ### 6.3 Backend 侧（已有）
 
-见 `docs/backend.md`：
+见 `docs/backend/README.md`：
 
 - `ADMIN_ORIGIN=http://localhost:3001`
 - `JWT_SECRET=...`

@@ -27,15 +27,15 @@
 
 你可以把 `auth_sessions` 理解为“服务端维护的会话白名单（按 sessionId）”：
 
-1) 登录成功后：
+1. 登录成功后：
    - 后端创建一条 `auth_sessions` 记录，并返回 `refreshToken`
    - 同时签发 JWT（`admin_access_token`），并把 `sid`（即 sessionId）写进 JWT
 
-2) 之后每一次请求后端受保护接口（包括 `/auth/me`）：
+2. 之后每一次请求后端受保护接口（包括 `/auth/me`）：
    - JWT 签名/过期校验通过后
    - **还会用 `sid` 回查 `auth_sessions` 是否存在且未过期**
 
-3) 你从表里删除该 `sid` 对应记录后：
+3. 你从表里删除该 `sid` 对应记录后：
    - `isActive(sid)` 查询不到记录 → `validate()` 抛 `401`（`40100 会话已失效`）
    - Admin 下一次请求后端就会收到 401，然后被迫重新登录
 
@@ -45,22 +45,22 @@
 
 这里有两种“删法”，效果不同：
 
-1) **只删某一条 session 记录（按 `_id=sessionId`）**
+1. **只删某一条 session 记录（按 `_id=sessionId`）**
    - 只踢掉该用户的某一次登录（某一设备/浏览器）
 
-2) **删该用户的所有 session（按 `userId` 批量删除）**
+2. **删该用户的所有 session（按 `userId` 批量删除）**
    - 踢掉该用户所有端的登录（全端下线）
    - 后端已有接口层能力：`AuthSessionsService.revokeAllByUserId(userId)`（目前主要是 repository 支持）
 
 ## 4. 架构图（SVG 内嵌）
 
-下面的图按现有代码实现绘制，样式参考 `docs/admin-auth-rbac-architecture.svg`。
+下面的图按现有代码实现绘制，样式参考 `docs/admin/assets/auth-rbac-architecture.svg`。
 
 说明：部分 Markdown 渲染器会出于安全策略**屏蔽内联 `<svg>`**，因此这里采用“SVG 文件嵌入”的方式（仍为 SVG 格式）。
 
-<img src="./admin-auth-session-kickout.svg" alt="Admin：auth_sessions 删除是否等同踢下线（代码实证架构图）" style="max-width: 100%; height: auto;" />
+<img src="./assets/auth-session-kickout.svg" alt="Admin：auth_sessions 删除是否等同踢下线（代码实证架构图）" style="max-width: 100%; height: auto;" />
 
-如果你的渲染器不支持 `<img>` 显示 SVG，可直接打开：`docs/admin-auth-session-kickout.svg`。
+如果你的渲染器不支持 `<img>` 显示 SVG，可直接打开：`docs/admin/assets/auth-session-kickout.svg`。
 
 ## 5. 一个小提醒（不影响结论）
 

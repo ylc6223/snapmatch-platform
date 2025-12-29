@@ -507,6 +507,6 @@ SERVER_HOST=your-server-ip ./scripts/manual-deploy.sh
 
 ## 📚 相关文档
 
-- [部署访问配置](./DEPLOYMENT_ACCESS.md) - 域名访问配置
-- [IP 访问配置](./DEPLOYMENT_IP_ACCESS.md) - IP 访问配置
-- [变更日志](../CHANGELOG.md) - 版本变更历史
+- [域名访问部署](./access.md) - 域名访问配置
+- [IP 访问部署（含 1Panel）](./ip-access.md) - IP 访问配置
+- [变更日志](../../CHANGELOG.md) - 版本变更历史

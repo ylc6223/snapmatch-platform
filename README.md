@@ -9,12 +9,7 @@
 - `apps/backend`：后台 API（NestJS，JWT + 权限控制）
 - `packages/*`：预留给共享组件/工具库
 - `docs/`：项目文档
-  - 📚 **[部署文档导航](docs/README.md)** - 部署相关的所有文档入口
-  - 📖 [部署完整指南](docs/deployment-guide.md) - 详细的部署教程
-  - ✅ [部署检查清单](docs/deployment-checklist.md) - 配置核对清单
-  - 📄 [部署策略](docs/deployment.md) - 原部署方案说明
-  - 🔧 [Admin API 策略](docs/admin-api-strategy.md) - 后台 API/数据流方案
-  - 💻 [Backend 说明](docs/backend.md) - 后端开发文档
+  - 📚 **[文档索引](docs/README.md)** - 全部文档入口（部署 / Admin / Backend / 规范）
 - `scripts/server-setup.sh`：服务器环境一键配置脚本
 
 ## 本地开发
@@ -46,27 +41,31 @@ pnpm dev
 本项目支持两种部署方式，**部署目录保持一致**（`/var/www/snapmatch`），主要区别在于 Nginx 配置方式：
 
 #### 📋 标准 Nginx 部署（推荐新用户）
+
 - **适用**: 全新服务器，未安装任何面板
 - **配置方式**: 手动编辑 Nginx 配置文件
-- **文档**: [deployment-guide.md](docs/deployment-guide.md)
+- **文档**: [docs/deployment/access.md](docs/deployment/access.md)
 
 #### 🎨 1Panel 面板部署（推荐已有 1Panel 用户）
+
 - **适用**: 服务器已安装 [1Panel](https://1panel.cn/) 面板
 - **配置方式**: 通过 Web 界面配置（无需编辑文件）
 - **优势**: 一键 SSL、可视化管理、自动续期
-- **文档**: [deployment-1panel.md](docs/deployment-1panel.md) 🆕
+- **文档**: [docs/deployment/ip-access.md](docs/deployment/ip-access.md)（包含 1Panel 快速配置）
 
 ### 快速开始
 
 **选择标准 Nginx 部署**:
-1. **阅读部署文档** → [docs/deployment-guide.md](docs/deployment-guide.md)
-2. **核对配置清单** → [docs/deployment-checklist.md](docs/deployment-checklist.md)
+
+1. **阅读部署文档** → [docs/deployment/access.md](docs/deployment/access.md)
+2. **问题排查** → [docs/deployment/troubleshooting.md](docs/deployment/troubleshooting.md)
 3. **配置服务器环境** → 使用 [scripts/server-setup.sh](scripts/server-setup.sh)
 4. **触发自动部署** → 推送版本标签
 
 **选择 1Panel 部署**:
-1. **阅读 1Panel 指南** → [docs/deployment-1panel.md](docs/deployment-1panel.md) ⭐
-2. **核对配置清单** → [docs/deployment-checklist.md](docs/deployment-checklist.md)（选择 1Panel 选项）
+
+1. **阅读 1Panel 指南** → [docs/deployment/ip-access.md](docs/deployment/ip-access.md) ⭐
+2. **问题排查** → [docs/deployment/troubleshooting.md](docs/deployment/troubleshooting.md)
 3. **配置服务器环境** → 创建部署目录和环境变量
 4. **通过 1Panel 配置** → Web 界面配置网站、反向代理、SSL
 5. **触发自动部署** → 推送版本标签

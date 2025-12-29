@@ -37,7 +37,6 @@ cp apps/backend/.env.example apps/backend/.env.local
 pnpm -C apps/backend hash:password "your-password"
 ```
 
-
 `JWT_SECRET` 建议用强随机值（长度 ≥ 32），可用下面命令生成：
 
 ```bash
@@ -135,8 +134,8 @@ Authorization: Bearer <accessToken>
 
 当前实现提供两层能力：
 
-1) **角色（Roles）**：`admin` / `photographer` / `customer`
-2) **权限（Permissions）**：字符串数组（例如 `packages:write`）
+1. **角色（Roles）**：`admin` / `photographer` / `customer`
+2. **权限（Permissions）**：字符串数组（例如 `packages:write`）
 
 ### 5.1 给接口加角色限制
 
@@ -165,10 +164,10 @@ createPackage() {}
 
 建议流程：
 
-1) 新建 `module/controller/service`
-2) DTO 使用 `class-validator`（后端已开启全局 `ValidationPipe`）
-3) 用 `@Roles(...)` 或 `@Permissions(...)` 标记接口权限
-4) 在 `apps/admin` 使用 `fetch/axios` 携带 Bearer Token 调用
+1. 新建 `module/controller/service`
+2. DTO 使用 `class-validator`（后端已开启全局 `ValidationPipe`）
+3. 用 `@Roles(...)` 或 `@Permissions(...)` 标记接口权限
+4. 在 `apps/admin` 使用 `fetch/axios` 携带 Bearer Token 调用
 
 如果你希望后续“权限点”统一管理（枚举/常量/文档化），我们可以在 `apps/backend/src/auth/permissions.ts` 增加权限字典并在 Admin 侧复用。
 

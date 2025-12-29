@@ -39,9 +39,9 @@
 
 ## 2. 系统架构图（SVG）
 
-图文件：`docs/admin-system-architecture.svg`
+图文件：`docs/admin/assets/system-architecture.svg`
 
-![SnapMatch 管理后台系统架构图](./admin-system-architecture.svg)
+![SnapMatch 管理后台系统架构图](./assets/system-architecture.svg)
 
 ---
 
@@ -51,8 +51,8 @@
 - `apps/backend`：NestJS（JWT + RBAC 权限控制）
 - `cloudbaserc.json`：预留 CloudBase Functions 入口（当前 `functions` 为空）
 - 现有文档：
-  - `docs/deployment.md`：Web/Admin 部署形态概述
-  - `docs/backend.md`：后端开发说明（当前为 accessToken 登录）
+  - `docs/deployment/overview.md`：Web/Admin 部署形态概述
+  - `docs/backend/README.md`：后端开发说明（当前为 accessToken 登录）
 
 本方案在现状基础上，补齐“**refresh + 401/403 统一策略**”与“**单域名上线形态**”。
 
@@ -334,7 +334,7 @@ sudo docker exec 1panel-openresty openresty -s reload
 
 ## 9. 本地开发与线上一致性建议
 
-- 本地端口（参考 `docs/deployment.md`）：
+- 本地端口（参考 `docs/deployment/overview.md`）：
   - Admin：`http://localhost:3001`
   - Backend：`http://localhost:3002`
 - 推荐在本地也模拟同源：

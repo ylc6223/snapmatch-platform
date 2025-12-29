@@ -17,10 +17,10 @@
 
 `GET /api/auth/me`（BFF）已经实现：
 
-1) 后端 `/auth/me` 返回 401 → 读取 `admin_refresh_token`  
-2) 调用后端 `/auth/refresh` → 写回新 cookie  
-3) 重试 `/auth/me`  
-4) 仍失败才清 cookie 并返回 401
+1. 后端 `/auth/me` 返回 401 → 读取 `admin_refresh_token`
+2. 调用后端 `/auth/refresh` → 写回新 cookie
+3. 重试 `/auth/me`
+4. 仍失败才清 cookie 并返回 401
 
 这意味着：多数“access token 过期”不会打断用户。
 
@@ -72,28 +72,28 @@ TanStack Query 没有“拦截器”这个概念，但可以在 `QueryCache` / `
 
 客户端请求业务数据 `/api/*`：
 
-1) BFF 收到请求 → 尝试带上 `admin_access_token` 转发后端  
-2) 后端 401（token 过期 or 会话失效）  
-3) BFF（未来可扩展到 `backendFetch`）尝试 refresh → 重放请求  
-4) 若仍 401 → 返回 401 给客户端  
-5) TanStack Query 全局 onError 捕获 401 → 弹出“会话失效”对话框
+1. BFF 收到请求 → 尝试带上 `admin_access_token` 转发后端
+2. 后端 401（token 过期 or 会话失效）
+3. BFF（未来可扩展到 `backendFetch`）尝试 refresh → 重放请求
+4. 若仍 401 → 返回 401 给客户端
+5. TanStack Query 全局 onError 捕获 401 → 弹出“会话失效”对话框
 
 ---
 
 ## 3. 推荐的落地步骤（以后你要做时照着走）
 
-1) 安装依赖：
+1. 安装依赖：
    - `@tanstack/react-query`
    - （可选）`@tanstack/react-query-devtools`
 
-2) 增加 QueryClientProvider（挂在全局 Providers）
+2. 增加 QueryClientProvider（挂在全局 Providers）
 
-3) 统一“API 客户端”：
+3. 统一“API 客户端”：
    - 只允许访问 `/api/*`
    - 统一错误类型（例如 `ApiError`）
    - 401 时只做一件事：`emitSessionExpired(...)`
 
-4) 逐步把页面的客户端数据请求迁移到 `useQuery/useMutation`
+4. 逐步把页面的客户端数据请求迁移到 `useQuery/useMutation`
    - 登录/登出这种建议仍走现有 BFF route（因为要写 cookie）
    - 业务 CRUD/列表/详情等完全适合 Query
 
@@ -109,4 +109,3 @@ TanStack Query 没有“拦截器”这个概念，但可以在 `QueryCache` / `
 否则无法像 Axios 的 `interceptors` 那样无侵入拦截所有请求。
 
 因此 TanStack Query 的正确姿势是：**把数据请求入口收敛到 Query**，从而自然拥有“全局处理”能力。
-

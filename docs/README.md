@@ -1,45 +1,27 @@
 # SnapMatch Platform 文档
 
-## 📚 文档索引
+本目录仅放“可长期维护/可复用”的正式文档；讨论稿与评审材料请放到 `discuss/`。
 
-### 部署文档
+## 📚 文档索引（按主题）
 
-- **[DEPLOYMENT_ACCESS.md](./DEPLOYMENT_ACCESS.md)** - 线上部署和访问配置指南（域名访问）
-  - OpenResty/Nginx 反向代理配置
-  - 健康检查和验证步骤
-  - 常见问题排查
+### 部署（deployment）
 
-- **[DEPLOYMENT_IP_ACCESS.md](./DEPLOYMENT_IP_ACCESS.md)** - 使用 IP 地址访问配置指南（无需域名备案）
-  - IP 访问配置方案
-  - 1Panel 快速配置
-  - 从 IP 切换到域名的步骤
+- **[部署总览](./deployment/overview.md)**：部署形态与阅读顺序
+- **[域名访问部署](./deployment/access.md)**：Nginx/OpenResty 反向代理（推荐）
+- **[IP 访问部署（含 1Panel）](./deployment/ip-access.md)**：无需域名备案的方案与迁移路径
+- **[部署排查指南](./deployment/troubleshooting.md)**：常见问题定位与修复 ⭐
 
-- **[DEPLOYMENT_TROUBLESHOOTING.md](./DEPLOYMENT_TROUBLESHOOTING.md)** - 部署问题排查指南 ⭐
-  - Backend 部署失败排查
-  - 前端文件未部署排查
-  - 网站访问问题排查
-  - 手动部署脚本使用
-  - GitHub Actions workflow 依赖关系说明
+### Admin（admin）
 
-### 架构设计文档
+- **[Admin 文档索引](./admin/README.md)**：Admin 架构 / 鉴权 / 交互规范入口
 
-#### Admin 后台
+### Backend（backend）
 
-- **[admin-architecture-and-deployment.md](./admin-architecture-and-deployment.md)** - Admin 系统架构和部署方案
-- **[admin-auth-rbac-design.md](./admin-auth-rbac-design.md)** - Admin RBAC 权限设计
-- **[admin-auth-session-kickout.md](./admin-auth-session-kickout.md)** - 会话踢出机制设计
-- **[admin-session-expired-ui-spec.md](./admin-session-expired-ui-spec.md)** - 会话过期 UI 规范
-- **[admin-tanstack-query-global-error-handling.md](./admin-tanstack-query-global-error-handling.md)** - TanStack Query 全局错误处理
-- **[admin-api-strategy.md](./admin-api-strategy.md)** - API 调用策略
+- **[Backend 开发说明](./backend/README.md)**：NestJS、JWT + RBAC、数据模型与本地运行
 
-#### Backend 后端
+### 规范（conventions）
 
-- **[backend.md](./backend.md)** - Backend 服务架构说明
-
-### 其他文档
-
-- **[deployment.md](./deployment.md)** - 通用部署说明
-- **[name.md](./name.md)** - 项目命名规范
+- **[命名规范](./conventions/naming.md)**：项目命名与约定
 
 ---
 
@@ -47,17 +29,9 @@
 
 ### 本地开发
 
-参考项目根目录的 [README.md](../README.md)
+参考项目根目录的 [README.md](../README.md)。
 
 ### 部署到生产环境
 
-1. **域名已备案**: 参考 [DEPLOYMENT_ACCESS.md](./DEPLOYMENT_ACCESS.md)
-2. **域名未备案（使用 IP）**: 参考 [DEPLOYMENT_IP_ACCESS.md](./DEPLOYMENT_IP_ACCESS.md)
-
----
-
-## 📝 文档维护
-
-- 文档应保持简洁、准确、最新
-- 过时的文档应及时删除或标记为已废弃
-- 新增文档时应更新此索引
+1. **域名已备案**：从 [域名访问部署](./deployment/access.md) 开始
+2. **域名未备案（使用 IP）**：从 [IP 访问部署](./deployment/ip-access.md) 开始
