@@ -174,8 +174,7 @@ jobs:
 
       - name: 构建 Web 前端
         run: pnpm -C apps/web build
-        env:
-          NEXT_PUBLIC_ADMIN_BASE_URL: https://www.thepexels.art/admin
+        # 不在构建时写死域名，默认使用相对路径 /admin（本地开发会自动指向 localhost:3001/admin）
 
       - name: 准备服务器目录
         uses: appleboy/ssh-action@v1.0.3

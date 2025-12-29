@@ -27,6 +27,12 @@ export default function LoginPage() {
     setErrorMessage(null)
 
     if (formData.account === "admin" && formData.password === "admin") {
+      // ADMIN_DASHBOARD_URL 在本地开发可能是跨域地址（localhost:3001），用 window 跳转更稳妥
+      if (ADMIN_DASHBOARD_URL.startsWith("http")) {
+        window.location.href = ADMIN_DASHBOARD_URL
+        return
+      }
+
       router.push(ADMIN_DASHBOARD_URL)
       return
     }
