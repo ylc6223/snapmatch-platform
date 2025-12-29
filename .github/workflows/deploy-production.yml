@@ -83,14 +83,37 @@ jobs:
         run: |
           docker save snapmatch-backend:latest | gzip > backend-image.tar.gz
 
-      - name: 部署 Backend Docker 镜像到服务器
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: 'backend-image.tar.gz'
-          target: '/tmp/'
+      - name: 准备 SSH（rsync）
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! command -v rsync >/dev/null 2>&1; then
+            echo "❌ 未检测到 rsync（runner 环境异常），无法继续部署。"
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          (umask 077 && printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519)
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keygen -F "${{ secrets.SERVER_HOST }}" >/dev/null 2>&1 || {
+            echo "❌ 未能写入 known_hosts，终止部署。"
+            exit 1
+          }
+
+      - name: 上传 Backend Docker 镜像到服务器（rsync）
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rsync -az --info=progress2 --partial \
+            -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
+            backend-image.tar.gz \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/backend-image.tar.gz"
 
       - name: 在服务器上启动 Backend 容器
         uses: appleboy/ssh-action@v1.0.3
@@ -191,19 +214,38 @@ jobs:
             sudo mkdir -p "$WEB_ROOT_DIR"
             sudo chown -R ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} "$WEB_ROOT_DIR"
 
-            # 仅清理 Web 根目录内容（不动站点其他目录：admin/log/rewrite/proxy 等）
-            cd "$WEB_ROOT_DIR"
-            find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+      - name: 准备 SSH（rsync）
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      - name: 部署 Web 文件到服务器
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: 'apps/web/out/*'
-          target: '${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/index/'
-          strip_components: 3
+          if ! command -v rsync >/dev/null 2>&1; then
+            echo "❌ 未检测到 rsync（runner 环境异常），无法继续部署。"
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          (umask 077 && printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519)
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keygen -F "${{ secrets.SERVER_HOST }}" >/dev/null 2>&1 || {
+            echo "❌ 未能写入 known_hosts，终止部署。"
+            exit 1
+          }
+
+      - name: 部署 Web 文件到服务器（rsync）
+        shell: bash
+        run: |
+          set -euo pipefail
+          WEB_ROOT_DIR="${{ env.PANEL_BASE_PATH }}/${{ env.SITE_DOMAIN }}/index"
+
+          rsync -az --delete --info=progress2 --partial \
+            -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
+            apps/web/out/ \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${WEB_ROOT_DIR}/"
 
       - name: 设置 Web 文件权限
         uses: appleboy/ssh-action@v1.0.3
@@ -250,64 +292,47 @@ jobs:
 
       - name: 打包 Standalone 文件
         run: |
-          # 说明：scp-action 运行在独立容器中，只会挂载 /github/workspace，
-          # 因此不能把要上传的文件打到 runner 的 /tmp 下，否则 scp-action 会找不到源文件并报 tar: empty archive。
-          #
           # 复制必要的文件到 standalone 目录（Next Standalone 默认不包含 static 与 public）
           cp -r apps/admin/.next/static apps/admin/.next/standalone/apps/admin/.next/
           cp -r apps/admin/public apps/admin/.next/standalone/apps/admin/
 
-          # 打包到仓库根目录，供 scp-action 读取
+          # 打包到仓库根目录，供 rsync 上传
           tar -czf admin-standalone.tar.gz -C apps/admin/.next/standalone .
 
-          # 兜底检查：确保归档非空，并输出大小（排查 scp 卡住时很关键）
+          # 兜底检查：确保归档非空，并输出大小（排查上传卡住时很关键）
           ls -lah admin-standalone.tar.gz
           du -h admin-standalone.tar.gz
 
-      - name: 上传 Admin 到服务器
-        id: upload_admin_scp_action
-        uses: appleboy/scp-action@v0.1.7
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: 'admin-standalone.tar.gz'
-          target: '/tmp/'
-          timeout: 120s
-          # scp-action 在部分网络/服务器配置下可能长时间无输出；卡住时快速失败，走备用上传方案
-          command_timeout: 90s
-          debug: true
-
-      - name: 上传 Admin 到服务器（备用：OpenSSH scp）
-        if: ${{ always() && steps.upload_admin_scp_action.outcome != 'success' }}
-        timeout-minutes: 10
+      - name: 准备 SSH（rsync）
         shell: bash
         run: |
           set -euo pipefail
 
+          if ! command -v rsync >/dev/null 2>&1; then
+            echo "❌ 未检测到 rsync（runner 环境异常），无法继续部署。"
+            exit 1
+          fi
+
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          # 写入私钥（避免回显）
           (umask 077 && printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519)
           chmod 600 ~/.ssh/id_ed25519
 
-          # 预写 known_hosts，避免 StrictHostKeyChecking 交互阻塞
-          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keygen -F "${{ secrets.SERVER_HOST }}" >/dev/null 2>&1 || {
+            echo "❌ 未能写入 known_hosts，终止部署。"
+            exit 1
+          }
 
+      - name: 上传 Admin 到服务器（rsync）
+        shell: bash
+        run: |
+          set -euo pipefail
           ls -lah admin-standalone.tar.gz
 
-          # 通过 ServerAlive 防止“连接已死但不报错”的长时间挂起
-          # OpenSSH 新版 scp 默认走 SFTP；某些服务器 SFTP 子系统配置异常会导致卡住
-          # 这里强制使用 legacy scp 协议（不引入新依赖）
-          scp -v -O -C \
-            -o BatchMode=yes \
-            -o ConnectTimeout=120 \
-            -o ServerAliveInterval=15 \
-            -o ServerAliveCountMax=8 \
-            -i ~/.ssh/id_ed25519 \
+          rsync -az --info=progress2 --partial \
+            -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
             admin-standalone.tar.gz \
             "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/admin-standalone.tar.gz"
 
