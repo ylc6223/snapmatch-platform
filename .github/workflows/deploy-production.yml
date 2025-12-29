@@ -251,6 +251,7 @@ jobs:
 
       - name: 上传 Admin 到服务器
         uses: appleboy/scp-action@v0.1.7
+        continue-on-error: true
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -258,8 +259,36 @@ jobs:
           source: 'admin-standalone.tar.gz'
           target: '/tmp/'
           timeout: 120s
-          command_timeout: 30m
+          # scp-action 在部分网络/服务器配置下可能长时间无输出；先缩短超时，失败后走备用上传方案
+          command_timeout: 5m
           debug: true
+
+      - name: 上传 Admin 到服务器（备用：OpenSSH scp）
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # 写入私钥（避免回显）
+          (umask 077 && printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519)
+          chmod 600 ~/.ssh/id_ed25519
+
+          # 预写 known_hosts，避免 StrictHostKeyChecking 交互阻塞
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # 通过 ServerAlive 防止“连接已死但不报错”的长时间挂起
+          scp \
+            -o BatchMode=yes \
+            -o ConnectTimeout=120 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=8 \
+            -i ~/.ssh/id_ed25519 \
+            -C \
+            admin-standalone.tar.gz \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/admin-standalone.tar.gz"
 
       - name: 部署 Admin 服务
         uses: appleboy/ssh-action@v1.0.3
