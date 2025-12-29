@@ -235,13 +235,18 @@ jobs:
 
       - name: 打包 Standalone 文件
         run: |
-          cd apps/admin
-          # 复制必要的文件到 standalone 目录
-          cp -r .next/static .next/standalone/apps/admin/.next/
-          cp -r public .next/standalone/apps/admin/
-          # 打包整个 standalone 目录
-          cd .next/standalone
-          tar -czf /tmp/admin-standalone.tar.gz .
+          # 说明：scp-action 运行在独立容器中，只会挂载 /github/workspace，
+          # 因此不能把要上传的文件打到 runner 的 /tmp 下，否则 scp-action 会找不到源文件并报 tar: empty archive。
+          #
+          # 复制必要的文件到 standalone 目录（Next Standalone 默认不包含 static 与 public）
+          cp -r apps/admin/.next/static apps/admin/.next/standalone/apps/admin/.next/
+          cp -r apps/admin/public apps/admin/.next/standalone/apps/admin/
+
+          # 打包到仓库根目录，供 scp-action 读取
+          tar -czf admin-standalone.tar.gz -C apps/admin/.next/standalone .
+
+          # 兜底检查：确保归档非空
+          ls -lah admin-standalone.tar.gz
 
       - name: 上传 Admin 到服务器
         uses: appleboy/scp-action@v0.1.7
@@ -249,7 +254,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: '/tmp/admin-standalone.tar.gz'
+          source: 'admin-standalone.tar.gz'
           target: '/tmp/'
 
       - name: 部署 Admin 服务
