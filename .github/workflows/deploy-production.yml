@@ -305,30 +305,23 @@ jobs:
           script: |
             set -euo pipefail
 
-            # Admin Standalone 需要 Node.js 运行时；进程托管使用 PM2
-            if ! command -v node >/dev/null 2>&1; then
-              echo "❌ 未检测到 Node.js，请先在服务器安装 Node.js (建议 20+)，再重新部署。"
+            # 重要：当前服务器的 Node/PM2 安装在 root 的 nvm 目录（/root/.nvm），
+            # GitHub Actions 通过 ${{ secrets.SERVER_USER }}（通常是 ubuntu）登录时默认找不到 node/pm2。
+            # 因此所有 PM2 操作统一用 sudo + login shell 执行，并显式加载 root 的 nvm 环境。
+            run_as_root() {
+              sudo bash -lc "export NVM_DIR=/root/.nvm; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; $*"
+            }
+
+            if ! run_as_root "command -v node >/dev/null 2>&1"; then
+              echo "❌ root 环境未检测到 Node.js（nvm），请先为 root 安装 Node.js 20+ 或修复 /root/.nvm。"
               exit 1
             fi
 
-            # 兼容：若 Node 通过 nvm 安装，非交互 shell 可能缺少全局 bin PATH
-            if command -v npm >/dev/null 2>&1; then
-              export PATH="$(npm bin -g 2>/dev/null || true):$PATH"
-            fi
-
-            if ! command -v pm2 >/dev/null 2>&1; then
-              echo "⚠️ pm2 未安装，尝试安装..."
-              if ! command -v npm >/dev/null 2>&1; then
-                echo "❌ 未检测到 npm，无法自动安装 pm2。"
-                exit 1
-              fi
-
-              npm i -g pm2 >/dev/null 2>&1 || sudo npm i -g pm2
-              export PATH="$(npm bin -g 2>/dev/null || true):$PATH"
-
-              if ! command -v pm2 >/dev/null 2>&1; then
-                echo "❌ pm2 安装后仍不可用，请检查服务器 PATH 或改为系统级安装。"
-                echo "npm bin -g: $(npm bin -g 2>/dev/null || echo '<unknown>')"
+            if ! run_as_root "command -v pm2 >/dev/null 2>&1"; then
+              echo "⚠️ root 环境未检测到 pm2，尝试安装..."
+              run_as_root "npm i -g pm2"
+              if ! run_as_root "command -v pm2 >/dev/null 2>&1"; then
+                echo "❌ pm2 安装后仍不可用，请检查 root 的 nvm/npm 全局 bin。"
                 exit 1
               fi
             fi
@@ -368,27 +361,27 @@ jobs:
             mkdir -p logs
 
             # 使用 PM2 启动或重启服务
-            if pm2 describe snapmatch-admin > /dev/null 2>&1; then
+            if run_as_root "pm2 describe snapmatch-admin >/dev/null 2>&1"; then
               echo "重启 Admin 服务..."
-              pm2 restart snapmatch-admin
+              run_as_root "pm2 restart snapmatch-admin"
             else
               echo "首次启动 Admin 服务..."
-              pm2 start ecosystem.config.js
-              pm2 save
+              run_as_root "pm2 start ecosystem.config.js"
+              run_as_root "pm2 save"
             fi
 
             # 等待服务启动
             sleep 3
 
             # 检查服务状态
-            pm2 status snapmatch-admin
+            run_as_root "pm2 status snapmatch-admin"
 
             # 验证服务是否可访问
             if curl -f http://localhost:3001/admin/ > /dev/null 2>&1; then
               echo "✅ Admin 服务启动成功"
             else
               echo "❌ Admin 服务启动失败，查看日志:"
-              pm2 logs snapmatch-admin --lines 50 --nostream
+              run_as_root "pm2 logs snapmatch-admin --lines 50 --nostream"
               exit 1
             fi
 
