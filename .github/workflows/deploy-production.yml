@@ -298,18 +298,17 @@ jobs:
           # 预写 known_hosts，避免 StrictHostKeyChecking 交互阻塞
           ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
+          ls -lah admin-standalone.tar.gz
+
           # 通过 ServerAlive 防止“连接已死但不报错”的长时间挂起
-          scp \
-            -v \
-            # OpenSSH 新版 scp 默认走 SFTP；某些服务器 SFTP 子系统配置异常会导致卡住
-            # 这里强制使用 legacy scp 协议（不引入新依赖）
-            -O \
+          # OpenSSH 新版 scp 默认走 SFTP；某些服务器 SFTP 子系统配置异常会导致卡住
+          # 这里强制使用 legacy scp 协议（不引入新依赖）
+          scp -v -O -C \
             -o BatchMode=yes \
             -o ConnectTimeout=120 \
             -o ServerAliveInterval=15 \
             -o ServerAliveCountMax=8 \
             -i ~/.ssh/id_ed25519 \
-            -C \
             admin-standalone.tar.gz \
             "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/admin-standalone.tar.gz"
 
