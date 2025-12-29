@@ -1,5 +1,6 @@
 import { generateMeta } from "@/lib/utils";
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { LoginForm } from "./login-form";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,7 +25,9 @@ export default function LoginPageV1() {
             <p className="mt-2 text-sm text-gray-600">Please sign in to your account</p>
           </div>
 
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
 
           {/* Third-party login & registration (temporarily disabled) */}
           {/*
