@@ -164,6 +164,14 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
+      - name: 缓存 Web 构建缓存（Next.js）
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: ${{ runner.os }}-next-web-${{ hashFiles('pnpm-lock.yaml', 'apps/web/pnpm-lock.yaml', 'apps/web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-next-web-
+
       - name: 构建 Web 前端
         run: pnpm -C apps/web build
         env:
@@ -228,6 +236,14 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
+      - name: 缓存 Admin 构建缓存（Next.js）
+        uses: actions/cache@v4
+        with:
+          path: apps/admin/.next/cache
+          key: ${{ runner.os }}-next-admin-${{ hashFiles('pnpm-lock.yaml', 'apps/admin/pnpm-lock.yaml', 'apps/admin/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-next-admin-
+
       - name: 构建 Admin (Standalone 模式)
         run: pnpm -C apps/admin build
         env:
@@ -250,9 +266,10 @@ jobs:
           du -h admin-standalone.tar.gz
 
       - name: 上传 Admin 到服务器
+        id: upload_admin_scp_action
         uses: appleboy/scp-action@v0.1.7
         continue-on-error: true
-        timeout-minutes: 6
+        timeout-minutes: 2
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -260,12 +277,12 @@ jobs:
           source: 'admin-standalone.tar.gz'
           target: '/tmp/'
           timeout: 120s
-          # scp-action 在部分网络/服务器配置下可能长时间无输出；先缩短超时，失败后走备用上传方案
-          command_timeout: 5m
+          # scp-action 在部分网络/服务器配置下可能长时间无输出；卡住时快速失败，走备用上传方案
+          command_timeout: 90s
           debug: true
 
       - name: 上传 Admin 到服务器（备用：OpenSSH scp）
-        if: ${{ failure() }}
+        if: ${{ always() && steps.upload_admin_scp_action.outcome != 'success' }}
         timeout-minutes: 10
         shell: bash
         run: |
@@ -295,6 +312,20 @@ jobs:
             -C \
             admin-standalone.tar.gz \
             "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/admin-standalone.tar.gz"
+
+      - name: 校验 Admin 包已上传到服务器
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            if [ ! -f /tmp/admin-standalone.tar.gz ]; then
+              echo "❌ /tmp/admin-standalone.tar.gz 不存在（上传失败），终止部署。"
+              exit 1
+            fi
+            ls -lah /tmp/admin-standalone.tar.gz
 
       - name: 部署 Admin 服务
         uses: appleboy/ssh-action@v1.0.3
