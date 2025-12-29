@@ -85,6 +85,7 @@ curl: (7) Failed to connect to localhost port 3002
 
 - 检查容器是否在运行：`sudo docker ps`
 - 检查端口映射：`netstat -tlnp | grep 3002`
+- 若部署脚本使用 `-p 3002:3000`，确保 `.env.production` 不要把 `PORT` 配成 `3002`（否则容器会监听 3002，导致探活一直失败）
 - 查看容器日志：`sudo docker logs snapmatch-backend`
 
 ---

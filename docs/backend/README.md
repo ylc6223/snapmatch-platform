@@ -31,6 +31,12 @@ pnpm -C apps/backend install
 cp apps/backend/.env.example apps/backend/.env.local
 ```
 
+生产部署（Docker）环境变量示例：
+
+```bash
+cp apps/backend/.env.production.example /opt/1panel/apps/snapmatch/backend/.env.production
+```
+
 生成密码 Hash（bcrypt，用于写入 `admin_users.password_hash`）：
 
 ```bash
@@ -50,6 +56,12 @@ pnpm -C apps/backend dev
 ```
 
 默认监听 `http://localhost:3002`（可用 `PORT` 覆盖）。
+
+端口约定（避免部署踩坑）：
+
+- 本地开发默认 `3002`
+- Docker 容器内建议固定 `3000`（与 `apps/backend/Dockerfile`/健康检查一致）
+- 宿主机对外端口建议用映射（例如 `-p 3002:3000`），再由 Nginx 反代 `/api`、`/health`
 
 ---
 

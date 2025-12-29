@@ -27,6 +27,13 @@ cp apps/backend/.env.example apps/backend/.env.local
 - `CLOUDBASE_MODEL_USERS`：用户数据模型名（默认 `rbac_users`）
 - `CLOUDBASE_MODEL_AUTH_SESSIONS`：会话数据模型名（默认 `auth_sessions`）
 
+## Docker/生产部署端口约定
+
+- 本地开发默认监听 `3002`。
+- Docker 镜像内默认监听 `3000`（`apps/backend/Dockerfile` 里设置 `PORT=3000`）。
+- 生产服务器通常做端口映射：宿主机 `3002` → 容器 `3000`（例如 `-p 3002:3000`）。
+- 若你的 `/opt/.../.env.production` 里包含 `PORT=3002`，会导致容器实际监听 `3002`，与 `-p 3002:3000` 冲突，从而出现健康检查一直失败（`Empty reply`/`Connection reset`）。
+
 生成密码 hash：
 
 ```bash

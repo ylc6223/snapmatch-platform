@@ -129,7 +129,7 @@ jobs:
             if [ ! -f /opt/1panel/apps/snapmatch/backend/.env.production ]; then
               echo "⚠️ 警告: .env.production 文件不存在"
               echo "请参考文档创建环境变量文件:"
-              echo "  1. 基于 apps/backend/.env.example 创建 .env.production"
+              echo "  1. 基于 apps/backend/.env.production.example 创建 .env.production"
               echo "  2. 填写必要的配置项 (JWT_SECRET, CLOUDBASE_ENV, CLOUDBASE_SECRET_ID, CLOUDBASE_SECRET_KEY)"
               echo "  3. 上传到服务器路径: /opt/1panel/apps/snapmatch/backend/.env.production"
               echo ""
@@ -151,6 +151,8 @@ jobs:
               --restart unless-stopped \
               -p 3002:3000 \
               --env-file /opt/1panel/apps/snapmatch/backend/.env.production \
+              -e PORT=3000 \
+              -e NODE_ENV=production \
               snapmatch-backend:latest
 
             # 等待健康检查
