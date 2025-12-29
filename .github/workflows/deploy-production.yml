@@ -303,6 +303,36 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -euo pipefail
+
+            # Admin Standalone 需要 Node.js 运行时；进程托管使用 PM2
+            if ! command -v node >/dev/null 2>&1; then
+              echo "❌ 未检测到 Node.js，请先在服务器安装 Node.js (建议 20+)，再重新部署。"
+              exit 1
+            fi
+
+            # 兼容：若 Node 通过 nvm 安装，非交互 shell 可能缺少全局 bin PATH
+            if command -v npm >/dev/null 2>&1; then
+              export PATH="$(npm bin -g 2>/dev/null || true):$PATH"
+            fi
+
+            if ! command -v pm2 >/dev/null 2>&1; then
+              echo "⚠️ pm2 未安装，尝试安装..."
+              if ! command -v npm >/dev/null 2>&1; then
+                echo "❌ 未检测到 npm，无法自动安装 pm2。"
+                exit 1
+              fi
+
+              npm i -g pm2 >/dev/null 2>&1 || sudo npm i -g pm2
+              export PATH="$(npm bin -g 2>/dev/null || true):$PATH"
+
+              if ! command -v pm2 >/dev/null 2>&1; then
+                echo "❌ pm2 安装后仍不可用，请检查服务器 PATH 或改为系统级安装。"
+                echo "npm bin -g: $(npm bin -g 2>/dev/null || echo '<unknown>')"
+                exit 1
+              fi
+            fi
+
             # 创建 Admin 应用目录
             mkdir -p /opt/1panel/apps/snapmatch/admin
             cd /opt/1panel/apps/snapmatch/admin
