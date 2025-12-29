@@ -284,6 +284,9 @@ jobs:
           # 通过 ServerAlive 防止“连接已死但不报错”的长时间挂起
           scp \
             -v \
+            # OpenSSH 新版 scp 默认走 SFTP；某些服务器 SFTP 子系统配置异常会导致卡住
+            # 这里强制使用 legacy scp 协议（不引入新依赖）
+            -O \
             -o BatchMode=yes \
             -o ConnectTimeout=120 \
             -o ServerAliveInterval=15 \
