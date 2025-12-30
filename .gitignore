@@ -19,6 +19,10 @@
 # AI / Claude
 .claude/
 
+# Python cache
+**/__pycache__/
+**/*.py[cod]
+
 # Environment variables
 .env
 .env.*

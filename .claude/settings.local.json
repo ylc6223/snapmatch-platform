@@ -1,6 +1,14 @@
 {
-    "enabledMcpjsonServers": [
-        "cloudbase"
-    ],
-    "enableAllProjectMcpServers": true
+  "permissions": {
+    "allow": [
+      "mcp__serena__find_symbol",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(tree:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "cloudbase"
+  ]
 }
