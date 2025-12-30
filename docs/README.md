@@ -4,6 +4,19 @@
 
 ## 📚 文档索引（按主题）
 
+### 架构（architecture）⭐
+
+- **[架构文档索引](./architecture/README.md)**：系统架构、双后端模式、请求链路分析
+  - [项目结构总览](./architecture/overview.md) - Monorepo 整体结构与技术栈
+  - [双后端架构](./architecture/dual-backend.md) - BFF 模式详解
+  - [请求链路分析](./architecture/request-flow.md) - 完整请求流程追踪
+
+### 开发指南（guides）
+
+- **[开发指南索引](./guides/README.md)**：迁移方案、最佳实践
+  - [API 版本化迁移指南](./guides/api-versioning/migration-guide.md) - 完整迁移方案与影响分析
+  - [API 版本化 Checklist](./guides/api-versioning/checklist.md) - 逐步操作清单
+
 ### 部署（deployment）
 
 - **[部署总览](./deployment/overview.md)**：部署形态与阅读顺序

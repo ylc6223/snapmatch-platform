@@ -63,10 +63,10 @@ server {
     }
 
     # ========================================
-    # Backend API (代理到 Docker 容器)
+    # API（全量 BFF：先到 Admin(Next)，再由 Admin 转发到 Backend）
     # ========================================
     location /api/ {
-        proxy_pass http://127.0.0.1:3002/;
+        proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
 
         # WebSocket 支持

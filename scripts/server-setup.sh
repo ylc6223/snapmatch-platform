@@ -273,10 +273,10 @@ server {
     }
 
     # ========================================
-    # Backend API (代理到 Docker 容器)
+    # API（全量 BFF：先到 Admin(Next)，再由 Admin 转发到 Backend）
     # ========================================
     location /api/ {
-        proxy_pass http://localhost:3002/;
+        proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
 
         # 代理头
