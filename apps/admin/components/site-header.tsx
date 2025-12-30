@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 
 import { DashboardTabbar, type TabbarRoute } from "@/components/dashboard-tabbar"
 import {
@@ -14,10 +15,14 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { ThemeToggleButton, useThemeTransition } from "@/components/ui/theme-toggle-button"
 import { toNavigationLabel } from "@/lib/navigation/labels"
 
 export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
   const pathname = usePathname()
+  const { resolvedTheme, setTheme } = useTheme()
+  const { startTransition } = useThemeTransition()
+  const currentTheme = resolvedTheme === "dark" ? "dark" : "light"
 
   const crumbs = React.useMemo(() => {
     const segments = pathname.split(/[?#]/)[0].split("/").filter(Boolean)
@@ -62,6 +67,15 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
             ))}
           </BreadcrumbList>
         </Breadcrumb>
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggleButton
+            theme={currentTheme}
+            start="top-right"
+            onClick={() =>
+              startTransition(() => setTheme(currentTheme === "dark" ? "light" : "dark"))
+            }
+          />
+        </div>
       </div>
       {tabbarRoutes?.length ? <DashboardTabbar routes={tabbarRoutes} /> : null}
     </header>
