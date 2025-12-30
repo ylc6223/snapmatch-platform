@@ -49,6 +49,7 @@ cp apps/admin/.env.example apps/admin/.env.local
 关键变量：
 
 - `BACKEND_BASE_URL`：后端基址（默认 `http://localhost:3002`）
+- `NEXT_PUBLIC_ADMIN_BASE_PATH`：Admin basePath（默认 `/admin`；修改后需重启 dev server）
 
 ### 3) 启动 Admin
 
