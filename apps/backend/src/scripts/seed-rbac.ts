@@ -146,8 +146,16 @@ async function ensureIdsByCode<T extends Model & { code: string }>(
 async function main() {
   loadEnvFiles(process.cwd(), [".env.local", ".env"]);
 
-  const env = process.env.CLOUDBASE_ENV ?? process.env.TCB_ENV;
-  if (!env || env.trim().length === 0) throw new Error("Missing CLOUDBASE_ENV (or TCB_ENV)");
+  const env = process.env.CLOUDBASE_ENV ?? process.env.TCB_ENV ?? process.env.ENV_ID;
+  if (!env || env.trim().length === 0) {
+    throw new Error(
+      [
+        "缺少 CloudBase 环境 ID：请在 apps/backend/.env.local 配置 CLOUDBASE_ENV=<环境ID>（或 TCB_ENV）。",
+        "开发环境约定：PORT=3002，ADMIN_ORIGIN=http://localhost:3001。",
+        "可参考 apps/backend/.env.example。",
+      ].join(" "),
+    );
+  }
   const region = process.env.CLOUDBASE_REGION ?? "ap-shanghai";
   const secretId = requireEnv("CLOUDBASE_SECRET_ID");
   const secretKey = requireEnv("CLOUDBASE_SECRET_KEY");

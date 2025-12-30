@@ -21,15 +21,22 @@ exports.CloudbaseModule = CloudbaseModule = __decorate([
                 provide: cloudbase_constants_1.CLOUDBASE_APP,
                 inject: [config_1.ConfigService],
                 useFactory: (config) => {
-                    const env = config.get("CLOUDBASE_ENV") ?? config.get("TCB_ENV");
-                    if (!env) {
-                        throw new Error("Missing CLOUDBASE_ENV (or TCB_ENV) for CloudBase Node SDK init");
+                    const env = config.get("CLOUDBASE_ENV") ??
+                        config.get("TCB_ENV") ??
+                        config.get("ENV_ID");
+                    const normalizedEnv = typeof env === "string" ? env.trim() : "";
+                    if (!normalizedEnv) {
+                        throw new Error([
+                            "缺少 CloudBase 环境 ID：请在 apps/backend/.env.local 配置 CLOUDBASE_ENV=<环境ID>（或 TCB_ENV）。",
+                            "开发环境约定：PORT=3002，ADMIN_ORIGIN=http://localhost:3001。",
+                            "可参考 apps/backend/.env.example。",
+                        ].join(" "));
                     }
                     const region = config.get("CLOUDBASE_REGION") ?? "ap-shanghai";
                     const secretId = config.get("CLOUDBASE_SECRET_ID");
                     const secretKey = config.get("CLOUDBASE_SECRET_KEY");
                     return (0, node_sdk_1.init)({
-                        env,
+                        env: normalizedEnv,
                         region,
                         ...(secretId && secretKey ? { secretId, secretKey } : {}),
                     });

@@ -82,6 +82,7 @@ pnpm -C apps/backend dev
 生产环境保护：
 
 - `NODE_ENV=production` 时，如果 `JWT_SECRET` 过弱会拒绝启动。
+- 如果缺少 `CLOUDBASE_ENV`（或 `TCB_ENV`），后端会在 CloudBase SDK 初始化阶段直接报错并退出；请先复制并填写 `apps/backend/.env.local`。
 
 ---
 
