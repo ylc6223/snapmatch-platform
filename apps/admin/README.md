@@ -71,7 +71,7 @@ pnpm -C apps/admin dev
 
 - `POST /api/auth/login`：账号密码登录 → Set-Cookie
 - `GET /api/auth/me`：获取当前用户（roles/permissions）
-- `POST /api/auth/logout`：退出登录（先调用后端 `/auth/logout` 撤销会话，再清理 cookie）
+- `POST /api/auth/logout`：退出登录（先调用后端 `/api/v1/auth/logout` 撤销会话，再清理 cookie）
 
 ### RBAC（展示层）
 

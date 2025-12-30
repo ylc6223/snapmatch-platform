@@ -89,7 +89,7 @@ pnpm -C apps/backend dev
 
 ### 4.1 登录
 
-接口：`POST /auth/login`（公开接口）
+接口：`POST /api/v1/auth/login`（公开接口）
 
 请求体：
 
@@ -118,11 +118,11 @@ Authorization: Bearer <accessToken>
 
 ### 4.3 当前用户
 
-接口：`GET /auth/me`（需要 JWT）
+接口：`GET /api/v1/auth/me`（需要 JWT）
 
 ### 4.4 Refresh（续期）
 
-接口：`POST /auth/refresh`（公开接口）
+接口：`POST /api/v1/auth/refresh`（公开接口）
 
 ```json
 { "refreshToken": "rt_..." }
@@ -132,7 +132,7 @@ Authorization: Bearer <accessToken>
 
 ### 4.5 Logout（服务端登出/踢下线）
 
-接口：`POST /auth/logout`（公开接口）
+接口：`POST /api/v1/auth/logout`（公开接口）
 
 ```json
 { "refreshToken": "rt_..." }

@@ -19,7 +19,7 @@ function getBackendBaseUrl() {
 
 async function refreshSession(refreshToken: string) {
   const backendBaseUrl = getBackendBaseUrl();
-  const response = await fetch(new URL("/auth/refresh", backendBaseUrl), {
+  const response = await fetch(new URL("/api/v1/auth/refresh", backendBaseUrl), {
     method: "POST",
     headers: {
       accept: "application/json",
@@ -46,7 +46,7 @@ async function refreshSession(refreshToken: string) {
 
 async function fetchMeWithAccessToken(accessToken: string) {
   const backendBaseUrl = getBackendBaseUrl();
-  const response = await fetch(new URL("/auth/me", backendBaseUrl), {
+  const response = await fetch(new URL("/api/v1/auth/me", backendBaseUrl), {
     method: "GET",
     headers: {
       accept: "application/json",
@@ -62,7 +62,7 @@ async function fetchMeWithAccessToken(accessToken: string) {
  * BFF：获取当前登录用户（同源）
  *
  * 对接后端：
- * - GET `${BACKEND_BASE_URL}/auth/me`
+ * - GET `${BACKEND_BASE_URL}/api/v1/auth/me`
  *
  * 说明：
  * - 该接口用于前端初始化登录态与展示层权限（roles/permissions）
@@ -72,7 +72,7 @@ async function fetchMeWithAccessToken(accessToken: string) {
 export async function GET() {
   try {
     // backendFetch 默认 auth=true：会从 HttpOnly Cookie 读取 token，并拼 Authorization 转发后端
-    const result = await backendFetch<ApiResponse<{ user: AuthUser }>>("/auth/me");
+    const result = await backendFetch<ApiResponse<{ user: AuthUser }>>("/api/v1/auth/me");
     const user = result.data?.user;
     if (!user) {
       return NextResponse.json(makeErrorResponse({ code: 502, message: "Bad Gateway" }), { status: 502 });

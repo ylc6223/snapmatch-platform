@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 export async function POST() {
   const refreshToken = await getAdminRefreshToken();
   if (refreshToken) {
-    await backendFetch("/auth/logout", {
+    await backendFetch("/api/v1/auth/logout", {
       method: "POST",
       auth: false,
       headers: { "content-type": "application/json" },

@@ -42,12 +42,12 @@ pnpm -C apps/backend hash:password "your-password"
 
 ## API 速览
 
-- `POST /auth/login`（Public）：账号+密码 → `accessToken` + `refreshToken`
-- `POST /auth/refresh`（Public）：`refreshToken` → 新的 `accessToken`（并旋转 `refreshToken`）
-- `POST /auth/logout`（Public）：撤销 `refreshToken` 对应会话（accessToken 绑定 `sid`，撤销后立即失效）
-- `GET /auth/me`（JWT）：返回当前用户
+- `POST /api/v1/auth/login`（Public）：账号+密码 → `accessToken` + `refreshToken`
+- `POST /api/v1/auth/refresh`（Public）：`refreshToken` → 新的 `accessToken`（并旋转 `refreshToken`）
+- `POST /api/v1/auth/logout`（Public）：撤销 `refreshToken` 对应会话（accessToken 绑定 `sid`，撤销后立即失效）
+- `GET /api/v1/auth/me`（JWT）：返回当前用户
 - `GET /health`（Public）：健康检查
-- `GET /secure/admin-only`（JWT + role=admin）：示例受保护接口
+- `GET /api/v1/secure/admin-only`（JWT + role=admin）：示例受保护接口
 
 ## CloudBase 部署（建议 CloudRun 容器模式）
 

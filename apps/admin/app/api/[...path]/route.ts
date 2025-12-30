@@ -19,7 +19,7 @@ function getBackendBaseUrl() {
 
 async function refreshSession(refreshToken: string) {
   const backendBaseUrl = getBackendBaseUrl();
-  const response = await fetch(new URL("/auth/refresh", backendBaseUrl), {
+  const response = await fetch(new URL("/api/v1/auth/refresh", backendBaseUrl), {
     method: "POST",
     headers: {
       accept: "application/json",
@@ -69,7 +69,9 @@ async function proxyToBackend(request: NextRequest, accessToken: string | null, 
   const incomingUrl = new URL(request.url);
   const pathname = incomingUrl.pathname;
 
-  const backendPath = pathname.startsWith("/api/") ? pathname.slice("/api".length) : pathname;
+  const backendPath = pathname.startsWith("/api/")
+    ? `/api/v1${pathname.slice("/api".length)}`
+    : pathname;
   const backendUrl = new URL(`${backendPath}${incomingUrl.search}`, backendBaseUrl);
 
   const headers = pickForwardHeaders(request.headers);
@@ -174,4 +176,3 @@ export async function DELETE(request: NextRequest) {
 export async function OPTIONS(request: NextRequest) {
   return handle(request);
 }
-

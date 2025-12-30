@@ -14,6 +14,10 @@ const response_envelope_interceptor_1 = require("./common/interceptors/response-
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { cors: false });
     const config = app.get(config_1.ConfigService);
+    const apiPrefix = config.get("API_PREFIX") ?? "api/v1";
+    app.setGlobalPrefix(apiPrefix, {
+        exclude: [{ path: "health", method: common_1.RequestMethod.ALL }],
+    });
     const adminOrigin = config.get("ADMIN_ORIGIN") ?? "http://localhost:3001";
     app.enableCors({
         origin: [adminOrigin],

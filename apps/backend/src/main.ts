@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { BadRequestException, ValidationPipe } from "@nestjs/common";
+import { BadRequestException, RequestMethod, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
 import os from "node:os";
@@ -13,6 +13,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: false });
   // 统一读取 ConfigModule 加载的环境变量。
   const config = app.get(ConfigService);
+
+  // API 版本化：默认使用 api/v1 前缀；健康检查保留为 /health，便于 Nginx/平台探活保持不变。
+  const apiPrefix = config.get<string>("API_PREFIX") ?? "api/v1";
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: [{ path: "health", method: RequestMethod.ALL }],
+  });
 
   // 默认只允许 Admin 前端来源，减少 CORS 暴露面（也更利于后续按角色/端区分来源）。
   const adminOrigin = config.get<string>("ADMIN_ORIGIN") ?? "http://localhost:3001";

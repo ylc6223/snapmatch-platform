@@ -17,7 +17,7 @@ export const runtime = "nodejs";
  * - 统一把错误收敛成 `{ code, message }` 供前端展示/跳转策略使用
  *
  * 对接后端：
- * - POST `${BACKEND_BASE_URL}/auth/login`
+ * - POST `${BACKEND_BASE_URL}/api/v1/auth/login`
  * - 成功返回：{ accessToken, user }
  */
 const LoginSchema = z.object({
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   try {
     // 2) 调用后端登录（这里 auth:false，因为此时还没有 token）
     const result = await backendFetch<ApiResponse<{ accessToken: string; refreshToken?: string; user: AuthUser }>>(
-      "/auth/login",
+      "/api/v1/auth/login",
       {
       method: "POST",
       auth: false,

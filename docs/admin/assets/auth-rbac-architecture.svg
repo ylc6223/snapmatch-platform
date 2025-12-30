@@ -116,7 +116,7 @@
 
   <rect x="960" y="498" width="340" height="112" fill="#f3fff8" class="box-strong"/>
   <text x="980" y="528" class="text">Backend API（NestJS）</text>
-  <text x="980" y="550" class="sub">apps/backend · /auth/login、/auth/me</text>
+  <text x="980" y="550" class="sub">apps/backend · /api/v1/auth/login、/api/v1/auth/me</text>
   <text x="980" y="572" class="sub">JwtAuthGuard：校验 Bearer 并注入 user</text>
   <text x="980" y="594" class="sub">Roles/Permissions Guard：RBAC 强校验</text>
 
@@ -152,7 +152,7 @@
   <rect x="572" y="782" width="376" height="34" fill="#f6fff2" class="box"/>
   <text x="588" y="804" class="sub">权限点字典：后端统一维护（permissions.ts）</text>
   <rect x="572" y="820" width="376" height="34" fill="#f6fff2" class="box"/>
-  <text x="588" y="842" class="sub">refresh 流程：已实现（/auth/refresh 旋转刷新 + 可撤销）</text>
+  <text x="588" y="842" class="sub">refresh 流程：已实现（/api/v1/auth/refresh 旋转刷新 + 可撤销）</text>
 
   <rect x="990" y="700" width="334" height="150" fill="#ffffff" class="dash"/>
   <text x="1012" y="728" class="text">运维与安全</text>

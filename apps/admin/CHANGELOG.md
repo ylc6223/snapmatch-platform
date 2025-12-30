@@ -56,7 +56,7 @@
 ### 变更
 
 - 统一错误返回约定为 `code + message`（前端仅对接 BFF，不透出后端原始结构）
-  - 后端 `/auth/login`、`/auth/me` 返回标准 `{ code, message }`（401 场景）
+  - 后端 `/api/v1/auth/login`、`/api/v1/auth/me` 返回标准 `{ code, message }`（401 场景）
   - Admin BFF 统一返回 `{ code, message }`，生产环境默认不返回 `detail`
 
 ### 影响范围

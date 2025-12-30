@@ -54,7 +54,7 @@ function getBackendBaseUrl() {
 
 async function backendMe(accessToken: string) {
   const backendBaseUrl = getBackendBaseUrl();
-  const response = await fetch(new URL("/auth/me", backendBaseUrl), {
+  const response = await fetch(new URL("/api/v1/auth/me", backendBaseUrl), {
     method: "GET",
     headers: {
       accept: "application/json",
@@ -67,7 +67,7 @@ async function backendMe(accessToken: string) {
 
 async function backendRefresh(refreshToken: string) {
   const backendBaseUrl = getBackendBaseUrl();
-  const response = await fetch(new URL("/auth/refresh", backendBaseUrl), {
+  const response = await fetch(new URL("/api/v1/auth/refresh", backendBaseUrl), {
     method: "POST",
     headers: {
       accept: "application/json",
@@ -93,7 +93,7 @@ async function backendRefresh(refreshToken: string) {
  * - `/dashboard/*`：轻量路由保护（仅检查 HttpOnly Cookie 是否存在）
  *
  * 注意：
- * - 这里只做“是否已登录”的快速拦截；token 是否有效由后端 /auth/me 与 RBAC Guard 兜底
+ * - 这里只做“是否已登录”的快速拦截；token 是否有效由后端 /api/v1/auth/me 与 RBAC Guard 兜底
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -110,7 +110,7 @@ export async function proxy(request: NextRequest) {
     // - 如果在服务端请求 /api/auth/me 才 refresh，会产生 Set-Cookie，但不会回写到浏览器（不会“落盘”）。
     // - refresh token 又会旋转，浏览器仍持有旧 refresh token，下一次请求就会失败并被迫回登录页。
     //
-    // 因此：proxy 层直接调用后端 /auth/me 校验 token；401 时用 refresh token 续期并：
+    // 因此：proxy 层直接调用后端 /api/v1/auth/me 校验 token；401 时用 refresh token 续期并：
     // 1) 在响应写回 cookie（让浏览器拿到新的 access/refresh token）
     // 2) 在请求头注入 x-admin-access-token（让同一次 SSR 渲染能用新 token 访问后端）
     try {
@@ -137,7 +137,7 @@ export async function proxy(request: NextRequest) {
       setAuthCookies(next, refreshed);
       return next;
     } catch {
-      // 网络错误/异常：保持放行，由页面内 /auth/me 与业务接口兜底（避免误踢用户）。
+      // 网络错误/异常：保持放行，由页面内 /api/v1/auth/me 与业务接口兜底（避免误踢用户）。
       return;
     }
   }

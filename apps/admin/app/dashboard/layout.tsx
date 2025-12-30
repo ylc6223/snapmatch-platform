@@ -75,7 +75,7 @@ export default async function Page({ children }: { children: React.ReactNode }) 
     if (!accessToken) redirect("/login?next=/dashboard")
 
     const response = await fetch(
-      new URL("/auth/me", process.env.BACKEND_BASE_URL ?? "http://localhost:3002"),
+      new URL("/api/v1/auth/me", process.env.BACKEND_BASE_URL ?? "http://localhost:3002"),
       {
         method: "GET",
         headers: { accept: "application/json", authorization: `Bearer ${accessToken}` },
@@ -87,7 +87,7 @@ export default async function Page({ children }: { children: React.ReactNode }) 
     const result = (await response.json()) as ApiResponse<{ user: AuthUser }>
     const current = result.data?.user
     if (!current) {
-      throw new Error("Invalid /auth/me response: missing user")
+      throw new Error("Invalid /api/v1/auth/me response: missing user")
     }
     user = current
   } catch (error) {
