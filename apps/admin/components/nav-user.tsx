@@ -29,6 +29,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { withAdminBasePath } from "@/lib/routing/base-path";
 
 export function NavUser({
   user,
@@ -43,8 +44,8 @@ export function NavUser({
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
-    router.replace("/login");
+    await fetch(withAdminBasePath("/api/auth/logout"), { method: "POST" }).catch(() => null);
+    router.replace(withAdminBasePath("/login"));
   };
 
   return (

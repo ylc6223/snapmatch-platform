@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from "@/lib/auth/constants";
+import { withAdminBasePath } from "@/lib/routing/base-path";
 
 function redirectToLogin(request: NextRequest) {
-  const url = new URL("/login", request.url);
+  const url = new URL(withAdminBasePath("/login"), request.url);
   const nextPath = request.nextUrl.pathname + request.nextUrl.search;
   url.searchParams.set("next", nextPath);
   return NextResponse.redirect(url);
@@ -13,7 +14,7 @@ function redirectToSessionExpired(
   request: NextRequest,
   detail?: { message?: string },
 ) {
-  const url = new URL("/session-expired", request.url);
+  const url = new URL(withAdminBasePath("/session-expired"), request.url);
   const nextPath = request.nextUrl.pathname + request.nextUrl.search;
   url.searchParams.set("next", nextPath);
   const message = detail?.message?.trim();

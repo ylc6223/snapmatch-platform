@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { withAdminBasePath } from "@/lib/routing/base-path";
 
 export function LoginForm() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(withAdminBasePath("/api/auth/login"), {
         method: "POST",
         headers: {
           "content-type": "application/json"
