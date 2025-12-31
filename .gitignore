@@ -19,6 +19,11 @@
 # AI / Claude
 .claude/
 
+# Local scratch / utilities
+tmp/
+tools/
+wechat-article-writer.zip
+
 # Python cache
 **/__pycache__/
 **/*.py[cod]
