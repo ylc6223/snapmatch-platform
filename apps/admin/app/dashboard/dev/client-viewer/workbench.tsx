@@ -27,6 +27,7 @@ import {
 import { Montserrat } from "next/font/google";
 
 import { ThemeToggleButton, useThemeTransition } from "@/components/ui/theme-toggle-button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import styles from "./lumina-theme.module.css";
 
@@ -786,7 +787,7 @@ export function LuminaSelectWorkbench() {
           <div
             className={cn(
               "relative min-h-0 flex-1 overflow-hidden",
-              isLeftPanelCollapsed && "pl-20"
+              isLeftPanelCollapsed && "pl-14"
             )}
           >
             {canvas}
@@ -848,76 +849,142 @@ export function LuminaSelectWorkbench() {
           </div>
 
           {isLeftPanelCollapsed ? (
-            <div className="pointer-events-none absolute top-1/2 left-4 z-50 -translate-y-1/2">
-              <div className="border-lumina-graphite bg-lumina-panel pointer-events-auto flex flex-col gap-1 rounded-2xl border p-1.5 shadow-[0_14px_50px_rgba(0,0,0,0.55)]">
-                <button
-                  type="button"
-                  aria-label="展开左侧面板"
-                  onClick={() => setIsLeftPanelCollapsed(false)}
-                  className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white"
-                >
-                  <PanelLeftOpen size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilter("all")}
-                  className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
-                    filter === "all" && "ring-lumina-border-default ring-2"
-                  )}
-                  title={t.folders.all}
-                  aria-label={t.folders.all}
-                >
-                  <Folder size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilter("liked")}
-                  className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
-                    filter === "liked" && "ring-lumina-border-default ring-2"
-                  )}
-                  title={t.filters.liked}
-                  aria-label={t.filters.liked}
-                >
-                  <Heart size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilter("book")}
-                  className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
-                    filter === "book" && "ring-lumina-border-default ring-2"
-                  )}
-                  title={t.filters.book}
-                  aria-label={t.filters.book}
-                >
-                  <BookOpen size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilter("retouch")}
-                  className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
-                    filter === "retouch" && "ring-lumina-border-default ring-2"
-                  )}
-                  title={t.filters.retouch}
-                  aria-label={t.filters.retouch}
-                >
-                  <PenTool size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilter("untagged")}
-                  className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
-                    filter === "untagged" && "ring-lumina-border-default ring-2"
-                  )}
-                  title={t.filters.untagged}
-                  aria-label={t.filters.untagged}
-                >
-                  <Filter size={16} />
-                </button>
+            <div className="pointer-events-none absolute top-1/2 left-3 z-50 -translate-y-1/2">
+              <div className="border-lumina-graphite bg-lumina-panel pointer-events-auto flex flex-col gap-1 rounded-md border p-1 shadow-[0_14px_50px_rgba(0,0,0,0.55)]">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="展开左侧面板"
+                      onClick={() => setIsLeftPanelCollapsed(false)}
+                      className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white"
+                    >
+                      <PanelLeftOpen size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                  >
+                    展开左侧面板
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("all")}
+                      className={cn(
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        filter === "all" && "ring-lumina-border-default ring-2"
+                      )}
+                      aria-label={t.folders.all}
+                    >
+                      <Folder size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                  >
+                    {t.folders.all}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("liked")}
+                      className={cn(
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        filter === "liked" && "ring-lumina-border-default ring-2"
+                      )}
+                      aria-label={t.filters.liked}
+                    >
+                      <Heart size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                  >
+                    {t.filters.liked}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("book")}
+                      className={cn(
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        filter === "book" && "ring-lumina-border-default ring-2"
+                      )}
+                      aria-label={t.filters.book}
+                    >
+                      <BookOpen size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                  >
+                    {t.filters.book}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("retouch")}
+                      className={cn(
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        filter === "retouch" && "ring-lumina-border-default ring-2"
+                      )}
+                      aria-label={t.filters.retouch}
+                    >
+                      <PenTool size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                  >
+                    {t.filters.retouch}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("untagged")}
+                      className={cn(
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        filter === "untagged" && "ring-lumina-border-default ring-2"
+                      )}
+                      aria-label={t.filters.untagged}
+                    >
+                      <Filter size={16} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                  >
+                    {t.filters.untagged}
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
           ) : null}
