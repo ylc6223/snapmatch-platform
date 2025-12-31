@@ -202,9 +202,7 @@ function StatPill({
   const isOver = count > max;
 
   return (
-    <div
-      className={cn("border-lumina-graphite flex h-8 items-center gap-3 border-r px-3", className)}
-    >
+    <div className={cn("flex h-8 items-center gap-3 px-3", className)}>
       <span className="w-12 truncate text-right text-xs font-semibold tracking-wider opacity-70">
         {label}
       </span>
@@ -534,7 +532,7 @@ export function LuminaSelectWorkbench() {
     >
       <header className="border-lumina-graphite bg-lumina-panel z-50 flex h-14 items-center justify-between border-b shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all select-none">
         <div className="flex h-full items-center">
-          <div className="border-lumina-graphite hover:bg-lumina-slate flex h-full w-14 items-center justify-center border-r transition-colors">
+          <div className="hover:bg-lumina-slate flex h-full w-14 items-center justify-center transition-colors">
             <Link
               href="/dashboard"
               className="group flex size-full items-center justify-center"
@@ -544,7 +542,7 @@ export function LuminaSelectWorkbench() {
             </Link>
           </div>
 
-          <div className="border-lumina-graphite flex h-full min-w-[240px] flex-col justify-center border-r px-5">
+          <div className="flex h-full min-w-[240px] flex-col justify-center px-5">
             <h1 className="max-w-[200px] truncate text-sm leading-tight font-bold tracking-tight">
               {PROJECT_CONFIG.packageName}
             </h1>
@@ -559,7 +557,7 @@ export function LuminaSelectWorkbench() {
             </div>
           </div>
 
-          <div className="border-lumina-graphite flex h-full items-center gap-1 border-r px-3">
+          <div className="flex h-full items-center gap-1 px-3">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
@@ -602,7 +600,7 @@ export function LuminaSelectWorkbench() {
           </div>
         </div>
 
-        <div className="border-lumina-graphite bg-lumina-block flex h-full items-center border-r">
+        <div className="flex h-full items-center">
           <StatPill
             label={t.stats.liked}
             count={selectionCounts.liked}
@@ -623,7 +621,7 @@ export function LuminaSelectWorkbench() {
           />
         </div>
 
-        <div className="flex h-full items-center gap-4 pr-5">
+        <div className="flex h-full items-center gap-2 pr-5">
           <button
             type="button"
             aria-label="切换语言"
@@ -652,9 +650,7 @@ export function LuminaSelectWorkbench() {
             {isRightPanelCollapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
           </button>
 
-          <div className="bg-lumina-graphite h-6 w-px" />
-
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-28 items-center justify-center gap-2 rounded-md border px-0 text-xs font-medium shadow-sm transition-all hover:text-white"
