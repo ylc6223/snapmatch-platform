@@ -48,6 +48,18 @@ async function getDashboardTabs() {
     }
   }
 
+  // 约定：settings 不提供 index page，但需要在 tabbar 提供入口，默认指向 accounts。
+  const settingsAccountsPage = path.join(dashboardDir, "settings", "accounts", "page.tsx")
+  try {
+    await fs.access(settingsAccountsPage)
+    tabs.push({
+      href: "/dashboard/settings/accounts",
+      label: buildDashboardTabLabelFromHref("/dashboard/settings/accounts"),
+    })
+  } catch {
+    // ignore
+  }
+
   return tabs
     .map((tab) => resolveDashboardTab(tab))
     .filter((tab) => !tab.hidden)

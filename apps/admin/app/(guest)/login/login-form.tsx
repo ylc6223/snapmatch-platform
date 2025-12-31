@@ -3,10 +3,13 @@
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { apiFetch, getApiErrorMessage } from "@/lib/api/client";
+import type { ApiResponse } from "@/lib/api/response";
 import { withAdminBasePath } from "@/lib/routing/base-path";
 
 export function LoginForm() {
@@ -23,47 +26,31 @@ export function LoginForm() {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const loginMutation = useMutation({
+    mutationFn: async (input: { account: string; password: string }) => {
+      return apiFetch<ApiResponse<{ user: unknown }>>(withAdminBasePath("/api/auth/login"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ account: input.account, password: input.password }),
+      });
+    },
+    onSuccess: () => {
+      const next = searchParams.get("next");
+      const redirectTo = next && next.startsWith("/") && !next.startsWith("//") ? next : dashboardPath;
+      router.replace(redirectTo);
+    },
+    onError: (error) => {
+      setErrorMessage(getApiErrorMessage(error, "登录失败"));
+    },
+  });
+
+  const isSubmitting = loginMutation.isPending;
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(withAdminBasePath("/api/auth/login"), {
-        method: "POST",
-        headers: {
-          "content-type": "application/json"
-        },
-        body: JSON.stringify({ account: account.trim(), password: password.trim() })
-      });
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as
-          | {
-              message?: string;
-              errors?: Array<{ field?: string; reason?: string }>;
-            }
-          | null;
-        const reasons = payload?.errors
-          ?.map((item) => item?.reason)
-          .filter((reason): reason is string => Boolean(reason && reason.length > 0));
-        const detail = reasons && reasons.length > 0 ? reasons.join("；") : null;
-        setErrorMessage(detail ? `${payload?.message ?? "登录失败"}：${detail}` : payload?.message ?? "登录失败");
-        return;
-      }
-
-      const next = searchParams.get("next");
-      const redirectTo =
-        next && next.startsWith("/") && !next.startsWith("//") ? next : dashboardPath;
-
-      router.replace(redirectTo);
-    } catch {
-      setErrorMessage("网络错误，请稍后重试");
-    } finally {
-      setIsSubmitting(false);
-    }
+    loginMutation.mutate({ account: account.trim(), password: password.trim() });
   };
 
   return (

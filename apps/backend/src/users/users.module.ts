@@ -6,9 +6,11 @@ import { USERS_REPOSITORY, type UsersRepository } from "./users.repository";
 import { CloudBaseUsersRepository } from "./users.repository.cloudbase";
 import { UsersService } from "./users.service";
 import type { CloudBase } from "@cloudbase/node-sdk";
+import { UsersAdminController } from "./users.admin.controller";
 
 @Module({
   imports: [CloudbaseModule],
+  controllers: [UsersAdminController],
   providers: [
     // 对外暴露用户查询能力（AuthService 依赖该服务）。
     UsersService,

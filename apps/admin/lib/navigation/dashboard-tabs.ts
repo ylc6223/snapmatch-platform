@@ -19,8 +19,7 @@ export type DashboardTabConfig = {
 // - 如需隐藏/改名/排序，在这里按 href 做覆盖即可
 export const DASHBOARD_TAB_CONFIG: Record<string, DashboardTabConfig> = {
   "/dashboard": { label: "Dashboard", order: 0, affixTab: true },
-  "/dashboard/users": { label: "Users", order: 10 },
-  "/dashboard/settings": { label: "Settings", order: 20 },
+  "/dashboard/settings/accounts": { label: "Settings", order: 20 },
 }
 
 export type DashboardResolvedTab = DashboardTab & {

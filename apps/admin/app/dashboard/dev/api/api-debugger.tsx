@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMutation } from "@tanstack/react-query";
 import { IconPlayerPlay, IconRefresh } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -148,14 +149,8 @@ export function ApiDebugger() {
 
   const canSendBody = method !== "GET" && method !== "DELETE";
 
-  const run = React.useCallback(async () => {
-    setIsRunning(true);
-    setErrorMessage(null);
-    setResponseStatus(null);
-    setResponseHeaders({});
-    setResponseBody("");
-
-    try {
+  const runMutation = useMutation({
+    mutationFn: async () => {
       const headers = new Headers();
       headers.set("accept", "application/json, text/plain, */*");
 
@@ -163,8 +158,7 @@ export function ApiDebugger() {
       if (canSendBody && bodyText.trim().length > 0) {
         const parsed = safeJsonParse(bodyText);
         if (!parsed.ok) {
-          setErrorMessage(`请求体 JSON 解析失败：${parsed.message}`);
-          return;
+          throw new Error(`请求体 JSON 解析失败：${parsed.message}`);
         }
         body = JSON.stringify(parsed.value);
         headers.set("content-type", "application/json");
@@ -174,7 +168,7 @@ export function ApiDebugger() {
         method,
         headers,
         body,
-        cache: "no-store"
+        cache: "no-store",
       });
 
       const headerEntries: Record<string, string> = {};
@@ -187,19 +181,29 @@ export function ApiDebugger() {
         ? JSON.stringify(await response.json().catch(() => null), null, 2)
         : await response.text().catch(() => "");
 
-      setResponseStatus(response.status);
-      setResponseHeaders(headerEntries);
-      setResponseBody(raw);
-    } catch (error) {
+      return { status: response.status, headers: headerEntries, body: raw };
+    },
+    onMutate: () => {
+      setIsRunning(true);
+      setErrorMessage(null);
+      setResponseStatus(null);
+      setResponseHeaders({});
+      setResponseBody("");
+    },
+    onSuccess: (result) => {
+      setResponseStatus(result.status);
+      setResponseHeaders(result.headers);
+      setResponseBody(result.body);
+    },
+    onError: (error) => {
       const message =
-        error instanceof Error && error.message.trim().length > 0
-          ? error.message.trim()
-          : "unknown error";
+        error instanceof Error && error.message.trim().length > 0 ? error.message.trim() : "unknown error";
       setErrorMessage(`请求失败：${message}`);
-    } finally {
+    },
+    onSettled: () => {
       setIsRunning(false);
-    }
-  }, [bodyText, canSendBody, method, resolvedUrl]);
+    },
+  });
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
@@ -267,7 +271,12 @@ export function ApiDebugger() {
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle>请求 / 响应</CardTitle>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="secondary" onClick={run} disabled={isRunning}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => runMutation.mutate()}
+              disabled={isRunning || runMutation.isPending}
+            >
               <IconPlayerPlay className="mr-2 size-4" />
               发送
             </Button>
