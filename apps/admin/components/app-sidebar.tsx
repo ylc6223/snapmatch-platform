@@ -3,10 +3,7 @@
 import * as React from "react";
 import {
   IconBug,
-  IconChartBar,
   IconDashboard,
-  IconFolder,
-  IconListDetails,
   IconPhoto,
   IconSettings,
   IconStack2,
@@ -43,12 +40,6 @@ const data = {
       ]
     },
     {
-      title: "Users",
-      url: "/dashboard/users",
-      icon: IconListDetails,
-      roles: ["admin"] satisfies Role[]
-    },
-    {
       title: "作品集管理",
       url: "/dashboard/portfolio",
       icon: IconPhoto,
@@ -83,7 +74,7 @@ const data = {
     },
     {
       title: "系统设置",
-      url: "/dashboard/settings",
+      url: "/dashboard/settings/accounts",
       icon: IconSettings,
       permissions: ["page:settings"],
       items: [

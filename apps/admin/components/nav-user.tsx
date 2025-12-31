@@ -8,6 +8,7 @@ import {
   IconUserCircle,
 } from "@tabler/icons-react"
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 
 import {
   Avatar,
@@ -30,6 +31,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { withAdminBasePath } from "@/lib/routing/base-path";
+import { apiFetch } from "@/lib/api/client";
 
 export function NavUser({
   user,
@@ -43,10 +45,14 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const router = useRouter();
 
-  const handleLogout = async () => {
-    await fetch(withAdminBasePath("/api/auth/logout"), { method: "POST" }).catch(() => null);
-    router.replace(withAdminBasePath("/login"));
-  };
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiFetch(withAdminBasePath("/api/auth/logout"), { method: "POST" }).catch(() => null);
+    },
+    onSuccess: () => {
+      router.replace(withAdminBasePath("/login"));
+    },
+  });
 
   return (
     <SidebarMenu>
@@ -106,7 +112,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={() => logoutMutation.mutate()} disabled={logoutMutation.isPending}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

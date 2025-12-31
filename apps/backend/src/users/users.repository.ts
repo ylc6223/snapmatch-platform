@@ -9,10 +9,57 @@ export type User = {
   permissions: string[];
 };
 
+export type UserStatus = 0 | 1;
+
+export type UserRoleInfo = {
+  code: Role;
+  name: string;
+};
+
+export type AdminUser = Omit<User, "passwordHash"> & {
+  userType: string;
+  status: UserStatus;
+};
+
+export type ListUsersInput = {
+  query?: string | null;
+  status?: UserStatus | null;
+  page: number;
+  pageSize: number;
+};
+
+export type ListUsersResult = {
+  items: AdminUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type CreateUserInput = {
+  account: string;
+  passwordHash: string;
+  userType: string;
+  status: UserStatus;
+  roleCodes: Role[];
+};
+
+export type UpdateUserInput = {
+  id: string;
+  passwordHash?: string | null;
+  userType?: string | null;
+  status?: UserStatus | null;
+  roleCodes?: Role[] | null;
+};
+
 // 用户仓库接口：用于隔离存储层（CloudBase 数据模型/未来其它实现）。
 export type UsersRepository = {
   findByAccount(account: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;
+  listUsers(input: ListUsersInput): Promise<ListUsersResult>;
+  listRoles(): Promise<UserRoleInfo[]>;
+  createUser(input: CreateUserInput): Promise<AdminUser>;
+  updateUser(input: UpdateUserInput): Promise<AdminUser | null>;
+  disableUser(id: string): Promise<boolean>;
 };
 
 // 注入 Token：UsersService 通过该 token 获取具体仓库实现。

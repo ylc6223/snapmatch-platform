@@ -1,6 +1,7 @@
 "use client";
 
 import { emitSessionExpired } from "@/lib/api/session-expired";
+import { isApiResponse, type ApiResponse } from "@/lib/api/response";
 
 export class ApiError extends Error {
   status: number;
@@ -47,3 +48,16 @@ export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit):
   return payload as T;
 }
 
+export function getApiErrorMessage(error: unknown, fallback: string) {
+  if (!(error instanceof ApiError)) return fallback;
+  if (!isApiResponse(error.payload)) return fallback;
+  const payload = error.payload as ApiResponse<unknown>;
+  const errors = payload.errors ?? [];
+  const detail = errors
+    .map((item) => item?.reason)
+    .filter((reason): reason is string => typeof reason === "string" && reason.trim().length > 0)
+    .join("；");
+  const message = payload.message?.trim() ?? "";
+  if (message && detail) return `${message}：${detail}`;
+  return message || fallback;
+}
