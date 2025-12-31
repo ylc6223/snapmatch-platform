@@ -42,16 +42,23 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --color-lumina-ink: #0b0f14;
-  --color-lumina-slate: #121923;
-  --color-lumina-graphite: #233041;
-  --color-lumina-paper: #e8eef7;
-  --color-lumina-muted: #9aa7b8;
-  --color-lumina-amber: #fbbf24;
-  --color-lumina-primary: #3b82f6;
-  --color-lumina-primary-hover: #2563eb;
-  --color-lumina-retouch: #22d3ee;
-  --color-lumina-retouch-hover: #06b6d4;
+  /* Lumina preview theme (aligned to provided commerce dark tokens) */
+  --color-lumina-paper: #f5fbff;
+  --color-lumina-muted: rgba(224, 245, 255, 0.6);
+
+  --color-lumina-ink: #0f1115;
+  --color-lumina-slate: #17191d;
+  --color-lumina-panel: #171a21;
+
+  --color-lumina-block: rgba(204, 221, 255, 0.06);
+  --color-lumina-block-hover: rgba(204, 221, 255, 0.16);
+  --color-lumina-graphite: rgba(184, 221, 255, 0.12);
+
+  --color-lumina-primary: #00cae0;
+  --color-lumina-primary-hover: #00a4c2;
+
+  --color-lumina-amber: #ffbe4d;
+  --color-lumina-retouch: #00cae0;
 }
 
 :root {
@@ -134,33 +141,18 @@
 }
 
 @layer utilities {
-  .lumina-backdrop {
-    background-image:
-      radial-gradient(
-        1200px circle at 22% -8%,
-        color-mix(in oklab, var(--color-lumina-primary) 24%, transparent),
-        transparent 60%
-      ),
-      radial-gradient(
-        900px circle at 84% 18%,
-        color-mix(in oklab, var(--color-lumina-amber) 12%, transparent),
-        transparent 58%
-      ),
-      linear-gradient(180deg, var(--color-lumina-ink), #070a0f 75%);
-  }
-
   .lumina-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   .lumina-scrollbar::-webkit-scrollbar-track {
-    background: color-mix(in oklab, var(--color-lumina-slate) 85%, transparent);
+    background: var(--color-lumina-slate);
   }
   .lumina-scrollbar::-webkit-scrollbar-thumb {
-    background: color-mix(in oklab, var(--color-lumina-graphite) 80%, transparent);
+    background: rgba(184, 221, 255, 0.18);
     border-radius: 0px;
   }
   .lumina-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklab, var(--color-lumina-graphite) 95%, transparent);
+    background: rgba(184, 221, 255, 0.28);
   }
 }
