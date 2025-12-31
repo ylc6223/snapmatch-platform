@@ -201,9 +201,7 @@ function StatPill({
   const isOver = count > max;
 
   return (
-    <div
-      className={cn("border-lumina-graphite flex h-8 items-center gap-3 border-r px-3", className)}
-    >
+    <div className={cn("flex h-8 items-center gap-3 border-r border-white/5 px-3", className)}>
       <span className="w-12 truncate text-right text-xs font-semibold tracking-wider opacity-70">
         {label}
       </span>
@@ -237,15 +235,15 @@ function LeftNavItem({
       className={cn(
         "group flex h-10 w-full items-center justify-between border-l-2 px-4 text-xs transition-all",
         active
-          ? "border-lumina-primary bg-lumina-slate font-medium text-white"
-          : "hover:bg-lumina-slate/30 border-transparent text-gray-400 hover:text-gray-200"
+          ? "border-lumina-primary bg-white/5 font-medium text-white"
+          : "text-lumina-muted hover:text-lumina-paper border-transparent hover:bg-white/5"
       )}
     >
       <div className="flex items-center gap-3">
         <Icon
           size={15}
           className={cn(
-            active ? "text-lumina-primary" : "transition-colors group-hover:text-gray-300"
+            active ? "text-lumina-primary" : "group-hover:text-lumina-paper/90 transition-colors"
           )}
         />
         <span>{label}</span>
@@ -296,12 +294,12 @@ function UsageBar({
   return (
     <div className="mb-5">
       <div className="mb-2 flex justify-between text-[10px] font-bold tracking-wider uppercase">
-        <span className="text-gray-400">{label}</span>
-        <span className={cn("font-mono", isFull ? "text-lumina-amber" : "text-gray-300")}>
+        <span className="text-lumina-muted/90">{label}</span>
+        <span className={cn("font-mono", isFull ? "text-lumina-amber" : "text-lumina-paper/80")}>
           {current}/{max}
         </span>
       </div>
-      <div className="bg-lumina-slate h-1.5 w-full overflow-hidden rounded-full shadow-inner">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5 shadow-inner">
         <div
           className={cn("h-full transition-all duration-500 ease-out", barClassName)}
           style={{ width: `${pct}%` }}
@@ -523,13 +521,13 @@ export function LuminaSelectWorkbench() {
       className={cn(
         luminaSans.variable,
         luminaMono.variable,
-        "bg-lumina-ink text-lumina-paper selection:bg-lumina-primary fixed inset-0 z-[60] flex h-svh w-screen flex-col overflow-hidden selection:text-white"
+        "lumina-backdrop bg-lumina-ink text-lumina-paper selection:bg-lumina-primary fixed inset-0 z-[60] flex h-svh w-screen flex-col overflow-hidden selection:text-white"
       )}
       style={{
         fontFamily: "var(--font-lumina-sans)"
       }}
     >
-      <header className="border-lumina-graphite bg-lumina-ink z-50 flex h-14 items-center justify-between border-b shadow-sm transition-all select-none">
+      <header className="bg-lumina-slate/25 z-50 flex h-14 items-center justify-between border-b border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all select-none">
         <div className="flex h-full items-center">
           <div className="border-lumina-graphite hover:bg-lumina-slate flex h-full w-14 items-center justify-center border-r transition-colors">
             <Link
@@ -541,11 +539,11 @@ export function LuminaSelectWorkbench() {
             </Link>
           </div>
 
-          <div className="border-lumina-graphite flex h-full min-w-[240px] flex-col justify-center border-r px-5">
+          <div className="flex h-full min-w-[240px] flex-col justify-center border-r border-white/5 px-5">
             <h1 className="max-w-[200px] truncate text-sm leading-tight font-bold tracking-tight">
               {PROJECT_CONFIG.packageName}
             </h1>
-            <div className="mt-0.5 flex items-center gap-2 font-mono text-[10px] text-gray-500">
+            <div className="text-lumina-muted/90 mt-0.5 flex items-center gap-2 font-mono text-[10px]">
               <span className="text-lumina-amber font-medium tabular-nums">
                 {PROJECT_CONFIG.tokenExpires} {t.expires}
               </span>
@@ -556,15 +554,15 @@ export function LuminaSelectWorkbench() {
             </div>
           </div>
 
-          <div className="border-lumina-graphite flex h-full items-center gap-1 border-r px-3">
+          <div className="flex h-full items-center gap-1 border-r border-white/5 px-3">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
               className={cn(
                 "rounded-md p-2 transition-all",
                 viewMode === "grid"
-                  ? "bg-lumina-slate text-white shadow-sm ring-1 ring-white/5"
-                  : "hover:bg-lumina-slate/50 text-gray-500 hover:text-gray-300"
+                  ? "bg-white/5 text-white shadow-sm ring-1 ring-white/10"
+                  : "text-lumina-muted hover:text-lumina-paper hover:bg-white/5"
               )}
               title={t.views.grid}
             >
@@ -576,8 +574,8 @@ export function LuminaSelectWorkbench() {
               className={cn(
                 "rounded-md p-2 transition-all",
                 viewMode === "single"
-                  ? "bg-lumina-slate text-white shadow-sm ring-1 ring-white/5"
-                  : "hover:bg-lumina-slate/50 text-gray-500 hover:text-gray-300"
+                  ? "bg-white/5 text-white shadow-sm ring-1 ring-white/10"
+                  : "text-lumina-muted hover:text-lumina-paper hover:bg-white/5"
               )}
               title={t.views.single}
             >
@@ -589,8 +587,8 @@ export function LuminaSelectWorkbench() {
               className={cn(
                 "rounded-md p-2 transition-all",
                 viewMode === "compare"
-                  ? "bg-lumina-slate text-white shadow-sm ring-1 ring-white/5"
-                  : "hover:bg-lumina-slate/50 text-gray-500 hover:text-gray-300"
+                  ? "bg-white/5 text-white shadow-sm ring-1 ring-white/10"
+                  : "text-lumina-muted hover:text-lumina-paper hover:bg-white/5"
               )}
               title={t.views.compare}
             >
@@ -599,7 +597,7 @@ export function LuminaSelectWorkbench() {
           </div>
         </div>
 
-        <div className="border-lumina-graphite bg-lumina-slate/30 flex h-full items-center border-r">
+        <div className="flex h-full items-center border-r border-white/5 bg-white/5">
           <StatPill
             label={t.stats.liked}
             count={selectionCounts.liked}
@@ -624,25 +622,25 @@ export function LuminaSelectWorkbench() {
           <button
             type="button"
             onClick={() => setLang(lang === "en" ? "zh" : "en")}
-            className="hover:bg-lumina-slate flex w-16 items-center justify-center gap-1.5 rounded py-1 font-mono text-[10px] font-bold text-gray-500 transition-colors hover:text-gray-300"
+            className="text-lumina-muted hover:text-lumina-paper flex w-16 items-center justify-center gap-1.5 rounded py-1 font-mono text-[10px] font-bold transition-colors hover:bg-white/5"
           >
             <Globe size={12} />
             {lang === "en" ? "中文" : "EN"}
           </button>
 
-          <div className="bg-lumina-graphite h-6 w-px" />
+          <div className="h-6 w-px bg-white/10" />
 
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="border-lumina-graphite bg-lumina-slate hover:bg-lumina-graphite flex h-9 w-28 items-center justify-center gap-2 rounded-md border px-0 text-xs font-medium text-gray-300 transition-all hover:text-white"
+              className="text-lumina-paper/80 flex h-9 w-28 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-0 text-xs font-medium shadow-sm transition-all hover:bg-white/10 hover:text-white"
             >
               <Save size={14} />
               {t.actions.save}
             </button>
             <button
               type="button"
-              className="bg-lumina-primary hover:bg-lumina-primary-hover flex h-9 w-40 items-center justify-center gap-2 rounded-md px-0 text-xs font-bold text-white shadow-lg shadow-blue-900/20 transition-all"
+              className="bg-lumina-primary hover:bg-lumina-primary-hover flex h-9 w-40 items-center justify-center gap-2 rounded-md px-0 text-xs font-bold text-white shadow-[0_12px_30px_rgba(59,130,246,0.22)] transition-all"
             >
               {t.actions.submit}
             </button>
@@ -651,9 +649,9 @@ export function LuminaSelectWorkbench() {
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="border-lumina-graphite bg-lumina-ink flex h-full w-64 shrink-0 flex-col border-r">
+        <aside className="bg-lumina-slate/10 flex h-full w-64 shrink-0 flex-col border-r border-white/5 backdrop-blur-xl">
           <div className="py-4">
-            <div className="mb-1 flex items-center justify-between px-5 py-2 text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+            <div className="text-lumina-muted/90 mb-1 flex items-center justify-between px-5 py-2 text-[10px] font-bold tracking-widest uppercase">
               {t.nav.collections}
               <Folder size={12} className="opacity-50" />
             </div>
@@ -691,10 +689,10 @@ export function LuminaSelectWorkbench() {
             />
           </div>
 
-          <div className="bg-lumina-graphite mx-5 my-2 h-px opacity-50" />
+          <div className="mx-5 my-2 h-px bg-white/6 opacity-70" />
 
           <div className="py-4">
-            <div className="mb-1 flex items-center justify-between px-5 py-2 text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+            <div className="text-lumina-muted/90 mb-1 flex items-center justify-between px-5 py-2 text-[10px] font-bold tracking-widest uppercase">
               {t.nav.filters}
               <Filter size={12} className="opacity-50" />
             </div>
@@ -728,20 +726,20 @@ export function LuminaSelectWorkbench() {
             />
           </div>
 
-          <div className="border-lumina-graphite bg-lumina-slate/20 mt-auto border-t p-5">
-            <div className="mb-3 text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+          <div className="mt-auto border-t border-white/5 bg-white/5 p-5">
+            <div className="text-lumina-muted/90 mb-3 text-[10px] font-bold tracking-widest uppercase">
               {t.nav.sort}
             </div>
             <div className="flex gap-2">
               <button
                 type="button"
-                className="border-lumina-graphite bg-lumina-slate hover:bg-lumina-graphite flex flex-1 items-center justify-center gap-1.5 rounded-md border py-2 text-xs text-gray-200 shadow-sm transition-all"
+                className="text-lumina-paper/90 flex flex-1 items-center justify-center gap-1.5 rounded-md border border-white/10 bg-white/5 py-2 text-xs shadow-sm transition-all hover:bg-white/10"
               >
                 <Clock size={12} /> {t.sort.time}
               </button>
               <button
                 type="button"
-                className="hover:bg-lumina-slate flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent bg-transparent py-2 text-xs text-gray-500 transition-all hover:text-gray-300"
+                className="text-lumina-muted hover:text-lumina-paper flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent bg-transparent py-2 text-xs transition-all hover:bg-white/5"
               >
                 <Hash size={12} /> {t.sort.name}
               </button>
@@ -751,10 +749,10 @@ export function LuminaSelectWorkbench() {
 
         <main className="bg-lumina-ink relative flex min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1 overflow-hidden">{canvas}</div>
-          <div className="border-lumina-graphite bg-lumina-ink relative z-40 flex h-24 shrink-0 border-t">
+          <div className="bg-lumina-slate/10 relative z-40 flex h-24 shrink-0 border-t border-white/5 backdrop-blur-xl">
             <button
               type="button"
-              className="border-lumina-graphite bg-lumina-ink hover:bg-lumina-slate z-10 flex h-full w-8 items-center justify-center border-r text-gray-400"
+              className="text-lumina-muted z-10 flex h-full w-8 items-center justify-center border-r border-white/5 bg-transparent hover:bg-white/5"
             >
               <ChevronLeft size={16} />
             </button>
@@ -772,7 +770,7 @@ export function LuminaSelectWorkbench() {
                     id={`lumina-filmstrip-${photo.id}`}
                     onClick={() => handleSelectPhoto(photo.id)}
                     className={cn(
-                      "group relative aspect-square h-16 shrink-0 cursor-pointer overflow-hidden rounded border-2 transition-all",
+                      "group relative aspect-square h-16 shrink-0 cursor-pointer overflow-hidden rounded-md border-2 transition-all",
                       isActive
                         ? "border-lumina-amber ring-lumina-amber/20 ring-2"
                         : "border-transparent hover:border-gray-600"
@@ -801,17 +799,17 @@ export function LuminaSelectWorkbench() {
             </div>
             <button
               type="button"
-              className="border-lumina-graphite bg-lumina-ink hover:bg-lumina-slate z-10 flex h-full w-8 items-center justify-center border-l text-gray-400"
+              className="text-lumina-muted z-10 flex h-full w-8 items-center justify-center border-l border-white/5 bg-transparent hover:bg-white/5"
             >
               <ChevronRight size={16} />
             </button>
           </div>
         </main>
 
-        <aside className="lumina-scrollbar border-lumina-graphite bg-lumina-ink flex h-full w-80 shrink-0 flex-col overflow-y-auto border-l">
+        <aside className="lumina-scrollbar bg-lumina-slate/10 flex h-full w-80 shrink-0 flex-col overflow-y-auto border-l border-white/5 backdrop-blur-xl">
           {!activePhoto ? (
             <div className="flex flex-1 flex-col items-center justify-center p-8 text-center text-gray-500">
-              <div className="bg-lumina-slate text-lumina-graphite mb-6 flex size-20 items-center justify-center rounded-full shadow-inner">
+              <div className="text-lumina-muted mb-6 flex size-20 items-center justify-center rounded-full bg-white/5 shadow-inner ring-1 ring-white/10">
                 <Info size={40} />
               </div>
               <h3 className="mb-2 text-sm font-medium text-gray-200">{t.panel.noSelection}</h3>
@@ -819,16 +817,16 @@ export function LuminaSelectWorkbench() {
             </div>
           ) : (
             <>
-              <div className="border-lumina-graphite bg-lumina-slate/10 border-b p-6">
+              <div className="border-b border-white/5 bg-white/5 p-6">
                 <div className="mb-2 flex items-center justify-between">
                   <h2 className="truncate font-mono text-sm text-gray-100">
                     {activePhoto.filename}
                   </h2>
-                  <span className="border-lumina-graphite bg-lumina-slate rounded border px-2 py-0.5 text-[10px] font-bold tracking-wide text-gray-400">
+                  <span className="text-lumina-muted rounded border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold tracking-wide">
                     {t.panel.raw}
                   </span>
                 </div>
-                <div className="font-mono text-[11px] text-gray-500">
+                <div className="text-lumina-muted/90 font-mono text-[11px]">
                   {activePhoto.width} x {activePhoto.height}px • 24MB
                 </div>
               </div>
@@ -841,7 +839,7 @@ export function LuminaSelectWorkbench() {
                     "group flex items-center justify-between rounded-lg border p-4 transition-all duration-200",
                     selections[activePhoto.id]?.liked
                       ? "border-lumina-amber bg-lumina-amber text-lumina-ink shadow-lumina-amber/20 shadow-lg"
-                      : "border-lumina-graphite bg-lumina-slate hover:bg-lumina-slate/80 text-gray-300 hover:border-gray-500"
+                      : "text-lumina-paper/80 border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -863,7 +861,7 @@ export function LuminaSelectWorkbench() {
                     "group flex items-center justify-between rounded-lg border p-4 transition-all duration-200",
                     selections[activePhoto.id]?.book
                       ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                      : "border-lumina-graphite bg-lumina-slate hover:bg-lumina-slate/80 text-gray-300 hover:border-gray-500"
+                      : "text-lumina-paper/80 border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -884,8 +882,8 @@ export function LuminaSelectWorkbench() {
                   className={cn(
                     "group flex items-center justify-between rounded-lg border p-4 transition-all duration-200",
                     selections[activePhoto.id]?.retouch
-                      ? "border-lumina-retouch bg-lumina-retouch shadow-lumina-retouch/20 text-white shadow-lg"
-                      : "border-lumina-graphite bg-lumina-slate hover:bg-lumina-slate/80 text-gray-300 hover:border-gray-500"
+                      ? "border-lumina-retouch bg-lumina-retouch shadow-lumina-retouch/15 text-lumina-ink shadow-lg"
+                      : "text-lumina-paper/80 border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -898,10 +896,10 @@ export function LuminaSelectWorkbench() {
                 </button>
               </div>
 
-              <div className="bg-lumina-graphite mx-6 my-2 h-px opacity-50" />
+              <div className="mx-6 my-2 h-px bg-white/6 opacity-70" />
 
               <div className="p-6">
-                <h3 className="mb-6 text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+                <h3 className="text-lumina-muted/90 mb-6 text-[10px] font-bold tracking-widest uppercase">
                   {t.panel.pkgStatus}
                 </h3>
                 <UsageBar
@@ -924,11 +922,11 @@ export function LuminaSelectWorkbench() {
                 />
               </div>
 
-              <div className="border-lumina-graphite bg-lumina-slate/30 mt-auto border-t p-6">
+              <div className="mt-auto border-t border-white/5 bg-white/5 p-6">
                 <div className="flex items-start gap-3">
                   <Info size={16} className="text-lumina-primary mt-0.5" />
-                  <p className="text-[11px] leading-relaxed text-gray-400">
-                    <span className="font-bold text-gray-200">{t.panel.tip}:</span>{" "}
+                  <p className="text-lumina-muted/90 text-[11px] leading-relaxed">
+                    <span className="text-lumina-paper font-bold">{t.panel.tip}:</span>{" "}
                     {t.panel.tipText}
                   </p>
                 </div>

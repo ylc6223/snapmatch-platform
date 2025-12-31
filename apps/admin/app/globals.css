@@ -42,14 +42,16 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --color-lumina-ink: #09090b;
-  --color-lumina-slate: #18181b;
-  --color-lumina-graphite: #27272a;
-  --color-lumina-paper: #fafafa;
+  --color-lumina-ink: #0b0f14;
+  --color-lumina-slate: #121923;
+  --color-lumina-graphite: #233041;
+  --color-lumina-paper: #e8eef7;
+  --color-lumina-muted: #9aa7b8;
   --color-lumina-amber: #fbbf24;
   --color-lumina-primary: #3b82f6;
   --color-lumina-primary-hover: #2563eb;
-  --color-lumina-retouch: #7c3aed;
+  --color-lumina-retouch: #22d3ee;
+  --color-lumina-retouch-hover: #06b6d4;
 }
 
 :root {
@@ -132,18 +134,33 @@
 }
 
 @layer utilities {
+  .lumina-backdrop {
+    background-image:
+      radial-gradient(
+        1200px circle at 22% -8%,
+        color-mix(in oklab, var(--color-lumina-primary) 24%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px circle at 84% 18%,
+        color-mix(in oklab, var(--color-lumina-amber) 12%, transparent),
+        transparent 58%
+      ),
+      linear-gradient(180deg, var(--color-lumina-ink), #070a0f 75%);
+  }
+
   .lumina-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   .lumina-scrollbar::-webkit-scrollbar-track {
-    background: var(--color-lumina-slate);
+    background: color-mix(in oklab, var(--color-lumina-slate) 85%, transparent);
   }
   .lumina-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--color-lumina-graphite);
+    background: color-mix(in oklab, var(--color-lumina-graphite) 80%, transparent);
     border-radius: 0px;
   }
   .lumina-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
+    background: color-mix(in oklab, var(--color-lumina-graphite) 95%, transparent);
   }
 }
