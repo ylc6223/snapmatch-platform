@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import {
   BookOpen,
   ChevronLeft,
@@ -22,6 +23,8 @@ import {
   Save
 } from "lucide-react";
 import { Montserrat } from "next/font/google";
+
+import { ThemeToggleButton, useThemeTransition } from "@/components/ui/theme-toggle-button";
 
 import styles from "./lumina-theme.module.css";
 
@@ -310,6 +313,10 @@ function UsageBar({
 }
 
 export function LuminaSelectWorkbench() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const { startTransition } = useThemeTransition();
+  const currentTheme = resolvedTheme === "dark" ? "dark" : "light";
+
   const [photos] = React.useState(() => generateMockPhotos(150));
   const [viewMode, setViewMode] = React.useState<ViewMode>("grid");
   const [activeId, setActiveId] = React.useState<string | null>(() => photos[0]?.id ?? null);
@@ -626,6 +633,15 @@ export function LuminaSelectWorkbench() {
           >
             <Languages size={16} />
           </button>
+
+          <ThemeToggleButton
+            theme={currentTheme}
+            start="top-right"
+            className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 h-9 w-9 rounded-md hover:text-white"
+            onClick={() =>
+              startTransition(() => setTheme(currentTheme === "dark" ? "light" : "dark"))
+            }
+          />
 
           <button
             type="button"
