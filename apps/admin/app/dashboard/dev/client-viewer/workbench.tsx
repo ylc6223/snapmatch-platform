@@ -865,7 +865,7 @@ export function LuminaSelectWorkbench() {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper z-[120] shadow-lg"
                   >
                     展开左侧面板
                   </TooltipContent>
@@ -888,7 +888,7 @@ export function LuminaSelectWorkbench() {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper z-[120] shadow-lg"
                   >
                     {t.folders.all}
                   </TooltipContent>
@@ -911,7 +911,7 @@ export function LuminaSelectWorkbench() {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper z-[120] shadow-lg"
                   >
                     {t.filters.liked}
                   </TooltipContent>
@@ -934,7 +934,7 @@ export function LuminaSelectWorkbench() {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper z-[120] shadow-lg"
                   >
                     {t.filters.book}
                   </TooltipContent>
@@ -957,7 +957,7 @@ export function LuminaSelectWorkbench() {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper z-[120] shadow-lg"
                   >
                     {t.filters.retouch}
                   </TooltipContent>
@@ -980,7 +980,7 @@ export function LuminaSelectWorkbench() {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper shadow-lg"
+                    className="border-lumina-graphite bg-lumina-panel text-lumina-paper z-[120] shadow-lg"
                   >
                     {t.filters.untagged}
                   </TooltipContent>
