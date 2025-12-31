@@ -1,21 +1,21 @@
 "use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
-  IconCamera,
-  IconChartBar, IconCircle,
+  IconChartBar,
   IconDashboard,
-  IconFileAi,
-  IconFileDescription,
   IconFolder,
-  IconInnerShadowTop,
   IconListDetails,
+  IconPhoto,
+  IconSettings,
+  IconStack2,
+  IconTruckDelivery,
   IconUsers
 } from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -23,8 +23,8 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
+  SidebarMenuItem
+} from "@/components/ui/sidebar";
 
 import type { AuthUser, Role } from "@/lib/auth/types";
 import { canAccess } from "@/lib/auth/can";
@@ -32,83 +32,77 @@ import { canAccess } from "@/lib/auth/can";
 const data = {
   navMain: [
     {
-      title: "Dashboard",
+      title: "工作台",
       url: "/dashboard",
       icon: IconDashboard,
+      permissions: ["page:dashboard", "dashboard:view"],
+      items: [
+        { title: "数据概览", url: "/dashboard/analytics" },
+        { title: "快捷入口", url: "/dashboard/shortcuts" }
+      ]
     },
     {
       title: "Users",
       url: "/dashboard/users",
       icon: IconListDetails,
-      roles: ["admin"] satisfies Role[],
+      roles: ["admin"] satisfies Role[]
     },
     {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: IconChartBar,
+      title: "作品集管理",
+      url: "/dashboard/portfolio",
+      icon: IconPhoto,
+      permissions: ["page:assets"],
+      items: [
+        { title: "作品列表", url: "/dashboard/portfolio/works" },
+        { title: "分类管理", url: "/dashboard/portfolio/categories" },
+        { title: "轮播图配置", url: "/dashboard/portfolio/banners" }
+      ]
     },
     {
-      title: "404 Page",
-      url: "/404-page",
-      icon: IconFolder,
+      title: "交付与选片",
+      url: "/dashboard/delivery",
+      icon: IconTruckDelivery,
+      permissions: ["page:assets"],
+      items: [
+        { title: "项目创建", url: "/dashboard/delivery/projects/new" },
+        { title: "照片库", url: "/dashboard/delivery/photos" },
+        { title: "选片链接", url: "/dashboard/delivery/viewer-links" },
+        { title: "精修交付", url: "/dashboard/delivery/retouch" }
+      ]
     },
     {
-      title: "500 Page",
-      url: "/500-page",
+      title: "客户与订单",
+      url: "/dashboard/crm",
       icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
+      permissions: ["page:packages"],
       items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+        { title: "客户档案", url: "/dashboard/crm/customers" },
+        { title: "订单列表", url: "/dashboard/crm/orders" }
+      ]
     },
     {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
+      title: "系统设置",
+      url: "/dashboard/settings",
+      icon: IconSettings,
+      permissions: ["page:settings"],
       items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+        { title: "账号与权限", url: "/dashboard/settings/accounts" },
+        { title: "存储配置", url: "/dashboard/settings/storage" },
+        { title: "小程序配置", url: "/dashboard/settings/miniprogram" }
+      ]
     },
     {
-      title: "Prompts",
-      icon: IconFileAi,
+      title: "示例页面",
       url: "#",
+      icon: IconStack2,
       items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
+        { title: "404 Page", url: "/404-page" },
+        { title: "500 Page", url: "/500-page" }
+      ]
+    }
   ],
-  navSecondary: [
-  ],
-}
+  navSecondary: []
+};
 
 export function AppSidebar({
   user,
@@ -122,12 +116,13 @@ export function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
               <a href="#">
-                <img src="https://shadcnuikit.com/logo.png" className="size-6 rounded-sm group-data-[collapsible=icon]:size-5" alt="shadcn ui kit svg logo" />
+                <img
+                  src="https://shadcnuikit.com/logo.png"
+                  className="size-6 rounded-sm group-data-[collapsible=icon]:size-5"
+                  alt="shadcn ui kit svg logo"
+                />
                 <span className="text-base font-medium">Shadcn UI Kit</span>
               </a>
             </SidebarMenuButton>
@@ -136,7 +131,6 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} label="Main" />
-        <NavMain items={data.navClouds} label="Cloud" showQuickActions={false} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
@@ -149,5 +143,5 @@ export function AppSidebar({
         />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
