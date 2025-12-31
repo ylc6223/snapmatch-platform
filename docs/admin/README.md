@@ -8,8 +8,9 @@
 2. [登录与 RBAC 设计](./auth-rbac-design.md)
 3. [会话踢出机制](./auth-session-kickout.md)
 4. [会话过期 UI 规范](./session-expired-ui-spec.md)
-5. [TanStack Query 全局错误处理](./tanstack-query-global-error-handling.md)
-6. [API 调用策略](./api-strategy.md)
+5. [React Query 请求层使用规范](./react-query-request-layer.md)
+6. [TanStack Query 全局错误处理](./tanstack-query-global-error-handling.md)
+7. [API 调用策略](./api-strategy.md)
 
 ## 🖼️ 架构图与流程图
 
