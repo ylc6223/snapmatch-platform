@@ -17,6 +17,8 @@ import {
   LayoutTemplate,
   Languages,
   Maximize,
+  PanelLeftClose,
+  PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   PenTool,
@@ -206,7 +208,7 @@ function StatPill({
       <span className="w-12 truncate text-right text-xs font-semibold tracking-wider opacity-70">
         {label}
       </span>
-      <span className={cn("font-mono text-sm", isOver && "text-lumina-amber")}>
+      <span className={cn("font-mono text-[13px] leading-none", isOver && "text-lumina-amber")}>
         {count}
         <span className="opacity-40">/{max}</span>
       </span>
@@ -242,7 +244,7 @@ function LeftNavItem({
     >
       <div className="flex items-center gap-3">
         <Icon
-          size={15}
+          size={16}
           className={cn(
             active ? "text-lumina-primary" : "group-hover:text-lumina-paper/90 transition-colors"
           )}
@@ -321,6 +323,7 @@ export function LuminaSelectWorkbench() {
   const [selections, setSelections] = React.useState<Record<string, SelectionState>>({});
   const [filter, setFilter] = React.useState<string>("all");
   const [lang, setLang] = React.useState<Locale>("zh");
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = React.useState(false);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = React.useState(false);
   const filmstripRef = React.useRef<HTMLDivElement>(null);
 
@@ -669,11 +672,23 @@ export function LuminaSelectWorkbench() {
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="border-lumina-graphite bg-lumina-slate flex h-full w-64 shrink-0 flex-col border-r">
+        <aside
+          className={cn(
+            "border-lumina-graphite bg-lumina-slate flex h-full shrink-0 flex-col border-r transition-[width] duration-200",
+            isLeftPanelCollapsed ? "w-0 overflow-hidden border-r-0" : "w-64"
+          )}
+        >
           <div className="py-4">
             <div className="text-lumina-muted/90 mb-1 flex items-center justify-between px-5 py-2 text-[10px] font-bold tracking-widest uppercase">
               {t.nav.collections}
-              <Folder size={12} className="opacity-50" />
+              <button
+                type="button"
+                aria-label="收起左侧面板"
+                onClick={() => setIsLeftPanelCollapsed(true)}
+                className="text-lumina-muted hover:text-lumina-paper hover:bg-lumina-block-hover -mr-1 inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors"
+              >
+                <PanelLeftClose size={16} />
+              </button>
             </div>
             <LeftNavItem
               id="all"
@@ -824,6 +839,81 @@ export function LuminaSelectWorkbench() {
               <ChevronRight size={16} />
             </button>
           </div>
+
+          {isLeftPanelCollapsed ? (
+            <div className="pointer-events-none absolute top-1/2 left-4 z-50 -translate-y-1/2">
+              <div className="border-lumina-graphite bg-lumina-panel pointer-events-auto flex flex-col gap-2 rounded-2xl border p-2 shadow-[0_14px_50px_rgba(0,0,0,0.55)]">
+                <button
+                  type="button"
+                  aria-label="展开左侧面板"
+                  onClick={() => setIsLeftPanelCollapsed(false)}
+                  className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white"
+                >
+                  <PanelLeftOpen size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilter("all")}
+                  className={cn(
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    filter === "all" && "ring-lumina-border-default ring-2"
+                  )}
+                  title={t.folders.all}
+                  aria-label={t.folders.all}
+                >
+                  <Folder size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilter("liked")}
+                  className={cn(
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    filter === "liked" && "ring-lumina-border-default ring-2"
+                  )}
+                  title={t.filters.liked}
+                  aria-label={t.filters.liked}
+                >
+                  <Heart size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilter("book")}
+                  className={cn(
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    filter === "book" && "ring-lumina-border-default ring-2"
+                  )}
+                  title={t.filters.book}
+                  aria-label={t.filters.book}
+                >
+                  <BookOpen size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilter("retouch")}
+                  className={cn(
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    filter === "retouch" && "ring-lumina-border-default ring-2"
+                  )}
+                  title={t.filters.retouch}
+                  aria-label={t.filters.retouch}
+                >
+                  <PenTool size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilter("untagged")}
+                  className={cn(
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    filter === "untagged" && "ring-lumina-border-default ring-2"
+                  )}
+                  title={t.filters.untagged}
+                  aria-label={t.filters.untagged}
+                >
+                  <Filter size={18} />
+                </button>
+              </div>
+            </div>
+          ) : null}
         </main>
 
         <aside
