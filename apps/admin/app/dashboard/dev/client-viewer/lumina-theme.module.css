@@ -30,6 +30,10 @@
     "Microsoft YaHei", Arial, sans-serif;
 
   font-family: var(--lumina-font-sans);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px;
 }
 
 .luminaTheme :global(.font-mono) {

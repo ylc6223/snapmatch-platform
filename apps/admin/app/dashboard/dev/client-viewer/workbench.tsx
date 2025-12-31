@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   BookOpen,
   ChevronLeft,
-  ChevronDown,
   ChevronRight,
   Clock,
   Filter,
@@ -24,12 +23,7 @@ import {
 } from "lucide-react";
 import { Montserrat } from "next/font/google";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import styles from "./lumina-theme.module.css";
 
@@ -625,32 +619,35 @@ export function LuminaSelectWorkbench() {
         </div>
 
         <div className="flex h-full items-center gap-4 pr-5">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/90 flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-semibold transition-colors"
-              >
-                <Globe size={14} className="text-lumina-muted" />
-                <span className="font-mono">{lang === "en" ? "EN" : "中文"}</span>
-                <ChevronDown size={14} className="text-lumina-muted ml-0.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="border-lumina-graphite bg-lumina-panel">
-              <DropdownMenuItem
-                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover text-lumina-paper/90"
-                onClick={() => setLang("zh")}
-              >
-                中文
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover text-lumina-paper/90"
-                onClick={() => setLang("en")}
-              >
-                English
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ToggleGroup
+            type="single"
+            value={lang}
+            onValueChange={(next) => {
+              if (next === "en" || next === "zh") setLang(next);
+            }}
+            variant="outline"
+            size="sm"
+            spacing={0}
+            className="border-lumina-graphite bg-lumina-block flex h-9 items-center rounded-md border p-1"
+          >
+            <div className="text-lumina-muted mr-0.5 ml-1 flex items-center">
+              <Globe size={14} />
+            </div>
+            <ToggleGroupItem
+              value="zh"
+              aria-label="切换到中文"
+              className="data-[state=on]:bg-lumina-block-hover data-[state=on]:text-lumina-paper text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper rounded-sm border-0"
+            >
+              <span className="font-mono text-[11px]">中文</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="en"
+              aria-label="Switch to English"
+              className="data-[state=on]:bg-lumina-block-hover data-[state=on]:text-lumina-paper text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper rounded-sm border-0"
+            >
+              <span className="font-mono text-[11px]">EN</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
 
           <button
             type="button"
