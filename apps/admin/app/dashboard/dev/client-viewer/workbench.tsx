@@ -783,7 +783,14 @@ export function LuminaSelectWorkbench() {
         </aside>
 
         <main className="bg-lumina-ink relative flex min-w-0 flex-1 flex-col">
-          <div className="relative min-h-0 flex-1 overflow-hidden">{canvas}</div>
+          <div
+            className={cn(
+              "relative min-h-0 flex-1 overflow-hidden",
+              isLeftPanelCollapsed && "pl-20"
+            )}
+          >
+            {canvas}
+          </div>
           <div className="border-lumina-graphite bg-lumina-panel relative z-40 flex h-24 shrink-0 border-t">
             <button
               type="button"
@@ -842,74 +849,74 @@ export function LuminaSelectWorkbench() {
 
           {isLeftPanelCollapsed ? (
             <div className="pointer-events-none absolute top-1/2 left-4 z-50 -translate-y-1/2">
-              <div className="border-lumina-graphite bg-lumina-panel pointer-events-auto flex flex-col gap-2 rounded-2xl border p-2 shadow-[0_14px_50px_rgba(0,0,0,0.55)]">
+              <div className="border-lumina-graphite bg-lumina-panel pointer-events-auto flex flex-col gap-1 rounded-2xl border p-1.5 shadow-[0_14px_50px_rgba(0,0,0,0.55)]">
                 <button
                   type="button"
                   aria-label="展开左侧面板"
                   onClick={() => setIsLeftPanelCollapsed(false)}
-                  className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white"
+                  className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white"
                 >
-                  <PanelLeftOpen size={18} />
+                  <PanelLeftOpen size={16} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter("all")}
                   className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
                     filter === "all" && "ring-lumina-border-default ring-2"
                   )}
                   title={t.folders.all}
                   aria-label={t.folders.all}
                 >
-                  <Folder size={18} />
+                  <Folder size={16} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter("liked")}
                   className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
                     filter === "liked" && "ring-lumina-border-default ring-2"
                   )}
                   title={t.filters.liked}
                   aria-label={t.filters.liked}
                 >
-                  <Heart size={18} />
+                  <Heart size={16} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter("book")}
                   className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
                     filter === "book" && "ring-lumina-border-default ring-2"
                   )}
                   title={t.filters.book}
                   aria-label={t.filters.book}
                 >
-                  <BookOpen size={18} />
+                  <BookOpen size={16} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter("retouch")}
                   className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
                     filter === "retouch" && "ring-lumina-border-default ring-2"
                   )}
                   title={t.filters.retouch}
                   aria-label={t.filters.retouch}
                 >
-                  <PenTool size={18} />
+                  <PenTool size={16} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter("untagged")}
                   className={cn(
-                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors hover:text-white",
+                    "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-xl border transition-colors hover:text-white",
                     filter === "untagged" && "ring-lumina-border-default ring-2"
                   )}
                   title={t.filters.untagged}
                   aria-label={t.filters.untagged}
                 >
-                  <Filter size={18} />
+                  <Filter size={16} />
                 </button>
               </div>
             </div>
