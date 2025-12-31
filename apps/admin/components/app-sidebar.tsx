@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  IconBug,
   IconChartBar,
   IconDashboard,
   IconFolder,
@@ -98,6 +99,16 @@ const data = {
       items: [
         { title: "404 Page", url: "/404-page" },
         { title: "500 Page", url: "/500-page" }
+      ]
+    },
+    {
+      title: "调试工具",
+      url: "#",
+      icon: IconBug,
+      roles: ["admin"] satisfies Role[],
+      items: [
+        { title: "API 调试", url: "/dashboard/dev/api" },
+        { title: "Swagger Docs", url: "/api/docs" }
       ]
     }
   ],

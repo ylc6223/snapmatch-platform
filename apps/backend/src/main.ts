@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { BadRequestException, RequestMethod, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import os from "node:os";
 import { AppModule } from "./app.module";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
@@ -59,6 +60,28 @@ async function bootstrap() {
   const jwtSecret = config.get<string>("JWT_SECRET") ?? "change-me";
   if (nodeEnv === "production" && (jwtSecret === "change-me" || jwtSecret.trim().length < 16)) {
     throw new Error("Invalid JWT_SECRET: must be set to a strong value in production");
+  }
+
+  // Swagger：用于接口可视化调试（默认非生产环境开启；生产环境需显式 ENABLE_SWAGGER=true）。
+  const enableSwagger =
+    (config.get<string>("ENABLE_SWAGGER") ?? "").toLowerCase() === "true" || nodeEnv !== "production";
+  if (enableSwagger) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle("SnapMatch Backend API")
+      .setDescription("SnapMatch 管理后台后端接口（NestJS + JWT + RBAC）")
+      .setVersion("0.1.0")
+      .addBearerAuth({ type: "http", scheme: "bearer", bearerFormat: "JWT" })
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup("docs", app, document, {
+      useGlobalPrefix: true,
+      customSiteTitle: "SnapMatch API Docs",
+      swaggerOptions: {
+        persistAuthorization: true,
+        displayRequestDuration: true,
+      },
+    });
   }
 
   // 统一错误响应结构：始终输出 `{ code, message, errors?, timestamp }`（严格 envelope，不对外暴露 detail）。
