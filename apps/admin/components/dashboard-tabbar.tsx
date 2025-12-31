@@ -3,6 +3,19 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+
+/**
+ * 这里引入并使用 @dnd-kit 来实现「标签页 Tabbar 的拖拽排序」能力：
+ * - DndContext：拖拽上下文容器，负责管理拖拽状态与事件（例如 onDragEnd）。
+ * - PointerSensor + useSensor/useSensors：定义用鼠标/触控等指针输入来触发拖拽，并支持组合多个传感器。
+ * - closestCenter：碰撞检测策略，用来判断当前拖拽元素“覆盖/最接近”的目标。
+ * - SortableContext + useSortable：把列表项变成可排序元素，计算位移 transform/transition，并在拖拽结束时更新顺序。
+ *
+ * 注意：该库在渲染时会生成一些运行时属性（例如 aria-describedby 的 id）。
+ * 在 Next.js 中 Client Component 会先 SSR 输出 HTML，再在浏览器端 hydrate；
+ * 如果 SSR 与 CSR 首次渲染生成的 id 不一致，会触发 hydration mismatch（控制台红字）。
+ * 为避免这个问题，本文件在首次 hydration 前先渲染“非拖拽版本”，等 mounted 后再启用 DnD 增强。
+ */
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -82,6 +95,7 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
   const router = useRouter()
   const pathname = normalizePathname(usePathname())
   const { isMobile } = useSidebar()
+  // mounted 后再启用 DnD，保证 SSR 与 CSR 首次输出一致，避免 hydration mismatch。
   const [hydrated, setHydrated] = React.useState(false)
 
   const stored = useAppStore((s) => s.tabbar)
