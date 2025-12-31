@@ -24,6 +24,8 @@ export type AdminUser = Omit<User, "passwordHash"> & {
 export type ListUsersInput = {
   query?: string | null;
   status?: UserStatus | null;
+  sortBy?: "account" | "userType" | "status" | null;
+  sortOrder?: "asc" | "desc" | null;
   page: number;
   pageSize: number;
 };

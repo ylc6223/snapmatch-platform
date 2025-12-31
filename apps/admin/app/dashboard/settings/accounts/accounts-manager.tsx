@@ -1,15 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef, OnChangeFn, SortingState, VisibilityState } from "@tanstack/react-table";
 import { toast } from "sonner";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Plus } from "lucide-react";
 
 import { apiFetch, getApiErrorMessage } from "@/lib/api/client";
 import type { ApiResponse } from "@/lib/api/response";
 import { withAdminBasePath } from "@/lib/routing/base-path";
 import { cn } from "@/lib/utils";
 
+import {
+  DataTable,
+  DataTablePagination,
+  DataTableToolbar,
+  useDataTableQueryState,
+  useTableData,
+} from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,14 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type RoleCode = "admin" | "photographer" | "sales" | "customer";
 
@@ -112,10 +112,23 @@ function uniq<T>(items: T[]) {
 }
 
 export function AccountsManager() {
-  const [query, setQuery] = React.useState("");
-  const [page, setPage] = React.useState(1);
-  const [pageSize] = React.useState(20);
   const queryClient = useQueryClient();
+  const [tableState, tableActions] = useDataTableQueryState({ defaultPageSize: 20 });
+  const onSortingChange: OnChangeFn<SortingState> = React.useCallback(
+    (updater) => {
+      const next = typeof updater === "function" ? updater(tableState.sorting) : updater;
+      tableActions.setSorting(next);
+    },
+    [tableActions, tableState.sorting],
+  );
+
+  const onColumnVisibilityChange: OnChangeFn<VisibilityState> = React.useCallback(
+    (updater) => {
+      const next = typeof updater === "function" ? updater(tableState.columnVisibility) : updater;
+      tableActions.setColumnVisibility(next);
+    },
+    [tableActions, tableState.columnVisibility],
+  );
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
@@ -145,41 +158,30 @@ export function AccountsManager() {
     staleTime: 5 * 60_000,
   });
 
-  const usersQueryParams = React.useMemo(() => {
-    const params = new URLSearchParams();
-    const q = query.trim();
-    if (q.length > 0) params.set("q", q);
-    params.set("page", String(page));
-    params.set("pageSize", String(pageSize));
-    return params;
-  }, [page, pageSize, query]);
+  const usersQuery = useTableData<AdminUser>({
+    queryKey: ["users", "list", tableState.q, tableState.page, tableState.pageSize, tableState.sorting] as const,
+    state: tableState,
+    fetcher: async (input) => {
+      const params = new URLSearchParams();
+      if (input.q.trim().length > 0) params.set("q", input.q.trim());
+      params.set("page", String(input.page));
+      params.set("pageSize", String(input.pageSize));
 
-  const usersQueryKey = React.useMemo(
-    () =>
-      ["users", "list", { q: query.trim(), page, pageSize }] as const,
-    [page, pageSize, query],
-  );
+      const sortBy = input.sortBy;
+      const sortOrder = input.sortOrder;
+      if (sortBy && sortOrder) {
+        params.set("sortBy", sortBy);
+        params.set("sortOrder", sortOrder);
+      }
 
-  const usersQuery = useQuery({
-    queryKey: usersQueryKey,
-    queryFn: async () => {
-      const url = withAdminBasePath(`/api/users?${usersQueryParams.toString()}`);
+      const url = withAdminBasePath(`/api/users?${params.toString()}`);
       const payload = await apiFetch<ApiResponse<ListUsersResult>>(url);
-      return (
-        payload.data ?? {
-          items: [],
-          total: 0,
-          page,
-          pageSize,
-        }
-      );
+      return payload.data ?? { items: [], total: 0, page: input.page, pageSize: input.pageSize };
     },
-    placeholderData: keepPreviousData,
   });
 
-  const data = usersQuery.data ?? { items: [], total: 0, page, pageSize };
-  const totalPages = Math.max(1, Math.ceil((data.total || 0) / pageSize));
-  const roles = rolesQuery.data ?? [];
+  const data = usersQuery.data ?? { items: [], total: 0, page: tableState.page, pageSize: tableState.pageSize };
+  const roles = React.useMemo(() => rolesQuery.data ?? [], [rolesQuery.data]);
 
   function openCreate() {
     setCreateForm({
@@ -213,7 +215,7 @@ export function AccountsManager() {
     onSuccess: async () => {
       toast.success("已创建账号");
       setCreateOpen(false);
-      setPage(1);
+      tableActions.setPage(1);
       await queryClient.invalidateQueries({ queryKey: ["users", "list"] });
     },
     onError: (error) => {
@@ -283,127 +285,135 @@ export function AccountsManager() {
     updateUserMutation.mutate({ id: editing.id, payload });
   }
 
+  const columns = React.useMemo<ColumnDef<AdminUser, unknown>[]>(() => {
+    return [
+      {
+        accessorKey: "account",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="-ml-3"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            账号
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <span className="font-medium">{row.original.account}</span>,
+      },
+      {
+        id: "roles",
+        header: "角色",
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1.5">
+            {row.original.roles.length > 0 ? (
+              row.original.roles.map((r) => (
+                <Badge key={r} variant="secondary" className="rounded-md">
+                  {roleLabel(r, roles)}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-muted-foreground">-</span>
+            )}
+          </div>
+        ),
+        enableSorting: false,
+      },
+      {
+        accessorKey: "userType",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="-ml-3"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            类型
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => userTypeLabel(row.original.userType),
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            className="-ml-3"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            状态
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      },
+      {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const user = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <span className="sr-only">打开菜单</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>操作</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => openEdit(user)}>编辑</DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => disableUserMutation.mutate(user.id)}
+                >
+                  禁用
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ];
+  }, [disableUserMutation, roles]);
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-1 items-center gap-2">
-          <Input
-            placeholder="按账号搜索…"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-            className="max-w-sm"
-          />
-          <Button
-            variant="outline"
-            disabled={usersQuery.isFetching}
-            onClick={() => void usersQuery.refetch()}>
-            刷新
-          </Button>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          新增账号
-        </Button>
-      </div>
-
       <Card>
         <CardContent className="pt-6">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>账号</TableHead>
-                  <TableHead>角色</TableHead>
-                  <TableHead>类型</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead className="w-12" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {usersQuery.isPending ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-sm text-muted-foreground">
-                      加载中…
-                    </TableCell>
-                  </TableRow>
-                ) : data.items.length > 0 ? (
-                  data.items.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.account}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1.5">
-                          {user.roles.length > 0 ? (
-                            user.roles.map((r) => (
-                              <Badge key={r} variant="secondary" className="rounded-md">
-                                {roleLabel(r, roles)}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-sm text-muted-foreground">-</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{userTypeLabel(user.userType)}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={user.status} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <span className="sr-only">打开菜单</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>操作</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => openEdit(user)}>编辑</DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => disableUserMutation.mutate(user.id)}>
-                              禁用
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-sm text-muted-foreground">
-                      暂无数据
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 pt-4 text-sm text-muted-foreground">
-            <div>
-              共 {data.total} 条 · 第 {data.page}/{totalPages} 页
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={usersQuery.isFetching || page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                上一页
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={usersQuery.isFetching || page >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-                下一页
-              </Button>
-            </div>
-          </div>
+          <DataTable
+            columns={columns}
+            data={data.items}
+            isLoading={usersQuery.isPending}
+            sorting={tableState.sorting}
+            onSortingChange={onSortingChange}
+            columnVisibility={tableState.columnVisibility}
+            onColumnVisibilityChange={onColumnVisibilityChange}
+            renderToolbar={(table) => (
+              <DataTableToolbar
+                table={table}
+                q={tableState.q}
+                onQChange={tableActions.setQ}
+                onRefresh={() => void usersQuery.refetch()}
+                placeholder="按账号搜索…"
+                actions={
+                  <Button onClick={openCreate}>
+                    <Plus className="h-4 w-4" />
+                    新增账号
+                  </Button>
+                }
+              />
+            )}
+          />
+          <DataTablePagination
+            total={data.total}
+            page={data.page}
+            pageSize={data.pageSize}
+            isFetching={usersQuery.isFetching}
+            onPageChange={tableActions.setPage}
+            onPageSizeChange={tableActions.setPageSize}
+          />
         </CardContent>
       </Card>
 

@@ -336,7 +336,7 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   )
 }
 
-export function DataTable({
+export function ExampleDataTable({
   data: initialData,
 }: {
   data: z.infer<typeof schema>[]

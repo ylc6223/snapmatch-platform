@@ -25,5 +25,18 @@ export class ListUsersQuery {
   @Transform(({ value }) => (value === "" || value === null || value === undefined ? value : Number(value)))
   @IsIn([0, 1])
   status?: 0 | 1;
-}
 
+  @ApiPropertyOptional({ description: "排序字段", enum: ["account", "userType", "status"], example: "account" })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  @IsIn(["account", "userType", "status"])
+  sortBy?: "account" | "userType" | "status";
+
+  @ApiPropertyOptional({ description: "排序方向", enum: ["asc", "desc"], example: "asc" })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  @IsIn(["asc", "desc"])
+  sortOrder?: "asc" | "desc";
+}

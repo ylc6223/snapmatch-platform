@@ -242,6 +242,15 @@ export class CloudBaseUsersRepository implements UsersRepository {
 
     const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
 
+    const allowedSortBy: Record<NonNullable<ListUsersInput["sortBy"]>, string> = {
+      account: "u.account",
+      userType: "u.userType",
+      status: "u.status",
+    };
+    const sortBy = input.sortBy ?? null;
+    const sortOrder = (input.sortOrder ?? "asc").toLowerCase() === "desc" ? "DESC" : "ASC";
+    const orderBy = sortBy && allowedSortBy[sortBy] ? `${allowedSortBy[sortBy]} ${sortOrder}` : `u.account ASC`;
+
     const rows = await runSql(
       this.models,
       `
@@ -259,7 +268,7 @@ export class CloudBaseUsersRepository implements UsersRepository {
       LEFT JOIN rbac_permissions p ON p._id = rp.permissionId AND p.status = 1
       ${whereSql}
       GROUP BY u._id
-      ORDER BY u.account ASC
+      ORDER BY ${orderBy}
       LIMIT {{limit}} OFFSET {{offset}}
       `,
       params,

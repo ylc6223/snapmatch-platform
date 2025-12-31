@@ -28,6 +28,8 @@ export class UsersAdminController {
       pageSize,
       query: query.q ?? null,
       status: query.status ?? null,
+      sortBy: query.sortBy ?? null,
+      sortOrder: query.sortOrder ?? null,
     });
   }
 
@@ -71,4 +73,3 @@ export class UsersAdminController {
     return { ok: true };
   }
 }
-

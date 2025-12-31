@@ -10,7 +10,8 @@
 4. [会话过期 UI 规范](./session-expired-ui-spec.md)
 5. [React Query 请求层使用规范](./react-query-request-layer.md)
 6. [TanStack Query 全局错误处理](./tanstack-query-global-error-handling.md)
-7. [API 调用策略](./api-strategy.md)
+7. [通用 DataTable 方案](./data-table-solution.md)
+8. [API 调用策略](./api-strategy.md)
 
 ## 🖼️ 架构图与流程图
 
