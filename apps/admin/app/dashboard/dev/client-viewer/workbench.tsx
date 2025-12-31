@@ -6,7 +6,6 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Check,
   Clock,
   Filter,
   Folder,
@@ -23,13 +22,6 @@ import {
   Save
 } from "lucide-react";
 import { Montserrat } from "next/font/google";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 
 import styles from "./lumina-theme.module.css";
 
@@ -625,36 +617,15 @@ export function LuminaSelectWorkbench() {
         </div>
 
         <div className="flex h-full items-center gap-4 pr-5">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="切换语言"
-                className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-muted hover:text-lumina-paper flex h-9 w-9 items-center justify-center rounded-full border transition-colors"
-              >
-                <Languages size={16} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border-lumina-graphite bg-lumina-panel text-lumina-paper/90 w-36"
-            >
-              <DropdownMenuItem
-                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover flex items-center justify-between"
-                onClick={() => setLang("zh")}
-              >
-                中文
-                {lang === "zh" ? <Check size={14} className="text-lumina-primary" /> : null}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover flex items-center justify-between"
-                onClick={() => setLang("en")}
-              >
-                English
-                {lang === "en" ? <Check size={14} className="text-lumina-primary" /> : null}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button
+            type="button"
+            aria-label="切换语言"
+            onClick={() => setLang((current) => (current === "en" ? "zh" : "en"))}
+            className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white"
+            title={lang === "en" ? "切换到中文" : "Switch to English"}
+          >
+            <Languages size={16} />
+          </button>
 
           <button
             type="button"
