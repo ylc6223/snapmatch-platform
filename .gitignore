@@ -18,6 +18,7 @@
 
 # AI / Claude
 .claude/
+.serena/
 
 # Local scratch / utilities
 tmp/
