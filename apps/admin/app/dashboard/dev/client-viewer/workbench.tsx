@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import {
   BookOpen,
   ChevronLeft,
@@ -239,7 +238,7 @@ function LeftNavItem({
       className={cn(
         "group flex h-10 w-full items-center justify-between border-l-2 px-4 text-xs transition-all",
         active
-          ? "border-lumina-primary bg-lumina-block font-medium text-white"
+          ? "border-lumina-primary bg-lumina-block font-medium text-lumina-paper"
           : "text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper border-transparent"
       )}
     >
@@ -272,7 +271,7 @@ function CanvasBadge({
   return (
     <div
       className={cn(
-        "flex size-5 items-center justify-center rounded-full text-white shadow-sm ring-1 ring-black/20",
+        "flex size-5 items-center justify-center rounded-full text-lumina-paper shadow-sm ring-1 ring-black/20",
         className
       )}
     >
@@ -313,10 +312,32 @@ function UsageBar({
   );
 }
 
+type ViewerTheme = "dark" | "light";
+
+const VIEWER_THEME_STORAGE_KEY = "snapmatch:client-viewer-theme";
+
 export function LuminaSelectWorkbench() {
-  const { resolvedTheme, setTheme } = useTheme();
   const { startTransition } = useThemeTransition();
-  const currentTheme = resolvedTheme === "dark" ? "dark" : "light";
+  const [viewerTheme, setViewerTheme] = React.useState<ViewerTheme>("dark");
+
+  React.useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(VIEWER_THEME_STORAGE_KEY);
+      if (stored === "dark" || stored === "light") {
+        setViewerTheme(stored);
+      }
+    } catch {
+      // Ignore localStorage errors and fall back to system/default theme.
+    }
+  }, []);
+
+  React.useEffect(() => {
+    try {
+      window.localStorage.setItem(VIEWER_THEME_STORAGE_KEY, viewerTheme);
+    } catch {
+      // Ignore persistence errors.
+    }
+  }, [viewerTheme]);
 
   const [photos] = React.useState(() => generateMockPhotos(150));
   const [viewMode, setViewMode] = React.useState<ViewMode>("grid");
@@ -428,13 +449,13 @@ export function LuminaSelectWorkbench() {
               alt="Main view"
             />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-20 select-none">
-              <div className="-rotate-12 text-6xl font-black tracking-widest text-white mix-blend-overlay">
+              <div className="-rotate-12 text-6xl font-black tracking-widest text-lumina-paper mix-blend-overlay">
                 {t.canvas.proof}
               </div>
               <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-8 p-8">
                 {Array.from({ length: 9 }).map((_, idx) => (
                   <div key={idx} className="flex items-center justify-center">
-                    <span className="-rotate-12 text-xl font-bold text-white/10">
+                    <span className="-rotate-12 text-xl font-bold text-lumina-paper/10">
                       {t.canvas.brand}
                     </span>
                   </div>
@@ -529,9 +550,10 @@ export function LuminaSelectWorkbench() {
   return (
     <div
       className={cn(
+        viewerTheme === "dark" ? "client-viewer-dark" : "client-viewer-light",
         luminaMontserrat.variable,
         styles.luminaTheme,
-        "bg-lumina-ink text-lumina-paper selection:bg-lumina-primary fixed inset-0 z-[60] flex h-svh w-screen flex-col overflow-hidden selection:text-white"
+        "bg-lumina-ink text-lumina-paper selection:bg-lumina-primary fixed inset-0 z-[60] flex h-svh w-screen flex-col overflow-hidden selection:text-lumina-paper"
       )}
     >
       <header className="border-lumina-graphite bg-lumina-panel z-50 flex h-14 items-center justify-between border-b shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all select-none">
@@ -568,7 +590,7 @@ export function LuminaSelectWorkbench() {
               className={cn(
                 "rounded-md p-2 transition-all",
                 viewMode === "grid"
-                  ? "bg-lumina-block ring-lumina-graphite text-white shadow-sm ring-1"
+                  ? "bg-lumina-block ring-lumina-graphite text-lumina-paper shadow-sm ring-1"
                   : "text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper"
               )}
               title={t.views.grid}
@@ -581,7 +603,7 @@ export function LuminaSelectWorkbench() {
               className={cn(
                 "rounded-md p-2 transition-all",
                 viewMode === "single"
-                  ? "bg-lumina-block ring-lumina-graphite text-white shadow-sm ring-1"
+                  ? "bg-lumina-block ring-lumina-graphite text-lumina-paper shadow-sm ring-1"
                   : "text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper"
               )}
               title={t.views.single}
@@ -594,7 +616,7 @@ export function LuminaSelectWorkbench() {
               className={cn(
                 "rounded-md p-2 transition-all",
                 viewMode === "compare"
-                  ? "bg-lumina-block ring-lumina-graphite text-white shadow-sm ring-1"
+                  ? "bg-lumina-block ring-lumina-graphite text-lumina-paper shadow-sm ring-1"
                   : "text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper"
               )}
               title={t.views.compare}
@@ -630,18 +652,20 @@ export function LuminaSelectWorkbench() {
             type="button"
             aria-label="切换语言"
             onClick={() => setLang((current) => (current === "en" ? "zh" : "en"))}
-            className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white"
+            className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-lumina-paper"
             title={lang === "en" ? "切换到中文" : "Switch to English"}
           >
             <Languages size={16} />
           </button>
 
           <ThemeToggleButton
-            theme={currentTheme}
+            theme={viewerTheme}
             start="top-right"
-            className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 h-9 w-9 rounded-md hover:text-white"
+            className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 h-9 w-9 rounded-md hover:text-lumina-paper"
             onClick={() =>
-              startTransition(() => setTheme(currentTheme === "dark" ? "light" : "dark"))
+              startTransition(() =>
+                setViewerTheme((current) => (current === "dark" ? "light" : "dark"))
+              )
             }
           />
 
@@ -657,7 +681,7 @@ export function LuminaSelectWorkbench() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-28 items-center justify-center gap-2 rounded-md border px-0 text-xs font-medium shadow-sm transition-all hover:text-white"
+              className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-28 items-center justify-center gap-2 rounded-md border px-0 text-xs font-medium shadow-sm transition-all hover:text-lumina-paper"
             >
               <Save size={14} />
               {t.actions.save}
@@ -783,7 +807,7 @@ export function LuminaSelectWorkbench() {
           </div>
         </aside>
 
-        <main className="bg-lumina-ink relative flex min-w-0 flex-1 flex-col">
+        <div role="main" className="bg-lumina-ink relative flex min-w-0 flex-1 flex-col">
           <div
             className={cn(
               "relative min-h-0 flex-1 overflow-hidden",
@@ -857,7 +881,7 @@ export function LuminaSelectWorkbench() {
                       type="button"
                       aria-label="展开左侧面板"
                       onClick={() => setIsLeftPanelCollapsed(false)}
-                      className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white"
+                      className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-lumina-paper"
                     >
                       <PanelLeftOpen size={16} />
                     </button>
@@ -877,7 +901,7 @@ export function LuminaSelectWorkbench() {
                       type="button"
                       onClick={() => setFilter("all")}
                       className={cn(
-                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-lumina-paper",
                         filter === "all" && "ring-lumina-border-default ring-2"
                       )}
                       aria-label={t.folders.all}
@@ -900,7 +924,7 @@ export function LuminaSelectWorkbench() {
                       type="button"
                       onClick={() => setFilter("liked")}
                       className={cn(
-                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-lumina-paper",
                         filter === "liked" && "ring-lumina-border-default ring-2"
                       )}
                       aria-label={t.filters.liked}
@@ -923,7 +947,7 @@ export function LuminaSelectWorkbench() {
                       type="button"
                       onClick={() => setFilter("book")}
                       className={cn(
-                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-lumina-paper",
                         filter === "book" && "ring-lumina-border-default ring-2"
                       )}
                       aria-label={t.filters.book}
@@ -946,7 +970,7 @@ export function LuminaSelectWorkbench() {
                       type="button"
                       onClick={() => setFilter("retouch")}
                       className={cn(
-                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-lumina-paper",
                         filter === "retouch" && "ring-lumina-border-default ring-2"
                       )}
                       aria-label={t.filters.retouch}
@@ -969,7 +993,7 @@ export function LuminaSelectWorkbench() {
                       type="button"
                       onClick={() => setFilter("untagged")}
                       className={cn(
-                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-white",
+                        "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors hover:text-lumina-paper",
                         filter === "untagged" && "ring-lumina-border-default ring-2"
                       )}
                       aria-label={t.filters.untagged}
@@ -988,7 +1012,7 @@ export function LuminaSelectWorkbench() {
               </div>
             </div>
           ) : null}
-        </main>
+        </div>
 
         <aside
           className={cn(
@@ -1054,14 +1078,14 @@ export function LuminaSelectWorkbench() {
                   className={cn(
                     "group flex items-center justify-between rounded-lg border p-4 transition-all duration-200",
                     selections[activePhoto.id]?.book
-                      ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                      ? "border-blue-600 bg-blue-600 text-lumina-paper shadow-lg shadow-blue-600/20"
                       : "border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 hover:border-lumina-graphite/80"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <BookOpen
                       size={18}
-                      className={cn(selections[activePhoto.id]?.book && "fill-white")}
+                      className={cn(selections[activePhoto.id]?.book && "fill-lumina-paper")}
                     />
                     <span className="text-xs font-bold tracking-wide uppercase">
                       {t.panel.btnBook}
