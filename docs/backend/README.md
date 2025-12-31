@@ -147,7 +147,7 @@ Authorization: Bearer <accessToken>
 
 当前实现提供两层能力：
 
-1. **角色（Roles）**：`admin` / `photographer` / `customer`
+1. **角色（Roles）**：`admin` / `photographer` / `sales` / `customer`
 2. **权限（Permissions）**：字符串数组（例如 `packages:write`）
 
 ### 5.1 给接口加角色限制

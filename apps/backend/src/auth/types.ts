@@ -2,6 +2,7 @@
 export enum Role {
   Admin = "admin",
   Photographer = "photographer",
+  Sales = "sales",
   Customer = "customer",
 }
 

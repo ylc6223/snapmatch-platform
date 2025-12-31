@@ -1,4 +1,4 @@
-export type Role = "admin" | "photographer" | "customer";
+export type Role = "admin" | "photographer" | "sales" | "customer";
 
 export type AuthUser = {
   id: string;
@@ -6,4 +6,3 @@ export type AuthUser = {
   roles: Role[];
   permissions: string[];
 };
-
