@@ -1,5 +1,7 @@
 "use client"
 
+"use client"
+
 import Link from "next/link"
 import { useState } from "react"
 import { Menu, X, Camera } from "lucide-react"
@@ -50,11 +52,11 @@ export function Header() {
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
           <ThemeToggle />
-          <Link href={ADMIN_LOGIN_URL}>
+          <a href={ADMIN_LOGIN_URL}>
             <Button variant="outline" className="rounded-full bg-transparent">
               Sign in
             </Button>
-          </Link>
+          </a>
         </div>
       </nav>
 
@@ -91,12 +93,9 @@ export function Header() {
                   ))}
                 </div>
                 <div className="py-6">
-                  <Link
-                    href={ADMIN_LOGIN_URL}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
+                  <a href={ADMIN_LOGIN_URL} onClick={() => setMobileMenuOpen(false)}>
                     <Button className="w-full rounded-full">Sign in</Button>
-                  </Link>
+                  </a>
                 </div>
               </div>
             </div>
