@@ -50,7 +50,9 @@ export function NavUser({
       await apiFetch(withAdminBasePath("/api/auth/logout"), { method: "POST" }).catch(() => null);
     },
     onSuccess: () => {
-      router.replace(withAdminBasePath("/login"));
+      // Next.js 已配置 basePath（默认 /admin），客户端导航会自动附加 basePath；
+      // 这里若手动拼接会导致 /admin/admin/login。
+      router.replace("/login");
     },
   });
 
