@@ -6,15 +6,16 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Check,
   Clock,
   Filter,
   Folder,
-  Globe,
   Grid,
   Hash,
   Heart,
   Info,
   LayoutTemplate,
+  Languages,
   Maximize,
   PanelRightClose,
   PanelRightOpen,
@@ -23,7 +24,12 @@ import {
 } from "lucide-react";
 import { Montserrat } from "next/font/google";
 
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 import styles from "./lumina-theme.module.css";
 
@@ -619,35 +625,36 @@ export function LuminaSelectWorkbench() {
         </div>
 
         <div className="flex h-full items-center gap-4 pr-5">
-          <ToggleGroup
-            type="single"
-            value={lang}
-            onValueChange={(next) => {
-              if (next === "en" || next === "zh") setLang(next);
-            }}
-            variant="outline"
-            size="sm"
-            spacing={0}
-            className="border-lumina-graphite bg-lumina-block flex h-9 items-center rounded-md border p-1"
-          >
-            <div className="text-lumina-muted mr-0.5 ml-1 flex items-center">
-              <Globe size={14} />
-            </div>
-            <ToggleGroupItem
-              value="zh"
-              aria-label="切换到中文"
-              className="data-[state=on]:bg-lumina-block-hover data-[state=on]:text-lumina-paper text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper rounded-sm border-0"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="切换语言"
+                className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-muted hover:text-lumina-paper flex h-9 w-9 items-center justify-center rounded-full border transition-colors"
+              >
+                <Languages size={16} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="border-lumina-graphite bg-lumina-panel text-lumina-paper/90 w-36"
             >
-              <span className="font-mono text-[11px]">中文</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="en"
-              aria-label="Switch to English"
-              className="data-[state=on]:bg-lumina-block-hover data-[state=on]:text-lumina-paper text-lumina-muted hover:bg-lumina-block-hover hover:text-lumina-paper rounded-sm border-0"
-            >
-              <span className="font-mono text-[11px]">EN</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
+              <DropdownMenuItem
+                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover flex items-center justify-between"
+                onClick={() => setLang("zh")}
+              >
+                中文
+                {lang === "zh" ? <Check size={14} className="text-lumina-primary" /> : null}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover flex items-center justify-between"
+                onClick={() => setLang("en")}
+              >
+                English
+                {lang === "en" ? <Check size={14} className="text-lumina-primary" /> : null}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <button
             type="button"
