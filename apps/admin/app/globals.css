@@ -41,6 +41,15 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --color-lumina-ink: #09090b;
+  --color-lumina-slate: #18181b;
+  --color-lumina-graphite: #27272a;
+  --color-lumina-paper: #fafafa;
+  --color-lumina-amber: #fbbf24;
+  --color-lumina-primary: #3b82f6;
+  --color-lumina-primary-hover: #2563eb;
+  --color-lumina-retouch: #7c3aed;
 }
 
 :root {
@@ -119,5 +128,22 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .lumina-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .lumina-scrollbar::-webkit-scrollbar-track {
+    background: var(--color-lumina-slate);
+  }
+  .lumina-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-lumina-graphite);
+    border-radius: 0px;
+  }
+  .lumina-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46;
   }
 }
