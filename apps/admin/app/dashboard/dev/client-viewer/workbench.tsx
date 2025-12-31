@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   BookOpen,
   ChevronLeft,
+  ChevronDown,
   ChevronRight,
   Clock,
   Filter,
@@ -16,10 +17,21 @@ import {
   Info,
   LayoutTemplate,
   Maximize,
+  PanelRightClose,
+  PanelRightOpen,
   PenTool,
   Save
 } from "lucide-react";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Montserrat } from "next/font/google";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+
+import styles from "./lumina-theme.module.css";
 
 type ViewMode = "grid" | "single" | "compare";
 
@@ -47,16 +59,10 @@ type ProjectConfig = {
   tokenExpires: string;
 };
 
-const luminaSans = IBM_Plex_Sans({
+const luminaMontserrat = Montserrat({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-lumina-sans"
-});
-
-const luminaMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-lumina-mono"
+  variable: "--font-lumina-montserrat"
 });
 
 const PROJECT_CONFIG: ProjectConfig = {
@@ -318,6 +324,7 @@ export function LuminaSelectWorkbench() {
   const [selections, setSelections] = React.useState<Record<string, SelectionState>>({});
   const [filter, setFilter] = React.useState<string>("all");
   const [lang, setLang] = React.useState<Locale>("zh");
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = React.useState(false);
   const filmstripRef = React.useRef<HTMLDivElement>(null);
 
   const t: Translation = TRANSLATIONS[lang];
@@ -521,13 +528,10 @@ export function LuminaSelectWorkbench() {
   return (
     <div
       className={cn(
-        luminaSans.variable,
-        luminaMono.variable,
+        luminaMontserrat.variable,
+        styles.luminaTheme,
         "bg-lumina-ink text-lumina-paper selection:bg-lumina-primary fixed inset-0 z-[60] flex h-svh w-screen flex-col overflow-hidden selection:text-white"
       )}
-      style={{
-        fontFamily: "var(--font-lumina-sans)"
-      }}
     >
       <header className="border-lumina-graphite bg-lumina-panel z-50 flex h-14 items-center justify-between border-b shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all select-none">
         <div className="flex h-full items-center">
@@ -621,13 +625,40 @@ export function LuminaSelectWorkbench() {
         </div>
 
         <div className="flex h-full items-center gap-4 pr-5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/90 flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-semibold transition-colors"
+              >
+                <Globe size={14} className="text-lumina-muted" />
+                <span className="font-mono">{lang === "en" ? "EN" : "中文"}</span>
+                <ChevronDown size={14} className="text-lumina-muted ml-0.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="border-lumina-graphite bg-lumina-panel">
+              <DropdownMenuItem
+                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover text-lumina-paper/90"
+                onClick={() => setLang("zh")}
+              >
+                中文
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="hover:bg-lumina-block-hover focus:bg-lumina-block-hover text-lumina-paper/90"
+                onClick={() => setLang("en")}
+              >
+                English
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <button
             type="button"
-            onClick={() => setLang(lang === "en" ? "zh" : "en")}
-            className="text-lumina-muted hover:text-lumina-paper hover:bg-lumina-block-hover flex w-16 items-center justify-center gap-1.5 rounded py-1 font-mono text-[10px] font-bold transition-colors"
+            onClick={() => setIsRightPanelCollapsed((prev) => !prev)}
+            className="border-lumina-graphite bg-lumina-block hover:bg-lumina-block-hover text-lumina-paper/80 flex h-9 w-9 items-center justify-center rounded-md border transition-colors"
+            aria-label={isRightPanelCollapsed ? "展开右侧面板" : "收起右侧面板"}
           >
-            <Globe size={12} />
-            {lang === "en" ? "中文" : "EN"}
+            {isRightPanelCollapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
           </button>
 
           <div className="bg-lumina-graphite h-6 w-px" />
@@ -642,7 +673,7 @@ export function LuminaSelectWorkbench() {
             </button>
             <button
               type="button"
-              className="bg-lumina-primary hover:bg-lumina-primary-hover flex h-9 w-40 items-center justify-center gap-2 rounded-md px-0 text-xs font-bold text-white shadow-[0_12px_30px_rgba(0,202,224,0.22)] transition-all"
+              className="border-lumina-border-default bg-lumina-primary hover:bg-lumina-primary-hover flex h-9 w-40 items-center justify-center gap-2 rounded-md border px-0 text-xs font-bold text-black shadow-[0_12px_30px_rgba(0,202,224,0.22)] transition-all"
             >
               {t.actions.submit}
             </button>
@@ -808,9 +839,19 @@ export function LuminaSelectWorkbench() {
           </div>
         </main>
 
-        <aside className="lumina-scrollbar border-lumina-graphite bg-lumina-slate flex h-full w-80 shrink-0 flex-col overflow-y-auto border-l">
+        <aside
+          className={cn(
+            "lumina-scrollbar border-lumina-graphite bg-lumina-slate flex h-full shrink-0 flex-col overflow-y-auto border-l transition-[width] duration-200",
+            isRightPanelCollapsed ? "w-0 border-l-0" : "w-80"
+          )}
+        >
           {!activePhoto ? (
-            <div className="flex flex-1 flex-col items-center justify-center p-8 text-center text-gray-500">
+            <div
+              className={cn(
+                "flex flex-1 flex-col items-center justify-center p-8 text-center",
+                isRightPanelCollapsed ? "hidden" : "text-gray-500"
+              )}
+            >
               <div className="border-lumina-graphite bg-lumina-block text-lumina-muted mb-6 flex size-20 items-center justify-center rounded-full shadow-inner ring-1">
                 <Info size={40} />
               </div>
@@ -818,7 +859,7 @@ export function LuminaSelectWorkbench() {
               <p className="max-w-[200px] text-xs leading-relaxed">{t.panel.noSelectionTip}</p>
             </div>
           ) : (
-            <>
+            <div className={cn(isRightPanelCollapsed ? "hidden" : "flex flex-1 flex-col")}>
               <div className="border-lumina-graphite bg-lumina-block border-b p-6">
                 <div className="mb-2 flex items-center justify-between">
                   <h2 className="truncate font-mono text-sm text-gray-100">
@@ -933,7 +974,7 @@ export function LuminaSelectWorkbench() {
                   </p>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </aside>
       </div>

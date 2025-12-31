@@ -1,0 +1,55 @@
+.luminaTheme {
+  --lumina-text-primary: #f5fbff;
+  --lumina-text-secondary: rgba(224, 245, 255, 0.6);
+  --lumina-text-tertiary: rgba(224, 245, 255, 0.6);
+  --lumina-text-placeholder: rgba(214, 241, 255, 0.35);
+  --lumina-text-disable: rgba(214, 241, 255, 0.2);
+
+  --lumina-background-1: #0f1115;
+  --lumina-background-2: #17191d;
+  --lumina-background-panel: #171a21;
+
+  --lumina-block-default: rgba(204, 221, 255, 0.06);
+  --lumina-block-hover: rgba(204, 221, 255, 0.16);
+  --lumina-block-pressed: rgba(204, 221, 255, 0.2);
+
+  --lumina-line-1: rgba(184, 221, 255, 0.08);
+  --lumina-line-2: rgba(184, 221, 255, 0.12);
+
+  --lumina-main-default: #00cae0;
+  --lumina-main-hover: #00a4c2;
+  --lumina-main-pressed: #008099;
+  --lumina-border-default: rgba(0, 202, 224, 0.3);
+
+  --lumina-state-warning: #ffbe4d;
+
+  --lumina-font-sans:
+    "CapCut Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  --lumina-font-mono:
+    var(--font-lumina-montserrat), Montserrat, "CapCut Sans", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", Arial, sans-serif;
+
+  font-family: var(--lumina-font-sans);
+}
+
+.luminaTheme :global(.font-mono) {
+  font-family: var(--lumina-font-mono);
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar) {
+  width: 8px;
+  height: 8px;
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar-track) {
+  background: var(--lumina-background-2);
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar-thumb) {
+  background: rgba(184, 221, 255, 0.18);
+  border-radius: 0px;
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar-thumb:hover) {
+  background: rgba(184, 221, 255, 0.28);
+}

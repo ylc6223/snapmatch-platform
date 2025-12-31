@@ -42,23 +42,24 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Lumina preview theme (aligned to provided commerce dark tokens) */
-  --color-lumina-paper: #f5fbff;
-  --color-lumina-muted: rgba(224, 245, 255, 0.6);
+  /* Lumina preview theme tokens (values are scoped in lumina theme stylesheet) */
+  --color-lumina-paper: var(--lumina-text-primary, #f5fbff);
+  --color-lumina-muted: var(--lumina-text-tertiary, rgba(224, 245, 255, 0.6));
 
-  --color-lumina-ink: #0f1115;
-  --color-lumina-slate: #17191d;
-  --color-lumina-panel: #171a21;
+  --color-lumina-ink: var(--lumina-background-1, #0f1115);
+  --color-lumina-slate: var(--lumina-background-2, #17191d);
+  --color-lumina-panel: var(--lumina-background-panel, #171a21);
 
-  --color-lumina-block: rgba(204, 221, 255, 0.06);
-  --color-lumina-block-hover: rgba(204, 221, 255, 0.16);
-  --color-lumina-graphite: rgba(184, 221, 255, 0.12);
+  --color-lumina-block: var(--lumina-block-default, rgba(204, 221, 255, 0.06));
+  --color-lumina-block-hover: var(--lumina-block-hover, rgba(204, 221, 255, 0.16));
+  --color-lumina-graphite: var(--lumina-line-2, rgba(184, 221, 255, 0.12));
 
-  --color-lumina-primary: #00cae0;
-  --color-lumina-primary-hover: #00a4c2;
+  --color-lumina-primary: var(--lumina-main-default, #00cae0);
+  --color-lumina-primary-hover: var(--lumina-main-hover, #00a4c2);
 
-  --color-lumina-amber: #ffbe4d;
-  --color-lumina-retouch: #00cae0;
+  --color-lumina-border-default: var(--lumina-border-default, rgba(0, 202, 224, 0.3));
+  --color-lumina-amber: var(--lumina-state-warning, #ffbe4d);
+  --color-lumina-retouch: var(--lumina-main-default, #00cae0);
 }
 
 :root {
@@ -137,22 +138,5 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-@layer utilities {
-  .lumina-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  .lumina-scrollbar::-webkit-scrollbar-track {
-    background: var(--color-lumina-slate);
-  }
-  .lumina-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(184, 221, 255, 0.18);
-    border-radius: 0px;
-  }
-  .lumina-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(184, 221, 255, 0.28);
   }
 }
