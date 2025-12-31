@@ -88,6 +88,15 @@ pnpm -C apps/backend dev
 
 ## 4. 鉴权与登录（JWT）
 
+### 4.0 Swagger（接口可视化调试）
+
+后端已接入 Swagger UI，用于接口可视化调试与联调：
+
+- 直连后端：`http://localhost:3002/api/v1/docs`
+- 通过 Admin 代理：`http://localhost:3001/api/docs`
+
+后续接口开发的 Swagger 标注规范见：`docs/backend/swagger.md`
+
 ### 4.1 登录
 
 接口：`POST /api/v1/auth/login`（公开接口）
