@@ -34,7 +34,7 @@
 - `apps/backend`：签发/校验 JWT、注入 `request.user`、执行 `@Roles/@Permissions` 强校验。
 - `apps/admin`：
   - `/app/api/*`：作为 BFF 层，读取 cookie 中的 token，转发请求到后端，并做统一错误映射。
-  - `middleware.ts`：对 `/dashboard/*` 做“是否已登录”的轻量拦截（只看 cookie 是否存在）。
+  - `proxy.ts`：对 `/dashboard/*` 做“是否已登录”的轻量拦截（只看 cookie 是否存在），并承载 SSR 场景的静默续期与 header 注入。
   - 页面/组件：基于 `me.roles/me.permissions` 做菜单/按钮可见性与禁用态。
 
 ### 2.2 为什么推荐 BFF
@@ -84,11 +84,11 @@
 
 ## 4. 路由保护与权限控制
 
-### 4.1 路由级保护：`middleware.ts`
+### 4.1 路由级保护：`proxy.ts`
 
 ![权限控制流程（路由保护 + 后端 RBAC）](./assets/authz-rbac-flow.svg)
 
-建议在 `apps/admin/middleware.ts`：
+建议在 `apps/admin/proxy.ts`：
 
 - 匹配：`/dashboard/:path*`
 - 判断：是否存在 `admin_access_token` cookie
@@ -96,7 +96,7 @@
 
 说明：
 
-- middleware 不做 token 解码/校验（避免复杂逻辑与网络请求）；真实有效性在后端接口调用时兜底。
+- `proxy.ts` 不做 token 解码/验签（避免复杂逻辑与网络请求）；真实有效性在后端接口调用时兜底。
 - token 失效时（后端返回 401），前端统一触发登出并跳登录。
 
 ### 4.2 展示层权限控制（前端）
@@ -155,7 +155,7 @@
 - `apps/admin/app/api/auth/me/route.ts`
 - `apps/admin/app/api/auth/logout/route.ts`
 - `apps/admin/lib/api/server-request.ts`（仅服务端用）
-- `apps/admin/middleware.ts` -（可选）`apps/admin/lib/auth/permissions.ts`（前端权限工具与类型）
+- `apps/admin/proxy.ts` -（可选）`apps/admin/lib/auth/permissions.ts`（前端权限工具与类型）
 
 后续每个资源一个 proxy：
 
@@ -214,7 +214,7 @@
 ## 9. MVP 落地顺序（建议按此拆任务）
 
 1. 登录打通：LoginForm → `POST /api/auth/login` → cookie → 跳转 dashboard
-2. 加 `middleware.ts`：保护 `/dashboard/*`
+2. 配置 `proxy.ts`：保护 `/dashboard/*`
 3. 做 `GET /api/auth/me` + 全局 Auth 状态（Provider/Hook）
 4. 实现 `serverRequest()` + 一个示例业务 proxy（例如 `/api/health` 或 `/api/packages`）
 5. 路由菜单增加权限字段并过滤；按钮级权限组件

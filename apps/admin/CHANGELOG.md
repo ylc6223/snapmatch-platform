@@ -42,7 +42,7 @@
 ### 变更
 
 - 登录页从“前端假校验”切换为真实调用后端登录：`apps/admin/app/(guest)/login/login-form.tsx`
-- 增加路由保护：`apps/admin/middleware.ts` 保护 `/dashboard/:path*`，未登录跳转 `/login?next=...`，并将 `/` 重定向到 `/dashboard`
+- 增加路由保护：`apps/admin/proxy.ts` 保护 `/dashboard/:path*`，未登录跳转 `/login?next=...`，并将 `/` 重定向到 `/dashboard`
 - Dashboard 布局服务端校验登录态并注入当前用户：`apps/admin/app/dashboard/layout.tsx`
 - 基础 RBAC（展示层）接入：`apps/admin/lib/auth/can.ts` + `apps/admin/components/app-sidebar.tsx`（示例：Users 菜单仅 admin 可见）
 - 退出登录：`apps/admin/components/nav-user.tsx` 调用 `/api/auth/logout` 并跳转 `/login`
