@@ -43,7 +43,7 @@
   <!-- header -->
   <text x="682" y="36" text-anchor="middle" class="title">权限控制流程（路由保护 + 后端 RBAC 强校验）</text>
   <text x="682" y="58" text-anchor="middle" class="muted">
-    middleware 只做“是否已登录”的轻量拦截；角色/权限判定由后端 Guard 执行（401/403 兜底）
+    proxy.ts 只做“是否已登录”的轻量拦截；角色/权限判定由后端 Guard 执行（401/403 兜底）
   </text>
 
   <!-- Layer: Client -->
@@ -65,7 +65,7 @@
 
   <!-- Boxes -->
   <rect x="210" y="308" width="360" height="92" fill="#f3fff8" class="box-strong"/>
-  <text x="230" y="338" class="text">A) 路由保护（middleware.ts）</text>
+  <text x="230" y="338" class="text">A) 路由保护（proxy.ts）</text>
   <text x="230" y="360" class="sub">匹配：/dashboard/:path*</text>
   <text x="230" y="380" class="sub">只检查 admin_access_token cookie 是否存在</text>
 
