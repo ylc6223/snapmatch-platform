@@ -189,12 +189,16 @@ export const ThemeToggleButton = ({
 export const useThemeTransition = () => {
   const startTransition = useCallback((updateFn: () => void) => {
     if ("startViewTransition" in document) {
-      (document as any).startViewTransition(updateFn);
-    } else {
-      updateFn();
+      try {
+        (document as any).startViewTransition(updateFn);
+        return;
+      } catch {
+        // Fall back when View Transitions API is present but fails at runtime.
+      }
     }
+
+    updateFn();
   }, []);
 
   return { startTransition };
 };
-

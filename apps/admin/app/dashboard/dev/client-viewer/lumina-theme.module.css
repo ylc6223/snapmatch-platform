@@ -1,0 +1,238 @@
+.luminaTheme {
+  --lumina-font-sans:
+    "CapCut Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  --lumina-font-mono:
+    var(--font-lumina-montserrat), Montserrat, "CapCut Sans", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", Arial, sans-serif;
+
+  font-family: var(--lumina-font-sans);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+:global(.client-viewer-dark).luminaTheme {
+  --lumina-text-primary: #f5fbff;
+  --lumina-text-secondary: rgba(224, 245, 255, 0.6);
+  --lumina-text-tertiary: rgba(224, 245, 255, 0.6);
+  --lumina-text-placeholder: rgba(214, 241, 255, 0.35);
+  --lumina-text-disable: rgba(214, 241, 255, 0.2);
+
+  --lumina-background-1: #0f1115;
+  --lumina-background-2: #17191d;
+  --lumina-background-panel: #171a21;
+
+  --lumina-block-default: rgba(204, 221, 255, 0.06);
+  --lumina-block-hover: rgba(204, 221, 255, 0.16);
+  --lumina-block-pressed: rgba(204, 221, 255, 0.2);
+
+  --lumina-line-1: rgba(184, 221, 255, 0.08);
+  --lumina-line-2: rgba(184, 221, 255, 0.12);
+
+  --lumina-main-default: #00cae0;
+  --lumina-main-hover: #00a4c2;
+  --lumina-main-pressed: #008099;
+  --lumina-border-default: rgba(0, 202, 224, 0.3);
+
+  --lumina-state-warning: #ffbe4d;
+}
+
+:global(.client-viewer-light).luminaTheme {
+  /* Light tokens provided by user */
+  --bg-black: #000;
+  --bg-body: #f8f9fa;
+  --bg-commerce-popup: #fff;
+  --bg-dropdown-menu: #fff;
+  --bg-float: #fff;
+  --bg-mask-30: #0000004d;
+  --bg-mask-60: #00000099;
+  --bg-mask-80: #000000cc;
+  --onmask-button-bg-default: #202127b7;
+  --onmask-button-bg-hover: #26272db7;
+  --onmask-button-bg-pressed: #1c1d23b7;
+  --bg-surface: #fff;
+  --bg-block-primary-default: #0000000d;
+  --bg-block-primary-hover: #00000012;
+  --bg-block-primary-pressed: #0000001a;
+  --bg-block-secondary-default: #00000008;
+  --bg-block-secondary-hover: #0000000d;
+  --bg-block-secondary-pressed: #00000012;
+  --brand-main-block-default: #00a1c21f;
+  --brand-main-block-hover: #00a1c229;
+  --brand-main-block-pressed: #00a1c214;
+  --brand-main-default: #00a1c2;
+  --brand-main-hover: #0996b2;
+  --brand-main-pressed: #00a1c2;
+  --brand-bright-default: #00b8cc;
+  --brand-bright-hover: #00afc2;
+  --brand-bright-pressed: #00b8cc;
+  --brand-video: #6b68ff;
+  --brand-music: #00c0cc;
+  --brand-image: #39acff;
+  --canvas-bg: #f1f2f3;
+  --canvas-sidebar-bg: #fff;
+  --canvas-bg-block-default: #f1f2f3eb;
+  --canvas-bg-block-hover: #e7e8e9eb;
+  --canvas-bg-block-pressed: #dfdfdfeb;
+  --canvas-float-block-default: #ffffffeb;
+  --canvas-float-block-hover: #f5f5f5eb;
+  --canvas-float-block-pressed: #ebebebeb;
+  --canvas-frame: #fff;
+  --canvas-image-loading-end: #e9eaeb;
+  --canvas-image-loading-start: #f9f9f9;
+  --text-primary: #0f1419;
+  --text-secondary: #536471;
+  --text-tertiary: #72808a;
+  --text-placeholder: #536471a3;
+  --text-disabled: #5364715c;
+  --text-link: #3686ad;
+  --stroke-primary: #00000012;
+  --stroke-secondary: #0000000d;
+  --stroke-tertiary: #00000008;
+  --inverse-text-primary: #ffffffe5;
+  --inverse-text-secondary: #ffffff99;
+  --inverse-text-tertiary: #ffffff33;
+  --inverse-text-link: #8ac7e599;
+  --inverse-bg: #0f0f12;
+  --inverse-button: #fff;
+  --functional-error: #f35;
+  --functional-warning: #ffa21e;
+  --functional-important: #ffa21e;
+  --functional-success: #00cae0;
+  --onmedia-text-primary: #f5fbff;
+  --onmedia-text-secondary: #f5fbffe0;
+  --onmedia-text-tertiary: #f5fbff8f;
+  --onmedia-text-placeholder: #f5fbff59;
+  --onmedia-text-disabled: #e0f5ff33;
+  --onmedia-panel: #18191de5;
+  --onmedia-block-default: #00000033;
+  --onmedia-block-disabled: #0000004d;
+  --onmedia-block-hover: #00000066;
+  --onmedia-block-pressed: #00000080;
+  --component-detail-panel: #fff;
+  --component-input-bg: #ffffffeb;
+  --component-input-bg-tab: #0000000d;
+  --component-input-adjust-stroke-default: #00000012;
+  --component-input-adjust-stroke-hover: #00000017;
+  --component-input-adjust-stroke-pressed: #0000001c;
+  --component-segmented-control-hover: #ffffffa3;
+  --component-segmented-control-selected: #fff;
+  --component-toast: #fff;
+  --component-tooltips: #22252a;
+  --component-upload-image: #e7e7e78f;
+  --component-upload-image-hover: #e7e7e7ab;
+  --dialog-bg: #fff;
+  --dialog-text-primary: #0f1419;
+  --dialog-text-secondary: #536471;
+  --dialog-text-placeholder: #536471a3;
+  --dialog-block-default: #0000000d;
+  --dialog-block-disabled: #0000000d;
+  --dialog-block-hover: #00000012;
+  --dialog-block-pressed: #0000001a;
+  --dialog-button-default: #0f0f12;
+  --dialog-button-disabled: #bac0ca;
+  --dialog-button-hover: #1a1d22;
+  --dialog-button-pressed: #0f0f12;
+  --component-primary-button-bg-default: #0f0f12;
+  --component-primary-button-bg-hover: #24272c;
+  --component-primary-button-bg-pressed: #0f0f12;
+  --component-primary-button-bg-disabled: #e1e3e5;
+  --component-primary-button-text-default: #fff;
+  --component-primary-button-text-disabled: #fff;
+  --component-secondary-button-bg-default: #0000000d;
+  --component-secondary-button-bg-disabled: #0000000d;
+  --component-secondary-button-bg-hover: #00000012;
+  --component-secondary-button-bg-pressed: #0000001a;
+  --component-secondary-button-text-default: #0f1419;
+  --component-secondary-button-text-disabled: #a5acb8;
+  --component-black-button-bg-default: #0f0f12;
+  --component-black-button-bg-pressed: #1a1d22;
+  --component-black-button-bg-disabled: #50545e;
+  --component-black-button-text-default: #fff;
+  --component-black-button-text-disabled: #ffffffb2;
+  --component-primary-text-button-default: #0f1419;
+  --component-primary-text-button-hover: #191e23;
+  --component-primary-text-button-pressed: #050a0f;
+  --component-primary-text-button-disabled: #5364715c;
+  --component-secondary-text-button-default: #536471;
+  --component-secondary-text-button-hover: #5d6e7b;
+  --component-secondary-text-button-pressed: #495a67;
+  --component-secondary-text-button-disabled: #5364715c;
+  --component-float-block-default: #f0f0f0e5;
+  --component-float-block-hover: #e5e5e5e5;
+  --component-float-block-pressed: #e0e0e0e5;
+  --component-float-bar-bg: #ffffffeb;
+  --component-onmedia-primary-text-button-default: #f5fbff;
+  --component-onmedia-primary-text-button-hover: #f5fbffe0;
+  --component-onmedia-primary-text-button-pressed: #f5fbffb8;
+  --component-onmedia-primary-text-button-disabled: #f5fbffb8;
+  --component-reference-popups-canvas-bg: #0000000d;
+  --component-reference-remove-default: #22252a;
+  --component-reference-remove-hover: #3b4047;
+  --component-reference-remove-pressed: #15161a;
+  --component-reference-remove-border: #e0f5ff40;
+  --component-reward-tag-bg-default: #ffcc001a;
+  --component-reward-tag-bg-hover: #ffcc0029;
+  --component-reward-tag-bg-pressed: #ffcc001a;
+  --component-upload-button-default: #f0f0f0;
+  --component-upload-button-hover: #e5e5e5;
+  --component-upload-button-pressed: #e0e0e0;
+  --component-slider-default: #0f1419;
+  --component-slider-hover: #191e23;
+  --component-slider-disabled: #050a0f;
+  --component-input-stroke: #0000000d;
+  --shadow-general: #00000014;
+  --shadow-icon-text: 0px 1px 2px #0000003d;
+  --shadow-dropdown-menu: 0 8px 56px 0px var(--shadow-general);
+  --shadow-reference-image: 0px 0px 2px #00000014, 0px 1px 8px #0000001f;
+  --shadow-generator-float-block: 0px 4px 12px #0000000f, 0px 2px 6px #00000005;
+  --shadow-input-hover: 0px 4px 32px rgba(0, 0, 0, 0.04), 0px 6px 24px rgba(0, 0, 0, 0.03);
+
+  /* Map to lumina tokens consumed by Tailwind */
+  --lumina-text-primary: var(--text-primary);
+  --lumina-text-secondary: var(--text-secondary);
+  --lumina-text-tertiary: var(--text-tertiary);
+  --lumina-text-placeholder: var(--text-placeholder);
+  --lumina-text-disable: var(--text-disabled);
+
+  --lumina-background-1: var(--bg-surface);
+  --lumina-background-2: var(--bg-body);
+  --lumina-background-panel: var(--bg-commerce-popup);
+
+  --lumina-block-default: var(--bg-block-secondary-default);
+  --lumina-block-hover: var(--bg-block-secondary-hover);
+  --lumina-block-pressed: var(--bg-block-secondary-pressed);
+
+  --lumina-line-1: var(--stroke-secondary);
+  --lumina-line-2: var(--stroke-primary);
+
+  --lumina-main-default: var(--brand-main-default);
+  --lumina-main-hover: var(--brand-main-hover);
+  --lumina-main-pressed: var(--brand-main-pressed);
+  --lumina-border-default: rgba(0, 161, 194, 0.3);
+
+  --lumina-state-warning: var(--functional-warning);
+}
+
+.luminaTheme :global(.font-mono) {
+  font-family: var(--lumina-font-mono);
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar) {
+  width: 8px;
+  height: 8px;
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar-track) {
+  background: var(--lumina-background-2);
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar-thumb) {
+  background: rgba(184, 221, 255, 0.18);
+  border-radius: 0px;
+}
+
+.luminaTheme :global(.lumina-scrollbar::-webkit-scrollbar-thumb:hover) {
+  background: rgba(184, 221, 255, 0.28);
+}
