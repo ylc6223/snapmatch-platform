@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 function normalizeNext(input: unknown) {
   const next = typeof input === "string" ? input : "";
-  if (!next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  if (!next.startsWith("/") || next.startsWith("//")) return "/dashboard/analytics";
   return next;
 }
 

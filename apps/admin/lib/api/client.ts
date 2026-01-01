@@ -15,7 +15,7 @@ export class ApiError extends Error {
 }
 
 function getNextPath() {
-  if (typeof window === "undefined") return "/dashboard";
+  if (typeof window === "undefined") return "/dashboard/analytics";
   return window.location.pathname + window.location.search;
 }
 

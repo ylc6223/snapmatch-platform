@@ -560,7 +560,7 @@ export function LuminaSelectWorkbench() {
         <div className="flex h-full items-center">
           <div className="hover:bg-lumina-slate flex h-full w-14 items-center justify-center transition-colors">
             <Link
-              href="/dashboard"
+              href="/dashboard/analytics"
               className="group flex size-full items-center justify-center"
               title="返回后台"
             >

@@ -55,7 +55,6 @@ function normalizePathname(pathname: string) {
 }
 
 function isActivePath(pathname: string, href: string) {
-  if (href === "/dashboard") return pathname === "/dashboard"
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
@@ -137,7 +136,7 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
 
   const activeHref = React.useMemo(() => {
     const candidate = visibleHrefs.find((href) => isActivePath(pathname, href))
-    return candidate ?? "/dashboard"
+    return candidate ?? "/dashboard/analytics"
   }, [pathname, visibleHrefs])
 
   const pathnameRef = React.useRef(pathname)
@@ -208,7 +207,8 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
 
       if (href === activeHref) {
         const remaining = visibleHrefs.filter((h) => h !== href && !stored.closed.includes(h))
-        const fallback = remaining.find((h) => isPinned(h)) ?? remaining[0] ?? "/dashboard"
+        const fallback =
+          remaining.find((h) => isPinned(h)) ?? remaining[0] ?? "/dashboard/analytics"
         router.push(fallback)
       }
     },
@@ -224,7 +224,7 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
 
     appActions.tabbarSet((prev) => ({ closed: uniq([...prev.closed, ...closable]) }))
 
-    const fallback = visibleHrefs.find((h) => isPinned(h)) ?? "/dashboard"
+    const fallback = visibleHrefs.find((h) => isPinned(h)) ?? "/dashboard/analytics"
     router.push(fallback)
   }, [visibleHrefs, routeMap, isPinned, router])
 

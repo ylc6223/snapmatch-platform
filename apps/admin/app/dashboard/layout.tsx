@@ -23,14 +23,6 @@ async function getDashboardTabs() {
   const dashboardDir = path.join(process.cwd(), "app", "dashboard")
   const tabs: DashboardTab[] = []
 
-  const rootPage = path.join(dashboardDir, "page.tsx")
-  try {
-    await fs.access(rootPage)
-    tabs.push({ href: "/dashboard", label: buildDashboardTabLabelFromHref("/dashboard") })
-  } catch {
-    // ignore
-  }
-
   const entries = await fs.readdir(dashboardDir, { withFileTypes: true })
   for (const entry of entries) {
     if (!entry.isDirectory()) continue
@@ -85,7 +77,7 @@ export default async function Page({ children }: { children: React.ReactNode }) 
 
     const accessToken =
       requestHeaders.get("x-admin-access-token") ?? (await getAdminAccessToken())
-    if (!accessToken) redirect(withAdminBasePath("/login?next=/dashboard"))
+    if (!accessToken) redirect(withAdminBasePath("/login?next=/dashboard/analytics"))
 
     const response = await fetch(
       new URL("/api/v1/auth/me", process.env.BACKEND_BASE_URL ?? "http://localhost:3002"),
@@ -96,7 +88,8 @@ export default async function Page({ children }: { children: React.ReactNode }) 
       }
     )
 
-    if (response.status === 401) redirect(withAdminBasePath("/session-expired?next=/dashboard"))
+    if (response.status === 401)
+      redirect(withAdminBasePath("/session-expired?next=/dashboard/analytics"))
     const result = (await response.json()) as ApiResponse<{ user: AuthUser }>
     const current = result.data?.user
     if (!current) {

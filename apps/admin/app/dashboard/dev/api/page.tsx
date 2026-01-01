@@ -27,7 +27,7 @@ export default async function Page() {
   const result = (await response.json()) as ApiResponse<{ user: AuthUser }>;
   const user = result.data?.user;
   const isAdmin = Boolean(user?.roles?.includes("admin"));
-  if (!isAdmin) redirect(withAdminBasePath("/dashboard"));
+  if (!isAdmin) redirect(withAdminBasePath("/dashboard/analytics"));
 
   return <ApiDebugger />;
 }

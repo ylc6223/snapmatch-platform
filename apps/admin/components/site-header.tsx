@@ -31,11 +31,14 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
       dashboardIndex >= 0 ? segments.slice(dashboardIndex) : segments
 
     if (effectiveSegments.length === 0) {
-      return [{ label: toNavigationLabel("dashboard"), href: "/dashboard", current: true }]
+      return [{ label: toNavigationLabel("dashboard"), href: "/dashboard/analytics", current: true }]
     }
 
     return effectiveSegments.map((segment, index) => {
-      const href = `/${effectiveSegments.slice(0, index + 1).join("/")}`
+      const href =
+        segment === "dashboard" && index === 0
+          ? "/dashboard/analytics"
+          : `/${effectiveSegments.slice(0, index + 1).join("/")}`
       return {
         label: toNavigationLabel(segment),
         href,

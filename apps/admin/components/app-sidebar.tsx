@@ -31,7 +31,7 @@ const data = {
   navMain: [
     {
       title: "工作台",
-      url: "/dashboard",
+      url: "/dashboard/analytics",
       icon: IconDashboard,
       permissions: ["page:dashboard", "dashboard:view"],
       items: [
