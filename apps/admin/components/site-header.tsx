@@ -63,7 +63,7 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
                   </BreadcrumbItem>
                 ) : (
                   <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
+                    <span className="text-muted-foreground">{crumb.label}</span>
                   </BreadcrumbItem>
                 )}
               </React.Fragment>
