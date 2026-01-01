@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { HeroActions } from "./hero-actions"
 import { ArrowRight } from "lucide-react"
 
 export function Hero() {
@@ -17,20 +17,7 @@ export function Hero() {
               热爱摄影，专注于记录生活中的美好瞬间。用独特的视角和真挚的情感，为你留下值得珍藏的影像回忆。
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Button 
-                size="lg" 
-                className="rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-white dark:text-background dark:hover:bg-white/90"
-              >
-                查看作品集
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="rounded-full bg-transparent border-2 border-primary text-primary hover:bg-primary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
-              >
-                预约咨询
-              </Button>
+              <HeroActions />
             </div>
           </div>
           <div className="relative">
