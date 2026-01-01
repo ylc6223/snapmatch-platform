@@ -31,7 +31,7 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
       dashboardIndex >= 0 ? segments.slice(dashboardIndex) : segments
 
     if (effectiveSegments.length === 0) {
-      return [{ label: "Dashboard", href: "/dashboard", current: true }]
+      return [{ label: toNavigationLabel("dashboard"), href: "/dashboard", current: true }]
     }
 
     return effectiveSegments.map((segment, index) => {
