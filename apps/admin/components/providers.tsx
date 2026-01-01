@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionExpiredDialog } from "@/components/session-expired-dialog";
+import { ForbiddenDialog } from "@/components/forbidden-dialog";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = React.useState(
@@ -29,6 +30,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         {children}
         <Toaster />
         <SessionExpiredDialog />
+        <ForbiddenDialog />
       </QueryClientProvider>
     </ThemeProvider>
   );

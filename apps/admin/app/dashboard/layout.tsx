@@ -88,8 +88,12 @@ export default async function Page({ children }: { children: React.ReactNode }) 
       }
     )
 
-    if (response.status === 401)
+    if (response.status === 401) {
       redirect(withAdminBasePath("/session-expired?next=/dashboard/analytics"))
+    }
+    if (response.status === 403) {
+      redirect(withAdminBasePath("/forbidden?next=/dashboard/analytics"))
+    }
     const result = (await response.json()) as ApiResponse<{ user: AuthUser }>
     const current = result.data?.user
     if (!current) {

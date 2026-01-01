@@ -1,6 +1,7 @@
 "use client";
 
 import { emitSessionExpired } from "@/lib/api/session-expired";
+import { emitForbidden } from "@/lib/api/forbidden";
 import { isApiResponse, type ApiResponse } from "@/lib/api/response";
 
 export class ApiError extends Error {
@@ -18,6 +19,11 @@ function isLoginPage() {
   if (typeof window === "undefined") return false;
   // basePath 可能是 /admin，因此这里用 endsWith 判断，避免硬编码 basePath。
   return window.location.pathname.replace(/\/+$/, "").endsWith("/login");
+}
+
+function isForbiddenPage() {
+  if (typeof window === "undefined") return false;
+  return window.location.pathname.replace(/\/+$/, "").endsWith("/forbidden");
 }
 
 function getRequestPathname(input: RequestInfo | URL) {
@@ -63,10 +69,27 @@ export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit):
         ? String((payload as { message?: unknown }).message ?? "")
         : "";
     const requestPathname = getRequestPathname(input);
-    const shouldEmit = !isLoginPage() && !(requestPathname && isAuthPublicEndpoint(requestPathname));
+    const shouldEmit =
+      !isLoginPage() && !isForbiddenPage() && !(requestPathname && isAuthPublicEndpoint(requestPathname));
     if (shouldEmit) {
       emitSessionExpired({
         message: message.trim().length ? message.trim() : "登录已失效或已被踢下线，请重新登录。",
+        nextPath: getNextPath(),
+      });
+    }
+  }
+
+  if (response.status === 403) {
+    const message =
+      typeof payload === "object" && payload !== null && "message" in payload
+        ? String((payload as { message?: unknown }).message ?? "")
+        : "";
+    const requestPathname = getRequestPathname(input);
+    const shouldEmit =
+      !isLoginPage() && !isForbiddenPage() && !(requestPathname && isAuthPublicEndpoint(requestPathname));
+    if (shouldEmit) {
+      emitForbidden({
+        message: message.trim().length ? message.trim() : "你没有权限访问该功能。",
         nextPath: getNextPath(),
       });
     }
