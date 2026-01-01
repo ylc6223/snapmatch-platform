@@ -3,8 +3,8 @@ import { ArrowRight } from "lucide-react"
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+    <section className="relative overflow-hidden mt-0">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
           <div className="max-w-xl">
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-balance">
@@ -14,14 +14,21 @@ export function Hero() {
               每一个珍贵瞬间
             </h1>
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-              光影工作室专注于商业摄影、人像摄影和产品摄影服务。我们用专业的技术和独特的视角，为每一位客户创造难忘的视觉体验。
+              热爱摄影，专注于记录生活中的美好瞬间。用独特的视角和真挚的情感，为你留下值得珍藏的影像回忆。
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Button size="lg" className="rounded-full gap-2">
+              <Button 
+                size="lg" 
+                className="rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-white dark:text-background dark:hover:bg-white/90"
+              >
                 查看作品集
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full bg-transparent">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="rounded-full bg-transparent border-2 border-primary text-primary hover:bg-primary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
+              >
                 预约咨询
               </Button>
             </div>

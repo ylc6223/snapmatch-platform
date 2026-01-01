@@ -5,17 +5,19 @@ import { CaseStudies } from "@/components/case-studies"
 import { Services } from "@/components/services"
 import { About } from "@/components/about"
 import { Contact } from "@/components/contact"
+import { FAQ } from "@/components/faq"
 import { Footer } from "@/components/footer"
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen m-0 p-0">
       <Header />
       <Hero />
       <Services />
       <PortfolioGallery />
       <CaseStudies />
       <About />
+      <FAQ />
       <Contact />
       <Footer />
     </main>

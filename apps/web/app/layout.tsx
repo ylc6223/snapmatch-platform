@@ -6,9 +6,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "光影工作室 | 专业摄影服务",
+  title: "一拍即合 | 专业独立摄影师",
   description:
-    "光影工作室专注于商业摄影、人像摄影和产品摄影服务，用专业的技术和独特的视角，为每一位客户创造难忘的视觉体验。",
+    "专注商业摄影、人像摄影和产品摄影服务，用专业的技术和独特的艺术视角，为每一位客户创造难忘的视觉体验。",
   generator: "v0.app",
 }
 
@@ -38,7 +38,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="font-sans antialiased">
-        <ThemeProvider defaultTheme="system" storageKey="photography-theme">
+        <ThemeProvider 
+          defaultTheme="light" 
+          storageKey="photography-theme"
+          enableSystem={false}
+        >
           {children}
         </ThemeProvider>
         <Analytics />

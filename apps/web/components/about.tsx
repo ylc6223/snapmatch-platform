@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge"
 
 const stats = [
-  { value: "10+", label: "年行业经验" },
-  { value: "500+", label: "服务客户" },
-  { value: "2000+", label: "完成项目" },
-  { value: "98%", label: "客户满意度" },
+  { value: "8+", label: "年摄影经验" },
+  { value: "500+", label: "拍摄场次" },
+  { value: "3000+", label: "作品数量" },
+  { value: "100%", label: "用心对待" },
 ]
 
 export function About() {
@@ -16,7 +16,7 @@ export function About() {
             <div className="aspect-[4/3] overflow-hidden rounded-2xl">
               <img
                 src="/placeholder.svg?height=500&width=650"
-                alt="工作室团队"
+                alt="摄影师工作照"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -34,7 +34,7 @@ export function About() {
 
           <div>
             <Badge variant="secondary" className="mb-4 rounded-full">
-              关于我们
+              关于我
             </Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">
               用心创作，
@@ -43,13 +43,13 @@ export function About() {
             </h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed">
               <p>
-                光影工作室成立于2014年，是一家专注于高端摄影服务的专业工作室。我们的团队由多位资深摄影师组成，每一位都拥有丰富的拍摄经验和独特的艺术视角。
+                热爱摄影，用镜头记录生活已有八个年头。专注于个人写真、日常跟拍和婚礼摄影，用真诚的态度和独特的视角，为每一位客户留下值得珍藏的影像回忆。
               </p>
               <p>
-                我们相信，好的摄影作品不仅仅是技术的体现，更是情感与故事的传递。无论是商业项目还是个人拍摄，我们都以最专业的态度和最真诚的心去对待每一次创作。
+                深信好的摄影作品不仅仅是技术的体现，更是情感与故事的传递。每一次拍摄都用心对待，努力捕捉那些不经意却最动人的瞬间，让照片有温度、有故事。
               </p>
               <p>
-                十年来，我们服务过数百家企业客户和数千位个人客户，积累了丰富的行业经验。我们始终坚持品质至上的原则，用镜头记录生活中的美好瞬间。
+                这些年，拍摄过五百多场不同类型的活动，记录了数千个美好瞬间。无论是日常生活中的小事，还是人生中的重要时刻，都用镜头为你珍藏，让美好成为永恒。
               </p>
             </div>
 
