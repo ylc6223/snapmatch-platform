@@ -7,6 +7,7 @@ require("reflect-metadata");
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const config_1 = require("@nestjs/config");
+const swagger_1 = require("@nestjs/swagger");
 const node_os_1 = __importDefault(require("node:os"));
 const app_module_1 = require("./app.module");
 const api_exception_filter_1 = require("./common/filters/api-exception.filter");
@@ -47,6 +48,24 @@ async function bootstrap() {
     const jwtSecret = config.get("JWT_SECRET") ?? "change-me";
     if (nodeEnv === "production" && (jwtSecret === "change-me" || jwtSecret.trim().length < 16)) {
         throw new Error("Invalid JWT_SECRET: must be set to a strong value in production");
+    }
+    const enableSwagger = (config.get("ENABLE_SWAGGER") ?? "").toLowerCase() === "true" || nodeEnv !== "production";
+    if (enableSwagger) {
+        const swaggerConfig = new swagger_1.DocumentBuilder()
+            .setTitle("SnapMatch Backend API")
+            .setDescription("SnapMatch 管理后台后端接口（NestJS + JWT + RBAC）")
+            .setVersion("0.1.0")
+            .addBearerAuth({ type: "http", scheme: "bearer", bearerFormat: "JWT" })
+            .build();
+        const document = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
+        swagger_1.SwaggerModule.setup("docs", app, document, {
+            useGlobalPrefix: true,
+            customSiteTitle: "SnapMatch API Docs",
+            swaggerOptions: {
+                persistAuthorization: true,
+                displayRequestDuration: true,
+            },
+        });
     }
     app.useGlobalFilters(new api_exception_filter_1.ApiExceptionFilter({ includeDetail: false }));
     app.useGlobalInterceptors(new response_envelope_interceptor_1.ResponseEnvelopeInterceptor());

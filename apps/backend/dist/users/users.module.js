@@ -14,12 +14,14 @@ const cloudbase_constants_1 = require("../database/cloudbase.constants");
 const users_repository_1 = require("./users.repository");
 const users_repository_cloudbase_1 = require("./users.repository.cloudbase");
 const users_service_1 = require("./users.service");
+const users_admin_controller_1 = require("./users.admin.controller");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
         imports: [cloudbase_module_1.CloudbaseModule],
+        controllers: [users_admin_controller_1.UsersAdminController],
         providers: [
             users_service_1.UsersService,
             {

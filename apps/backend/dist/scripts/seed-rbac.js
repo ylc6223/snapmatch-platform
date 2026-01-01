@@ -54,6 +54,9 @@ async function resolvePasswordHash(which) {
         return hash;
     const password = process.env[`SEED_${prefix}_PASSWORD`]?.trim();
     if (!password) {
+        if (which !== "admin" && which !== "visitor") {
+            return resolvePasswordHash("admin");
+        }
         throw new Error(`Missing seed password for ${which}. Set SEED_${prefix}_PASSWORD_HASH (recommended) or SEED_${prefix}_PASSWORD.`);
     }
     return bcryptjs_1.default.hash(password, 10);
@@ -119,6 +122,8 @@ async function main() {
     const roleScopesModel = getModel(models, roleScopesModelName);
     const roles = [
         { code: "admin", name: "管理员(摄影师)", status: 1 },
+        { code: "photographer", name: "摄影师/修图师", status: 1 },
+        { code: "sales", name: "销售/客服", status: 1 },
         { code: "customer", name: "访客(客户)", status: 1 },
     ];
     const resources = ["dashboard", "packages", "assets", "users", "settings"];
@@ -188,9 +193,13 @@ async function main() {
         },
     })));
     const adminHash = await resolvePasswordHash("admin");
+    const photographerHash = await resolvePasswordHash("photographer");
+    const salesHash = await resolvePasswordHash("sales");
     const visitorHash = await resolvePasswordHash("visitor");
     const seedUsers = [
         { envType: "admin", account: "admin", passwordHash: adminHash, userType: "photographer", status: 1 },
+        { envType: "photographer", account: "photographer", passwordHash: photographerHash, userType: "photographer", status: 1 },
+        { envType: "sales", account: "sales", passwordHash: salesHash, userType: "sales", status: 1 },
         { envType: "visitor", account: "visitor", passwordHash: visitorHash, userType: "customer", status: 1 },
     ];
     const userIdByAccount = new Map();
@@ -213,6 +222,8 @@ async function main() {
     }
     const userRoleEdges = [
         { userId: userIdByAccount.get("admin"), roleId: roleIdByCode.get("admin") },
+        { userId: userIdByAccount.get("photographer"), roleId: roleIdByCode.get("photographer") },
+        { userId: userIdByAccount.get("sales"), roleId: roleIdByCode.get("sales") },
         { userId: userIdByAccount.get("visitor"), roleId: roleIdByCode.get("customer") },
     ];
     for (const edge of userRoleEdges) {
@@ -220,8 +231,28 @@ async function main() {
     }
     await userRolesModel.createMany({ data: userRoleEdges });
     const adminRoleId = roleIdByCode.get("admin");
+    const photographerRoleId = roleIdByCode.get("photographer");
+    const salesRoleId = roleIdByCode.get("sales");
     const customerRoleId = roleIdByCode.get("customer");
     const adminPermissionIds = Array.from(permissionIdByCode.values());
+    const photographerPermissionIds = [
+        permissionIdByCode.get("page:dashboard"),
+        permissionIdByCode.get("page:assets"),
+        permissionIdByCode.get("page:packages"),
+        permissionIdByCode.get("dashboard:view"),
+        permissionIdByCode.get("assets:read"),
+        permissionIdByCode.get("assets:write"),
+        permissionIdByCode.get("packages:read"),
+    ].filter((v) => Boolean(v));
+    const salesPermissionIds = [
+        permissionIdByCode.get("page:dashboard"),
+        permissionIdByCode.get("page:users"),
+        permissionIdByCode.get("page:packages"),
+        permissionIdByCode.get("dashboard:view"),
+        permissionIdByCode.get("users:read"),
+        permissionIdByCode.get("users:write"),
+        permissionIdByCode.get("packages:read"),
+    ].filter((v) => Boolean(v));
     const customerPermissionIds = [
         permissionIdByCode.get("page:dashboard"),
         permissionIdByCode.get("page:packages"),
@@ -231,19 +262,33 @@ async function main() {
         permissionIdByCode.get("assets:read"),
     ].filter((v) => Boolean(v));
     await rolePermsModel.deleteMany({ filter: { where: { roleId: { $eq: adminRoleId } } } });
+    await rolePermsModel.deleteMany({ filter: { where: { roleId: { $eq: photographerRoleId } } } });
+    await rolePermsModel.deleteMany({ filter: { where: { roleId: { $eq: salesRoleId } } } });
     await rolePermsModel.deleteMany({ filter: { where: { roleId: { $eq: customerRoleId } } } });
     await rolePermsModel.createMany({
         data: adminPermissionIds.map((permissionId) => ({ roleId: adminRoleId, permissionId })),
+    });
+    await rolePermsModel.createMany({
+        data: photographerPermissionIds.map((permissionId) => ({ roleId: photographerRoleId, permissionId })),
+    });
+    await rolePermsModel.createMany({
+        data: salesPermissionIds.map((permissionId) => ({ roleId: salesRoleId, permissionId })),
     });
     await rolePermsModel.createMany({
         data: customerPermissionIds.map((permissionId) => ({ roleId: customerRoleId, permissionId })),
     });
     const scopes = [
         { roleCode: "admin", resource: "*", scopeType: "all" },
+        { roleCode: "photographer", resource: "assets", scopeType: "self" },
+        { roleCode: "photographer", resource: "packages", scopeType: "self" },
+        { roleCode: "sales", resource: "users", scopeType: "self" },
+        { roleCode: "sales", resource: "packages", scopeType: "self" },
         { roleCode: "customer", resource: "packages", scopeType: "self" },
         { roleCode: "customer", resource: "assets", scopeType: "self" },
     ];
     await roleScopesModel.deleteMany({ filter: { where: { roleId: { $eq: adminRoleId } } } });
+    await roleScopesModel.deleteMany({ filter: { where: { roleId: { $eq: photographerRoleId } } } });
+    await roleScopesModel.deleteMany({ filter: { where: { roleId: { $eq: salesRoleId } } } });
     await roleScopesModel.deleteMany({ filter: { where: { roleId: { $eq: customerRoleId } } } });
     await roleScopesModel.createMany({
         data: scopes.map((s) => ({

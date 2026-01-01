@@ -11,10 +11,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RefreshDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 class RefreshDto {
 }
 exports.RefreshDto = RefreshDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: "refresh token（登录时返回；用于续期 accessToken，会旋转并更新有效期）",
+        example: "rt_example_please_replace",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(10),
     __metadata("design:type", String)

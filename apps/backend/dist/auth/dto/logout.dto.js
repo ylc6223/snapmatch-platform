@@ -11,10 +11,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LogoutDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 class LogoutDto {
 }
 exports.LogoutDto = LogoutDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: "refresh token（用于服务端登出/踢下线，成功后对应会话立即失效）",
+        example: "rt_example_please_replace",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(10),
     __metadata("design:type", String)

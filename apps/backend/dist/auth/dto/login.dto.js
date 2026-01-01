@@ -12,10 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 class LoginDto {
 }
 exports.LoginDto = LoginDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: "账号（员工账号/种子账号等，区分大小写不敏感）",
+        example: "admin",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_transformer_1.Transform)(({ value }) => (typeof value === "string" ? value.trim() : value)),
     (0, class_validator_1.MinLength)(1),
@@ -23,6 +28,10 @@ __decorate([
     __metadata("design:type", String)
 ], LoginDto.prototype, "account", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: "密码（明文传入，服务端使用 bcrypt 校验；不会在任何响应中回传）",
+        example: "admin",
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_transformer_1.Transform)(({ value }) => (typeof value === "string" ? value.trim() : value)),
     (0, class_validator_1.MinLength)(6),

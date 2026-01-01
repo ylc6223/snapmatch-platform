@@ -11,9 +11,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SecureController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const permissions_decorator_1 = require("./decorators/permissions.decorator");
 const roles_decorator_1 = require("./decorators/roles.decorator");
 const types_1 = require("./types");
+const api_response_decorators_1 = require("../common/swagger/api-response.decorators");
+const secure_response_dto_1 = require("./dto/secure-response.dto");
 let SecureController = class SecureController {
     adminOnly() {
         return { ok: true, scope: "admin" };
@@ -28,6 +31,8 @@ let SecureController = class SecureController {
 exports.SecureController = SecureController;
 __decorate([
     (0, roles_decorator_1.Roles)(types_1.Role.Admin),
+    (0, swagger_1.ApiOperation)({ summary: "仅管理员可访问（示例）" }),
+    (0, api_response_decorators_1.ApiOkEnvelope)(secure_response_dto_1.SecureOkDto),
     (0, common_1.Get)("admin-only"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -35,6 +40,8 @@ __decorate([
 ], SecureController.prototype, "adminOnly", null);
 __decorate([
     (0, roles_decorator_1.Roles)(types_1.Role.Photographer),
+    (0, swagger_1.ApiOperation)({ summary: "仅摄影师可访问（示例）" }),
+    (0, api_response_decorators_1.ApiOkEnvelope)(secure_response_dto_1.SecureOkDto),
     (0, common_1.Get)("photographer-only"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -42,12 +49,16 @@ __decorate([
 ], SecureController.prototype, "photographerOnly", null);
 __decorate([
     (0, permissions_decorator_1.Permissions)("packages:write"),
+    (0, swagger_1.ApiOperation)({ summary: "需要指定权限（示例）" }),
+    (0, api_response_decorators_1.ApiOkEnvelope)(secure_response_dto_1.SecureOkDto),
     (0, common_1.Get)("needs-permission"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SecureController.prototype, "needsPermission", null);
 exports.SecureController = SecureController = __decorate([
+    (0, swagger_1.ApiTags)("secure"),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)("secure")
 ], SecureController);
 //# sourceMappingURL=secure.controller.js.map
