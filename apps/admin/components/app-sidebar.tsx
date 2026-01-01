@@ -98,7 +98,6 @@ const data = {
       icon: IconBug,
       roles: ["admin"] satisfies Role[],
       items: [
-        { title: "API 调试", url: "/dashboard/dev/api" },
         { title: "选片端预览（Lumina）", url: "/dashboard/dev/client-viewer" },
         { title: "Swagger Docs", url: "/api/docs" }
       ]
