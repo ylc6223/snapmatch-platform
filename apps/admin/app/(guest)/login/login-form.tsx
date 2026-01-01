@@ -19,8 +19,8 @@ export function LoginForm() {
 
   const dashboardPath = useMemo(() => {
     const current = pathname || "/login";
-    const replaced = current.replace(/\/login\/?$/, "/dashboard");
-    return replaced === current ? "/dashboard" : replaced;
+    const replaced = current.replace(/\/login\/?$/, "/dashboard/analytics");
+    return replaced === current ? "/dashboard/analytics" : replaced;
   }, [pathname]);
 
   const [account, setAccount] = useState("");

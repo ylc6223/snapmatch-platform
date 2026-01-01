@@ -18,8 +18,9 @@ export type DashboardTabConfig = {
 // - 默认会把 /dashboard 下所有 page.tsx 页面加入 Tabs
 // - 如需隐藏/改名/排序，在这里按 href 做覆盖即可
 export const DASHBOARD_TAB_CONFIG: Record<string, DashboardTabConfig> = {
-  "/dashboard": { label: "Dashboard", order: 0, affixTab: true },
-  "/dashboard/settings/accounts": { label: "Settings", order: 20 },
+  "/dashboard/analytics": { label: "数据概览", order: 0, affixTab: true },
+  // 注意：Tabs 只展示“实际页面”。/dashboard/settings 没有 page.tsx，因此不要用父级概念覆盖子页面 Tab 文案。
+  "/dashboard/settings/accounts": { order: 20 },
 }
 
 export type DashboardResolvedTab = DashboardTab & {

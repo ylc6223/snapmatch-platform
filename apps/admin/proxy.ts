@@ -90,7 +90,7 @@ async function backendRefresh(refreshToken: string) {
  * Next.js 16：使用 `proxy.ts` 替代 `middleware.ts`（两者不能同时存在）。
  *
  * 用途：
- * - `/` → `/dashboard`（默认落地页）
+ * - `/` → `/dashboard/analytics`（默认落地页）
  * - `/dashboard/*`：轻量路由保护（仅检查 HttpOnly Cookie 是否存在）
  *
  * 注意：
@@ -100,7 +100,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/dashboard/analytics", request.url));
   }
 
   if (pathname.startsWith("/dashboard")) {

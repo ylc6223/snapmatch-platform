@@ -20,9 +20,9 @@ type State = {
 };
 
 function getDefaultNextPath() {
-  if (typeof window === "undefined") return "/dashboard";
+  if (typeof window === "undefined") return "/dashboard/analytics";
   const path = window.location.pathname + window.location.search;
-  return path.length > 0 ? path : "/dashboard";
+  return path.length > 0 ? path : "/dashboard/analytics";
 }
 
 export function SessionExpiredDialog(props: {
@@ -36,11 +36,12 @@ export function SessionExpiredDialog(props: {
       : "登录已失效，请重新登录后继续。",
     nextPath: props.defaultDetail?.nextPath?.trim().length
       ? props.defaultDetail.nextPath.trim()
-      : "/dashboard",
+      : "/dashboard/analytics",
   }));
 
   const nextUrl = useMemo(() => {
-    const next = state.nextPath && state.nextPath.startsWith("/") ? state.nextPath : "/dashboard";
+    const next =
+      state.nextPath && state.nextPath.startsWith("/") ? state.nextPath : "/dashboard/analytics";
     const search = new URLSearchParams({ next }).toString();
     return `/login?${search}`;
   }, [state.nextPath]);

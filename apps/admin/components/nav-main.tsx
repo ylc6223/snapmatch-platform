@@ -52,7 +52,6 @@ export function NavMain({
   const isActive = React.useCallback(
     (href: string) => {
       if (href === "#") return false
-      if (href === "/dashboard") return normalizedPathname === "/dashboard"
       return normalizedPathname === href || normalizedPathname.startsWith(`${href}/`)
     },
     [normalizedPathname]

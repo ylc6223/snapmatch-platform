@@ -31,7 +31,7 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
       dashboardIndex >= 0 ? segments.slice(dashboardIndex) : segments
 
     if (effectiveSegments.length === 0) {
-      return [{ label: "Dashboard", href: "/dashboard", current: true }]
+      return [{ label: toNavigationLabel("dashboard"), href: "/dashboard/analytics", current: true }]
     }
 
     return effectiveSegments.map((segment, index) => {
@@ -52,7 +52,7 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
         <Breadcrumb>
           <BreadcrumbList>
             {crumbs.map((crumb, index) => (
-              <React.Fragment key={crumb.href}>
+              <React.Fragment key={`${crumb.href}:${index}`}>
                 {index > 0 ? <BreadcrumbSeparator className="hidden md:block" /> : null}
                 {crumb.current ? (
                   <BreadcrumbItem>
@@ -60,7 +60,7 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
                   </BreadcrumbItem>
                 ) : (
                   <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
+                    <span className="text-muted-foreground">{crumb.label}</span>
                   </BreadcrumbItem>
                 )}
               </React.Fragment>

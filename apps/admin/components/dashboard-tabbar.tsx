@@ -3,6 +3,19 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+
+/**
+ * 这里引入并使用 @dnd-kit 来实现「标签页 Tabbar 的拖拽排序」能力：
+ * - DndContext：拖拽上下文容器，负责管理拖拽状态与事件（例如 onDragEnd）。
+ * - PointerSensor + useSensor/useSensors：定义用鼠标/触控等指针输入来触发拖拽，并支持组合多个传感器。
+ * - closestCenter：碰撞检测策略，用来判断当前拖拽元素“覆盖/最接近”的目标。
+ * - SortableContext + useSortable：把列表项变成可排序元素，计算位移 transform/transition，并在拖拽结束时更新顺序。
+ *
+ * 注意：该库在渲染时会生成一些运行时属性（例如 aria-describedby 的 id）。
+ * 在 Next.js 中 Client Component 会先 SSR 输出 HTML，再在浏览器端 hydrate；
+ * 如果 SSR 与 CSR 首次渲染生成的 id 不一致，会触发 hydration mismatch（控制台红字）。
+ * 为避免这个问题，本文件在首次 hydration 前先渲染“非拖拽版本”，等 mounted 后再启用 DnD 增强。
+ */
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -42,7 +55,6 @@ function normalizePathname(pathname: string) {
 }
 
 function isActivePath(pathname: string, href: string) {
-  if (href === "/dashboard") return pathname === "/dashboard"
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
@@ -82,8 +94,14 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
   const router = useRouter()
   const pathname = normalizePathname(usePathname())
   const { isMobile } = useSidebar()
+  // mounted 后再启用 DnD，保证 SSR 与 CSR 首次输出一致，避免 hydration mismatch。
+  const [hydrated, setHydrated] = React.useState(false)
 
   const stored = useAppStore((s) => s.tabbar)
+
+  React.useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   const routeMap = React.useMemo(() => {
     const map = new Map<string, TabbarRoute>()
@@ -118,7 +136,7 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
 
   const activeHref = React.useMemo(() => {
     const candidate = visibleHrefs.find((href) => isActivePath(pathname, href))
-    return candidate ?? "/dashboard"
+    return candidate ?? "/dashboard/analytics"
   }, [pathname, visibleHrefs])
 
   const pathnameRef = React.useRef(pathname)
@@ -189,7 +207,8 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
 
       if (href === activeHref) {
         const remaining = visibleHrefs.filter((h) => h !== href && !stored.closed.includes(h))
-        const fallback = remaining.find((h) => isPinned(h)) ?? remaining[0] ?? "/dashboard"
+        const fallback =
+          remaining.find((h) => isPinned(h)) ?? remaining[0] ?? "/dashboard/analytics"
         router.push(fallback)
       }
     },
@@ -205,7 +224,7 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
 
     appActions.tabbarSet((prev) => ({ closed: uniq([...prev.closed, ...closable]) }))
 
-    const fallback = visibleHrefs.find((h) => isPinned(h)) ?? "/dashboard"
+    const fallback = visibleHrefs.find((h) => isPinned(h)) ?? "/dashboard/analytics"
     router.push(fallback)
   }, [visibleHrefs, routeMap, isPinned, router])
 
@@ -284,122 +303,123 @@ export function DashboardTabbar({ routes }: { routes: TabbarRoute[] }) {
 
   if (routes.length === 0) return null
 
+  const content = (
+    <div className="flex w-full items-center gap-1 overflow-x-auto">
+      {visibleHrefs.map((href) => {
+        const route = routeMap.get(href)
+        if (!route) return null
+
+        const active = href === activeHref
+        const pinned = isPinned(href)
+        const canClose = route.meta.closable && !pinned && visibleHrefs.length > 1
+        const dragDisabled = isMobile
+
+        const item = (
+          <ContextMenu>
+            <ContextMenuTrigger asChild>
+              <div
+                className={cn(
+                  "group/tab relative flex h-9 shrink-0 items-center rounded-md border px-2 text-sm",
+                  active
+                    ? "bg-primary/10 text-foreground border-border"
+                    : "bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Link
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-2 pr-1",
+                    dragDisabled ? "cursor-pointer" : "cursor-grab"
+                  )}
+                >
+                  {pinned ? <Pin className="size-3.5 opacity-70" /> : null}
+                  <span className="max-w-[10rem] truncate">{route.label}</span>
+                </Link>
+
+                <div className="ml-1 flex items-center gap-1">
+                  {canClose ? (
+                    <button
+                      type="button"
+                      aria-label="Close tab"
+                      className="text-muted-foreground hover:text-foreground rounded-sm p-1"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onClose(href)
+                      }}
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem disabled={href !== activeHref} onSelect={() => refresh(href)}>
+                <RefreshCcw className="mr-2 size-4" />
+                刷新
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem disabled={!canClose} onSelect={() => onClose(href)}>
+                关闭
+              </ContextMenuItem>
+              <ContextMenuItem disabled={visibleHrefs.length <= 1} onSelect={() => closeOthers(href)}>
+                关闭其他
+              </ContextMenuItem>
+              <ContextMenuItem
+                disabled={visibleHrefs.indexOf(href) <= 0}
+                onSelect={() => closeLeft(href)}
+              >
+                关闭左侧
+              </ContextMenuItem>
+              <ContextMenuItem
+                disabled={visibleHrefs.indexOf(href) === visibleHrefs.length - 1}
+                onSelect={() => closeRight(href)}
+              >
+                关闭右侧
+              </ContextMenuItem>
+              <ContextMenuItem disabled={visibleHrefs.length <= 1} onSelect={closeAll}>
+                关闭全部
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem disabled={affixHrefs.includes(href)} onSelect={() => togglePin(href)}>
+                {pinned && !affixHrefs.includes(href) ? "取消固定" : "固定"}
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        )
+
+        return hydrated ? (
+          <SortableTabItem key={href} id={href} disabled={dragDisabled}>
+            {item}
+          </SortableTabItem>
+        ) : (
+          <div key={href}>{item}</div>
+        )
+      })}
+    </div>
+  )
+
   return (
     <div className="w-full overflow-hidden px-4">
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={(event) => {
-          const activeId = String(event.active.id)
-          const overId = event.over?.id ? String(event.over.id) : null
-          if (!overId) return
-          reorder(activeId, overId)
-        }}
-      >
-        <SortableContext items={visibleHrefs} strategy={horizontalListSortingStrategy}>
-          <div className="flex w-full items-center gap-1 overflow-x-auto">
-            {visibleHrefs.map((href) => {
-              const route = routeMap.get(href)
-              if (!route) return null
-
-              const active = href === activeHref
-              const pinned = isPinned(href)
-              const canClose = route.meta.closable && !pinned && visibleHrefs.length > 1
-              const dragDisabled = isMobile
-
-              const item = (
-                <ContextMenu>
-                  <ContextMenuTrigger asChild>
-                    <div
-                      className={cn(
-                        "group/tab relative flex h-9 shrink-0 items-center rounded-md border px-2 text-sm",
-                        active
-                          ? "bg-primary/10 text-foreground border-border"
-                          : "bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                      )}
-                    >
-                      <Link
-                        href={href}
-                        className={cn(
-                          "flex items-center gap-2 pr-1",
-                          dragDisabled ? "cursor-pointer" : "cursor-grab"
-                        )}
-                      >
-                        {pinned ? <Pin className="size-3.5 opacity-70" /> : null}
-                        <span className="max-w-[10rem] truncate">{route.label}</span>
-                      </Link>
-
-                      <div className="ml-1 flex items-center gap-1">
-                        {canClose ? (
-                          <button
-                            type="button"
-                            aria-label="Close tab"
-                            className="text-muted-foreground hover:text-foreground rounded-sm p-1"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              onClose(href)
-                            }}
-                          >
-                            <X className="size-3.5" />
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem
-                      disabled={href !== activeHref}
-                      onSelect={() => refresh(href)}
-                    >
-                      <RefreshCcw className="mr-2 size-4" />
-                      刷新
-                    </ContextMenuItem>
-                    <ContextMenuSeparator />
-                    <ContextMenuItem disabled={!canClose} onSelect={() => onClose(href)}>
-                      关闭
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      disabled={visibleHrefs.length <= 1}
-                      onSelect={() => closeOthers(href)}
-                    >
-                      关闭其他
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      disabled={visibleHrefs.indexOf(href) <= 0}
-                      onSelect={() => closeLeft(href)}
-                    >
-                      关闭左侧
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      disabled={visibleHrefs.indexOf(href) === visibleHrefs.length - 1}
-                      onSelect={() => closeRight(href)}
-                    >
-                      关闭右侧
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      disabled={visibleHrefs.length <= 1}
-                      onSelect={closeAll}
-                    >
-                      关闭全部
-                    </ContextMenuItem>
-                    <ContextMenuSeparator />
-                    <ContextMenuItem disabled={affixHrefs.includes(href)} onSelect={() => togglePin(href)}>
-                      {pinned && !affixHrefs.includes(href) ? "取消固定" : "固定"}
-                    </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
-              )
-
-              return (
-                <SortableTabItem key={href} id={href} disabled={dragDisabled}>
-                  {item}
-                </SortableTabItem>
-              )
-            })}
-          </div>
-        </SortableContext>
-      </DndContext>
+      {hydrated ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={(event) => {
+            const activeId = String(event.active.id)
+            const overId = event.over?.id ? String(event.over.id) : null
+            if (!overId) return
+            reorder(activeId, overId)
+          }}
+        >
+          <SortableContext items={visibleHrefs} strategy={horizontalListSortingStrategy}>
+            {content}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        content
+      )}
     </div>
   )
 }
