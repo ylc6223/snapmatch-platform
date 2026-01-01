@@ -26,7 +26,7 @@ export function DataTablePagination(input: {
             <SelectTrigger className="w-[120px]" size="sm">
               <SelectValue placeholder="每页数量" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" align="end" sideOffset={6}>
               {[10, 20, 50, 100].map((n) => (
                 <SelectItem key={n} value={String(n)}>
                   {n}/页
@@ -55,4 +55,3 @@ export function DataTablePagination(input: {
     </div>
   );
 }
-
