@@ -1,6 +1,10 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "lucide-react"
+import Link from "next/link"
+import { MotionWrapper } from "./motion-wrapper"
 
 const caseStudies = [
   {
@@ -48,47 +52,48 @@ export function CaseStudies() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {caseStudies.map((study) => (
-            <Card
-              key={study.id}
-              className="group overflow-hidden border-0 bg-card shadow-lg hover:shadow-xl transition-shadow"
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={study.image || "/placeholder.svg"}
-                  alt={study.title}
-                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute top-4 right-4">
-                  <Badge variant="secondary" className="bg-background/90 backdrop-blur">
-                    {study.highlight}
-                  </Badge>
-                </div>
-              </div>
-              <CardHeader>
-                <div className="flex items-start gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground mt-1" />
-                  <div>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{study.title}</CardTitle>
-                    <CardDescription className="mt-1 flex items-center gap-2">
-                      <span>{study.date}</span>
-                      <span>·</span>
-                      <span>{study.location}</span>
-                    </CardDescription>
+          {caseStudies.map((study, index) => (
+            <MotionWrapper key={study.id} delay={index * 0.1} type="scale">
+              <Link href={`/blog/${study.id}`} className="group block h-full">
+                <Card className="h-full overflow-hidden border-0 bg-card shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={study.image || "/placeholder.svg"}
+                      alt={study.title}
+                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute top-4 right-4">
+                      <Badge variant="secondary" className="bg-background/90 backdrop-blur">
+                        {study.highlight}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-4">{study.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {study.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="rounded-full">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  <CardHeader>
+                    <div className="flex items-start gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground mt-1" />
+                      <div>
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors">{study.title}</CardTitle>
+                        <CardDescription className="mt-1 flex items-center gap-2">
+                          <span>{study.date}</span>
+                          <span>·</span>
+                          <span>{study.location}</span>
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">{study.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {study.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="rounded-full">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </MotionWrapper>
           ))}
         </div>
       </div>

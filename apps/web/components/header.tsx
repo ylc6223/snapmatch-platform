@@ -146,7 +146,10 @@ export function Header() {
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
           <ThemeToggle />
           <a href={ADMIN_LOGIN_URL}>
-            <Button variant="outline" className="rounded-full bg-transparent">
+            <Button
+              variant="outline"
+              className="rounded-full bg-transparent border-2 border-primary text-primary hover:bg-primary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
+            >
               Sign in
             </Button>
           </a>
@@ -178,7 +181,12 @@ export function Header() {
             </div>
             <div className="py-6">
               <a href={ADMIN_LOGIN_URL} onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full rounded-full">Sign in</Button>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full bg-transparent border-2 border-primary text-primary hover:bg-primary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
+                >
+                  Sign in
+                </Button>
               </a>
             </div>
           </div>

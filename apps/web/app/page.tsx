@@ -7,6 +7,7 @@ import { About } from "@/components/about"
 import { Contact } from "@/components/contact"
 import { FAQ } from "@/components/faq"
 import { Footer } from "@/components/footer"
+import { BackToTop } from "@/components/back-to-top"
 
 export default function HomePage() {
   return (
@@ -20,6 +21,7 @@ export default function HomePage() {
       <FAQ />
       <Contact />
       <Footer />
+      <BackToTop />
     </main>
   )
 }

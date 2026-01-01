@@ -38,26 +38,62 @@ export function Footer() {
           <div>
             <h3 className="font-semibold">快速链接</h3>
             <ul className="mt-4 space-y-3">
-              {["首页", "作品集", "案例展示", "关于我", "常见问题", "联系我们"].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                  首页
+                </Link>
+              </li>
+              <li>
+                <Link href="/#portfolio" className="text-muted-foreground hover:text-foreground transition-colors">
+                  作品集
+                </Link>
+              </li>
+              <li>
+                <Link href="/#cases" className="text-muted-foreground hover:text-foreground transition-colors">
+                  案例展示
+                </Link>
+              </li>
+              <li>
+                <Link href="/#about" className="text-muted-foreground hover:text-foreground transition-colors">
+                  关于我
+                </Link>
+              </li>
+              <li>
+                <Link href="/#faq" className="text-muted-foreground hover:text-foreground transition-colors">
+                  常见问题
+                </Link>
+              </li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold">服务项目</h3>
             <ul className="mt-4 space-y-3">
-              {["个人写真", "日常跟拍", "婚礼摄影", "活动记录", "静物摄影"].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/#services" className="text-muted-foreground hover:text-foreground transition-colors">
+                  个人写真
+                </Link>
+              </li>
+              <li>
+                <Link href="/#services" className="text-muted-foreground hover:text-foreground transition-colors">
+                  日常跟拍
+                </Link>
+              </li>
+              <li>
+                <Link href="/#services" className="text-muted-foreground hover:text-foreground transition-colors">
+                  婚礼摄影
+                </Link>
+              </li>
+              <li>
+                <Link href="/#services" className="text-muted-foreground hover:text-foreground transition-colors">
+                  活动记录
+                </Link>
+              </li>
+              <li>
+                <Link href="/#services" className="text-muted-foreground hover:text-foreground transition-colors">
+                  静物摄影
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -65,11 +101,11 @@ export function Footer() {
         <div className="mt-12 border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">© 2025 一拍即合. 保留所有权利.</p>
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-foreground transition-colors">
-              隐私政策
+            <Link href="/#contact" className="hover:text-foreground transition-colors">
+              联系我们
             </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
-              服务条款
+            <Link href="/#faq" className="hover:text-foreground transition-colors">
+              常见问题
             </Link>
           </div>
         </div>

@@ -7,18 +7,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
+import { StaticMap } from "@/components/static-map"
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react"
 
 const contactInfo = [
   {
     icon: MapPin,
     title: "服务地区",
-    content: "北京市 | 可接受全国预约",
+    content: "广西南宁 | 全国可约",
   },
   {
     icon: Phone,
     title: "联系电话",
-    content: "+86 10 8888 8888",
+    content: "+86 771 8888 8888",
   },
   {
     icon: Mail,
@@ -28,7 +29,7 @@ const contactInfo = [
   {
     icon: Clock,
     title: "工作时间",
-    content: "工作日 9:00 - 18:00 | 随时接受咨询",
+    content: "工作日 9:00-18:00",
   },
 ]
 
@@ -54,17 +55,17 @@ export function Contact() {
           <p className="mt-4 text-lg text-muted-foreground">有任何问题或合作意向？欢迎随时与我联系</p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2 lg:h-[600px]">
+        <div className="grid gap-8 lg:grid-cols-2">
           <div className="flex flex-col">
-            <div className="grid gap-4 sm:grid-cols-2 flex-1">
+            <div className="grid gap-3 sm:grid-cols-2">
               {contactInfo.map((info) => (
                 <Card key={info.title} className="border-border/50">
-                  <CardContent className="flex items-start gap-4 p-6">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <info.icon className="h-5 w-5" />
+                  <CardContent className="flex items-start gap-3 p-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/10 text-primary">
+                      <info.icon className="h-4 w-4" />
                     </div>
-                    <div>
-                      <h3 className="font-medium">{info.title}</h3>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-medium">{info.title}</h3>
                       <p className="mt-1 text-sm text-muted-foreground">{info.content}</p>
                     </div>
                   </CardContent>
@@ -72,11 +73,14 @@ export function Contact() {
               ))}
             </div>
 
-            <div className="mt-8 overflow-hidden rounded-xl">
-              <img
-                src="/placeholder.svg?height=300&width=600"
-                alt="摄影工作区"
-                className="h-32 w-full object-cover lg:h-40"
+            <div className="mt-4">
+              <StaticMap
+                lat={23.39}
+                lng={110.08}
+                zoom={14}
+                width={800}
+                height={500}
+                className="aspect-[16/10]"
               />
             </div>
           </div>

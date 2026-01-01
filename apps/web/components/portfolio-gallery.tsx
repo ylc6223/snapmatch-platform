@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { PortfolioFilter } from "./portfolio-filter"
 import { Eye, Heart } from "lucide-react"
+import { MotionWrapper } from "./motion-wrapper"
 
 const portfolioItems = [
   {
@@ -122,29 +123,36 @@ export function PortfolioGallery() {
         </div>
 
         <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-          {filteredItems.map((item) => (
-            <div key={item.id} className="break-inside-avoid group relative overflow-hidden rounded-xl bg-card">
-              <img
-                src={item.image || "/placeholder.svg"}
-                alt={item.title}
-                className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                  <div className="flex items-center gap-4 mt-2 text-white/80 text-sm">
-                    <span className="flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      {item.likes}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
-                      {item.views}
-                    </span>
+          {filteredItems.map((item, index) => (
+            <MotionWrapper
+              key={item.id}
+              type="scale"
+              delay={Math.min(index * 0.08, 0.8)} // 最大延迟0.8秒
+              duration={0.5}
+            >
+              <div className="break-inside-avoid group relative overflow-hidden rounded-xl bg-card">
+                <img
+                  src={item.image || "/placeholder.svg"}
+                  alt={item.title}
+                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                    <div className="flex items-center gap-4 mt-2 text-white/80 text-sm">
+                      <span className="flex items-center gap-1">
+                        <Heart className="h-4 w-4" />
+                        {item.likes}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-4 w-4" />
+                        {item.views}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </MotionWrapper>
           ))}
         </div>
       </div>
