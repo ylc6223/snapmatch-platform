@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "pnpm -r --parallel dev",
+    "dev:worktree": "node ./scripts/dev-worktree.mjs",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "dev:web": "pnpm -C apps/web dev",

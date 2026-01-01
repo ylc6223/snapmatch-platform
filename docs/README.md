@@ -16,6 +16,7 @@
 - **[开发指南索引](./guides/README.md)**：迁移方案、最佳实践
   - [API 版本化迁移指南](./guides/api-versioning/migration-guide.md) - 完整迁移方案与影响分析
   - [API 版本化 Checklist](./guides/api-versioning/checklist.md) - 逐步操作清单
+  - [Worktree 并行开发](./guides/worktree-dev.md) - 自动分配端口，一键启动（避免多 worktree 冲突）
 
 ### 部署（deployment）
 

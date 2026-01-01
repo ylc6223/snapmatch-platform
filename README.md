@@ -16,14 +16,24 @@
 
 > 推荐使用 `pnpm`。
 
+### 一键启动（推荐：避免多个 worktree 端口冲突）
+
 ```bash
-# 启动 Web 官网（端口 3000）
+pnpm dev:worktree
+```
+
+更多说明见：`docs/guides/worktree-dev.md`。
+
+### 分别启动（可手动指定端口）
+
+```bash
+# 启动 Web 官网（默认端口 3000，可用 PORT 覆盖）
 pnpm -C apps/web dev
 
-# 启动 Admin 后台（端口 3001）
-PORT=3001 pnpm -C apps/admin dev
+# 启动 Admin 后台（默认端口 3001，可用 PORT 覆盖）
+pnpm -C apps/admin dev
 
-# 启动 Backend API（端口 3002）
+# 启动 Backend API（默认端口 3002，可用 PORT 覆盖）
 pnpm -C apps/backend dev
 ```
 
@@ -33,6 +43,8 @@ pnpm -C apps/backend dev
 # 同时启动所有应用
 pnpm dev
 ```
+
+> 多个 worktree 并行时，优先用 `pnpm dev:worktree`；如需手动运行不同端口，参考 `docs/guides/worktree-dev.md` 的变量说明。
 
 ## 🚀 部署指南
 
