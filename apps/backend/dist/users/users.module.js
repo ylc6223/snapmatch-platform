@@ -8,26 +8,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const cloudbase_module_1 = require("../database/cloudbase.module");
-const cloudbase_constants_1 = require("../database/cloudbase.constants");
 const users_repository_1 = require("./users.repository");
-const users_repository_cloudbase_1 = require("./users.repository.cloudbase");
 const users_service_1 = require("./users.service");
 const users_admin_controller_1 = require("./users.admin.controller");
+const mysql_module_1 = require("../database/mysql.module");
+const users_repository_mysql_1 = require("./users.repository.mysql");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
-        imports: [cloudbase_module_1.CloudbaseModule],
+        imports: [mysql_module_1.MysqlModule],
         controllers: [users_admin_controller_1.UsersAdminController],
         providers: [
             users_service_1.UsersService,
             {
                 provide: users_repository_1.USERS_REPOSITORY,
-                inject: [config_1.ConfigService, cloudbase_constants_1.CLOUDBASE_APP],
-                useFactory: (config, app) => new users_repository_cloudbase_1.CloudBaseUsersRepository(app.models, config),
+                useClass: users_repository_mysql_1.MySqlUsersRepository,
             },
         ],
         exports: [users_service_1.UsersService],

@@ -3,15 +3,13 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
 import { UsersModule } from "../users/users.module";
-import { CloudbaseModule } from "../database/cloudbase.module";
-import { CLOUDBASE_APP } from "../database/cloudbase.constants";
-import type { CloudBase } from "@cloudbase/node-sdk";
+import { MysqlModule } from "../database/mysql.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { SecureController } from "./secure.controller";
 import { AUTH_SESSIONS_REPOSITORY } from "./sessions/auth-sessions.repository";
-import { CloudBaseAuthSessionsRepository } from "./sessions/auth-sessions.repository.cloudbase";
+import { MySqlAuthSessionsRepository } from "./sessions/auth-sessions.repository.mysql";
 import { AuthSessionsService } from "./sessions/auth-sessions.service";
 
 function parseJwtExpiresInToSeconds(value: string): number {
@@ -38,7 +36,7 @@ function parseJwtExpiresInToSeconds(value: string): number {
   imports: [
     // 用户模块：AuthService 需要通过 UsersService 查找用户并完成登录校验。
     UsersModule,
-    CloudbaseModule,
+    MysqlModule,
     // Passport 基础设施：提供 Guard/Strategy 的运行机制。
     PassportModule,
     // JWT 配置：从环境变量读取密钥与过期时间。
@@ -60,10 +58,8 @@ function parseJwtExpiresInToSeconds(value: string): number {
     AuthService,
     {
       provide: AUTH_SESSIONS_REPOSITORY,
-      // 固定使用 CloudBase 数据模型作为存储层。
-      inject: [ConfigService, CLOUDBASE_APP],
-      useFactory: (config: ConfigService, app: CloudBase) =>
-        new CloudBaseAuthSessionsRepository(app.models, config),
+      // 固定使用 MySQL 作为存储层。
+      useClass: MySqlAuthSessionsRepository,
     },
     AuthSessionsService,
     JwtStrategy,

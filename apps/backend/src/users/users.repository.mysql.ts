@@ -1,0 +1,343 @@
+import { randomUUID } from "node:crypto";
+import { Injectable } from "@nestjs/common";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
+import { Role } from "../auth/types";
+import { RbacPermissionEntity } from "../database/entities/rbac-permission.entity";
+import { RbacRolePermissionEntity } from "../database/entities/rbac-role-permission.entity";
+import { RbacRoleEntity } from "../database/entities/rbac-role.entity";
+import { RbacUserRoleEntity } from "../database/entities/rbac-user-role.entity";
+import { RbacUserEntity } from "../database/entities/rbac-user.entity";
+import type {
+  AdminUser,
+  CreateUserInput,
+  ListUsersInput,
+  ListUsersResult,
+  UpdateUserInput,
+  User,
+  UserRoleInfo,
+  UsersRepository,
+} from "./users.repository";
+
+function splitCsv(value: unknown): string[] {
+  if (typeof value !== "string") return [];
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+}
+
+function toRoles(values: unknown): Role[] {
+  const items = splitCsv(values);
+  const allowed = new Set<string>(Object.values(Role));
+  return items.filter((v): v is Role => allowed.has(v)) as Role[];
+}
+
+function toNumber(value: unknown): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") return Number(value);
+  return Number(value ?? 0);
+}
+
+function generateId34Safe(): string {
+  // 表的 `_id` 为 varchar(34)，这里生成 32 位 hex（不含 "-"），保证不超长。
+  return randomUUID().replaceAll("-", "");
+}
+
+@Injectable()
+export class MySqlUsersRepository implements UsersRepository {
+  constructor(
+    @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectRepository(RbacUserEntity) private readonly users: Repository<RbacUserEntity>,
+    @InjectRepository(RbacRoleEntity) private readonly roles: Repository<RbacRoleEntity>,
+  ) {}
+
+  private async findAdminUserById(id: string): Promise<AdminUser | null> {
+    const row = await this.users
+      .createQueryBuilder("u")
+      .select("u.id", "id")
+      .addSelect("u.account", "account")
+      .addSelect("u.userType", "userType")
+      .addSelect("u.status", "status")
+      .addSelect("GROUP_CONCAT(DISTINCT r.code)", "roles")
+      .addSelect("GROUP_CONCAT(DISTINCT p.code)", "permissions")
+      .leftJoin(RbacUserRoleEntity, "ur", "ur.userId = u.id")
+      .leftJoin(RbacRoleEntity, "r", "r.id = ur.roleId AND r.status = 1")
+      .leftJoin(RbacRolePermissionEntity, "rp", "rp.roleId = r.id")
+      .leftJoin(RbacPermissionEntity, "p", "p.id = rp.permissionId AND p.status = 1")
+      .where("u.id = :id", { id })
+      .groupBy("u.id")
+      .getRawOne<Record<string, unknown>>();
+
+    if (!row) return null;
+
+    const userId = typeof row.id === "string" ? row.id : "";
+    const accountValue = typeof row.account === "string" ? row.account : "";
+    if (!userId || !accountValue) return null;
+
+    const userType = typeof row.userType === "string" ? row.userType : "";
+    const statusValue = toNumber(row.status) === 1 ? 1 : 0;
+
+    return {
+      id: userId,
+      account: accountValue,
+      userType,
+      status: statusValue,
+      roles: toRoles(row.roles),
+      permissions: splitCsv(row.permissions),
+    };
+  }
+
+  async findByAccount(account: string): Promise<User | null> {
+    const normalized = account.toLowerCase();
+    const row = await this.users
+      .createQueryBuilder("u")
+      .select("u.id", "id")
+      .addSelect("u.account", "account")
+      .addSelect("u.passwordHash", "passwordHash")
+      .addSelect("u.status", "status")
+      .addSelect("GROUP_CONCAT(DISTINCT r.code)", "roles")
+      .addSelect("GROUP_CONCAT(DISTINCT p.code)", "permissions")
+      .leftJoin(RbacUserRoleEntity, "ur", "ur.userId = u.id")
+      .leftJoin(RbacRoleEntity, "r", "r.id = ur.roleId AND r.status = 1")
+      .leftJoin(RbacRolePermissionEntity, "rp", "rp.roleId = r.id")
+      .leftJoin(RbacPermissionEntity, "p", "p.id = rp.permissionId AND p.status = 1")
+      .where("u.account = :account AND u.status = 1", { account: normalized })
+      .groupBy("u.id")
+      .getRawOne<Record<string, unknown>>();
+
+    if (!row) return null;
+    const id = typeof row.id === "string" ? row.id : "";
+    const accountValue = typeof row.account === "string" ? row.account : "";
+    const passwordHash = typeof row.passwordHash === "string" ? row.passwordHash : "";
+    const status = typeof row.status === "number" ? row.status : Number(row.status ?? 0);
+    if (!id || !accountValue || !passwordHash || status !== 1) return null;
+
+    return {
+      id,
+      account: accountValue,
+      passwordHash,
+      roles: toRoles(row.roles),
+      permissions: splitCsv(row.permissions),
+    };
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const row = await this.users
+      .createQueryBuilder("u")
+      .select("u.id", "id")
+      .addSelect("u.account", "account")
+      .addSelect("u.passwordHash", "passwordHash")
+      .addSelect("u.status", "status")
+      .addSelect("GROUP_CONCAT(DISTINCT r.code)", "roles")
+      .addSelect("GROUP_CONCAT(DISTINCT p.code)", "permissions")
+      .leftJoin(RbacUserRoleEntity, "ur", "ur.userId = u.id")
+      .leftJoin(RbacRoleEntity, "r", "r.id = ur.roleId AND r.status = 1")
+      .leftJoin(RbacRolePermissionEntity, "rp", "rp.roleId = r.id")
+      .leftJoin(RbacPermissionEntity, "p", "p.id = rp.permissionId AND p.status = 1")
+      .where("u.id = :id AND u.status = 1", { id })
+      .groupBy("u.id")
+      .getRawOne<Record<string, unknown>>();
+
+    if (!row) return null;
+    const userId = typeof row.id === "string" ? row.id : "";
+    const accountValue = typeof row.account === "string" ? row.account : "";
+    const passwordHash = typeof row.passwordHash === "string" ? row.passwordHash : "";
+    const status = typeof row.status === "number" ? row.status : Number(row.status ?? 0);
+    if (!userId || !accountValue || !passwordHash || status !== 1) return null;
+
+    return {
+      id: userId,
+      account: accountValue,
+      passwordHash,
+      roles: toRoles(row.roles),
+      permissions: splitCsv(row.permissions),
+    };
+  }
+
+  async listUsers(input: ListUsersInput): Promise<ListUsersResult> {
+    const page = Number.isFinite(input.page) && input.page > 0 ? Math.floor(input.page) : 1;
+    const pageSize = Number.isFinite(input.pageSize) && input.pageSize > 0 ? Math.floor(input.pageSize) : 20;
+    const offset = (page - 1) * pageSize;
+
+    const query = typeof input.query === "string" ? input.query.trim().toLowerCase() : "";
+    const status = input.status ?? null;
+
+    const allowedSortBy: Record<NonNullable<ListUsersInput["sortBy"]>, string> = {
+      account: "u.account",
+      userType: "u.userType",
+      status: "u.status",
+    };
+    const sortBy = input.sortBy ?? null;
+    const sortOrder = (input.sortOrder ?? "asc").toLowerCase() === "desc" ? "DESC" : "ASC";
+    const orderColumn = sortBy && allowedSortBy[sortBy] ? allowedSortBy[sortBy] : "u.account";
+
+    const qb = this.users
+      .createQueryBuilder("u")
+      .select("u.id", "id")
+      .addSelect("u.account", "account")
+      .addSelect("u.userType", "userType")
+      .addSelect("u.status", "status")
+      .addSelect("GROUP_CONCAT(DISTINCT r.code)", "roles")
+      .addSelect("GROUP_CONCAT(DISTINCT p.code)", "permissions")
+      .leftJoin(RbacUserRoleEntity, "ur", "ur.userId = u.id")
+      .leftJoin(RbacRoleEntity, "r", "r.id = ur.roleId AND r.status = 1")
+      .leftJoin(RbacRolePermissionEntity, "rp", "rp.roleId = r.id")
+      .leftJoin(RbacPermissionEntity, "p", "p.id = rp.permissionId AND p.status = 1");
+
+    const countQb = this.users.createQueryBuilder("u");
+
+    if (query.length > 0) {
+      qb.andWhere("LOWER(u.account) LIKE :accountLike", { accountLike: `%${query}%` });
+      countQb.andWhere("LOWER(u.account) LIKE :accountLike", { accountLike: `%${query}%` });
+    }
+    if (status !== null && (status === 0 || status === 1)) {
+      qb.andWhere("u.status = :status", { status });
+      countQb.andWhere("u.status = :status", { status });
+    }
+
+    const rows = await qb
+      .groupBy("u.id")
+      .orderBy(orderColumn, sortOrder)
+      .limit(pageSize)
+      .offset(offset)
+      .getRawMany<Record<string, unknown>>();
+
+    const total = await countQb.getCount();
+
+    const items: AdminUser[] = rows
+      .map((row: Record<string, unknown>) => {
+        const id = typeof row.id === "string" ? row.id : "";
+        const accountValue = typeof row.account === "string" ? row.account : "";
+        if (!id || !accountValue) return null;
+        const userType = typeof row.userType === "string" ? row.userType : "";
+        const statusValue = toNumber(row.status) === 1 ? 1 : 0;
+        return {
+          id,
+          account: accountValue,
+          userType,
+          status: statusValue,
+          roles: toRoles(row.roles),
+          permissions: splitCsv(row.permissions),
+        } satisfies AdminUser;
+      })
+      .filter((v: AdminUser | null): v is AdminUser => Boolean(v));
+
+    return { items, total, page, pageSize };
+  }
+
+  async listRoles(): Promise<UserRoleInfo[]> {
+    const allowed = new Set<string>(Object.values(Role));
+    const records = await this.roles.find({
+      where: { status: 1 },
+      order: { code: "ASC" },
+    });
+    return records
+      .map((record) => {
+        const code = record.code;
+        const name = record.name;
+        if (typeof code !== "string" || typeof name !== "string") return null;
+        if (!allowed.has(code)) return null;
+        return { code: code as Role, name } satisfies UserRoleInfo;
+      })
+      .filter((v): v is UserRoleInfo => Boolean(v));
+  }
+
+  private async setUserRoles(userId: string, roleCodes: Role[]) {
+    const allowed = new Set<string>(Object.values(Role));
+    const normalizedCodes = Array.from(new Set(roleCodes.filter((code) => allowed.has(code))));
+    const now = Date.now();
+
+    await this.dataSource.transaction(async (manager) => {
+      const roleRepo = manager.getRepository(RbacRoleEntity);
+      const userRoleRepo = manager.getRepository(RbacUserRoleEntity);
+
+      const roleRecords = await roleRepo.find({
+        where: { status: 1 },
+        order: { code: "ASC" },
+      });
+
+      const roleIdByCode = new Map<string, string>();
+      for (const r of roleRecords) {
+        if (typeof r.id === "string" && typeof r.code === "string") {
+          roleIdByCode.set(r.code, r.id);
+        }
+      }
+
+      const roleIds = normalizedCodes
+        .map((code) => roleIdByCode.get(code))
+        .filter((v): v is string => typeof v === "string" && v.length > 0);
+
+      await userRoleRepo.delete({ userId });
+
+      if (roleIds.length === 0) return;
+      await userRoleRepo.insert(
+        roleIds.map(
+          (roleId) =>
+            ({
+              id: generateId34Safe(),
+              userId,
+              roleId,
+              createdAt: now,
+              updatedAt: now,
+            }) satisfies Partial<RbacUserRoleEntity>,
+        ),
+      );
+    });
+  }
+
+  async createUser(input: CreateUserInput): Promise<AdminUser> {
+    const normalizedAccount = input.account.trim().toLowerCase();
+    const existing = await this.users.findOne({ where: { account: normalizedAccount } });
+    if (existing) throw new Error("ACCOUNT_EXISTS");
+
+    const createdId = generateId34Safe();
+    const now = Date.now();
+    await this.users.insert({
+      id: createdId,
+      account: normalizedAccount,
+      passwordHash: input.passwordHash,
+      userType: input.userType,
+      status: input.status,
+      createdAt: now,
+      updatedAt: now,
+    } satisfies Partial<RbacUserEntity>);
+
+    await this.setUserRoles(createdId, input.roleCodes);
+
+    const created = await this.findAdminUserById(createdId);
+    if (!created) throw new Error("创建用户失败：回读用户信息失败");
+    return created;
+  }
+
+  async updateUser(input: UpdateUserInput): Promise<AdminUser | null> {
+    const patch: Partial<RbacUserEntity> = {};
+    if (typeof input.passwordHash === "string" && input.passwordHash.trim().length > 0) {
+      patch.passwordHash = input.passwordHash;
+    }
+    if (typeof input.userType === "string") {
+      patch.userType = input.userType;
+    }
+    if (input.status === 0 || input.status === 1) {
+      patch.status = input.status;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      patch.updatedAt = Date.now();
+      await this.users.update({ id: input.id }, patch);
+    }
+
+    if (Array.isArray(input.roleCodes)) {
+      await this.setUserRoles(input.id, input.roleCodes);
+    }
+
+    return this.findAdminUserById(input.id);
+  }
+
+  async disableUser(id: string): Promise<boolean> {
+    const existing = await this.findAdminUserById(id);
+    if (!existing) return false;
+    await this.users.update({ id }, { status: 0, updatedAt: Date.now() });
+    return true;
+  }
+}
