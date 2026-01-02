@@ -64,13 +64,13 @@
 
 ### 关键信息
 
-| 项目         | 当前状态                          | 目标状态   |
-| ------------ | --------------------------------- | ---------- |
-| **数据库**   | CloudBase MySQL (托管)            | 自建 MySQL |
-| **ORM**      | 腾讯数据模型                      | TypeORM    |
-| **迁移策略** | 保留 CloudBase 作为备份，双写模式 | -          |
-| **数据处理** | 迁移所有现有数据                  | -          |
-| **表结构**   | **复用现有结构**，不重新设计      | -          |
+| 项目         | 当前状态                     | 目标状态   |
+| ------------ | ---------------------------- | ---------- |
+| **数据库**   | CloudBase MySQL (托管)       | 自建 MySQL |
+| **ORM**      | 腾讯数据模型                 | TypeORM    |
+| **迁移策略** | 导出后完全替换               | -          |
+| **数据处理** | 迁移所有现有数据             | -          |
+| **表结构**   | **复用现有结构**，不重新设计 | -          |
 
 ---
 
@@ -100,10 +100,10 @@
 
 | 挑战                           | 应对方案                              |
 | ------------------------------ | ------------------------------------- |
-| ORM 差异（腾讯 ORM → TypeORM） | Repository 接口隔离，逐步迁移         |
+| ORM 差异（腾讯 ORM → TypeORM） | Repository 接口隔离，直接替换实现     |
 | SQL 语法细微差异               | 几乎无差异，主要在占位符 `{{}}` → `?` |
-| 数据一致性                     | 双写机制 + 数据校验脚本               |
-| 业务中断风险                   | 渐进式迁移 + 快速回滚能力             |
+| 数据一致性                     | 数据迁移后校验验证                    |
+| 业务中断风险                   | 选择低峰期迁移，准备快速回滚方案      |
 
 ---
 
@@ -118,37 +118,28 @@
 - Repository 模式与现有架构完美契合
 - 支持从现有数据库生成实体（简化开发）
 
-### 双写机制: Wrapper Pattern
+### 迁移策略: 直接替换
 
-采用包装器模式，最小化代码改动：
+由于项目采用 Repository 接口模式，可以直接替换底层实现：
 
 ```typescript
-// 包装器模式，最小化代码改动
-class DualWriteUsersRepository implements UsersRepository {
-  constructor(
-    private primary: CloudBaseUsersRepository, // 主库（CloudBase）
-    private secondary?: MySQLUsersRepository, // 从库（本地 MySQL）
-  ) {}
+// 替换前：使用 CloudBase
+CloudBaseUsersRepository implements UsersRepository
 
-  async createUser(input) {
-    // 主库同步写入
-    const result = await this.primary.createUser(input);
+// 替换后：使用 TypeORM + MySQL
+MySQLUsersRepository implements UsersRepository
 
-    // 从库异步写入（失败不阻塞）
-    if (this.secondary) {
-      this.secondary.createUser(input).catch((err) => logger.error('Secondary write failed', err));
-    }
-
-    return result;
-  }
+// 业务层代码无需修改
+UsersService {
+  constructor(@Inject(USERS_REPOSITORY) private repo: UsersRepository) {}
 }
 ```
 
 **优势:**
 
-- 最小化代码改动
-- 渐进式迁移，风险可控
-- 保持接口不变，业务层无感知
+- 业务层代码完全不变
+- 接口契约保证兼容性
+- 一次性切换，简单直接
 
 ---
 
@@ -695,86 +686,25 @@ export class MySQLUsersRepository implements UsersRepository {
 - 主键 `_id` 在 CloudBase 可以直接访问，在 MySQL 需要加引号
 - 其他 SQL 语法几乎不变
 
-#### 5.3 实现双写 Repository
-
-**`src/users/dual-write/dual-write-users.repository.ts`:**
-
-```typescript
-import { Logger } from '@nestjs/common';
-import type { UsersRepository } from '../users.repository';
-
-export class DualWriteUsersRepository implements UsersRepository {
-  private readonly logger = new Logger(DualWriteUsersRepository.name);
-
-  constructor(
-    private readonly primary: UsersRepository, // CloudBase
-    private readonly secondary?: UsersRepository, // MySQL
-  ) {}
-
-  async findByAccount(account: string) {
-    // 查询只走主库
-    return this.primary.findByAccount(account);
-  }
-
-  async createUser(input: CreateUserInput) {
-    // 先写主库（同步）
-    const result = await this.primary.createUser(input);
-
-    // 异步写从库（失败不阻塞）
-    if (this.secondary) {
-      this.secondary.createUser(input).catch((err) => {
-        this.logger.error(`[DUAL-WRITE] MySQL write failed: ${err.message}`);
-      });
-    }
-
-    return result;
-  }
-
-  // ... 其他方法
-}
-```
-
-#### 5.4 更新 Users Module
+#### 5.3 更新 Users Module 配置
 
 **修改 `src/users/users.module.ts`:**
 
 ```typescript
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CloudbaseModule } from '../database/cloudbase.module';
 import { MySQLModule } from '../database/mysql.module';
-import { CLOUDBASE_APP } from '../database/cloudbase.constants';
 import { USERS_REPOSITORY } from './users.repository';
-import { CloudBaseUsersRepository } from './users.repository.cloudbase';
 import { MySQLUsersRepository } from './users.repository.mysql';
-import { DualWriteUsersRepository } from './dual-write/dual-write-users.repository';
 
 @Module({
-  imports: [CloudbaseModule, MySQLModule],
+  imports: [MySQLModule],
   providers: [
-    // CloudBase Repository（主库）
-    {
-      provide: 'CLOUDBASE_USERS_REPOSITORY',
-      inject: [ConfigService, CLOUDBASE_APP],
-      useFactory: (config: ConfigService, app: any) =>
-        new CloudBaseUsersRepository(app.models, config),
-    },
-
-    // MySQL Repository（从库）
-    {
-      provide: 'MYSQL_USERS_REPOSITORY',
-      inject: [ConfigService],
-      useFactory: () => new MySQLUsersRepository(config),
-    },
-
-    // Dual-Write Repository（对外暴露）
+    // MySQL Repository（直接使用）
     {
       provide: USERS_REPOSITORY,
-      inject: ['CLOUDBASE_USERS_REPOSITORY', 'MYSQL_USERS_REPOSITORY'],
-      useFactory: (primary: UsersRepository, secondary?: UsersRepository): UsersRepository => {
-        const enableMySQL = process.env.ENABLE_MYSQL_DUAL_WRITE === 'true';
-        return new DualWriteUsersRepository(primary, enableMySQL ? secondary : undefined);
-      },
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): UsersRepository => new MySQLUsersRepository(config),
     },
   ],
   exports: [USERS_REPOSITORY],
@@ -782,65 +712,87 @@ import { DualWriteUsersRepository } from './dual-write/dual-write-users.reposito
 export class UsersModule {}
 ```
 
----
+**说明**：
 
-### 阶段 6: 双写运行和数据验证 (1-2 周)
-
-#### 6.1 启用双写
-
-```bash
-# .env.local
-ENABLE_MYSQL_DUAL_WRITE=true
-
-# 重启应用
-npm run dev
-```
-
-#### 6.2 数据一致性验证
-
-```bash
-# 创建验证脚本
-# src/scripts/verify-data-consistency.ts
-
-class DataConsistencyVerifier {
-  async verify() {
-    // 对比 CloudBase MySQL 和本地 MySQL 的数据量
-
-    const tcbCount = await tcb.models.rbac_users.count();
-    const [result] = await mysql.query('SELECT COUNT(*) as count FROM rbac_users');
-    const mysqlCount = result.count;
-
-    if (tcbCount !== mysqlCount) {
-      throw new Error(`Count mismatch: CloudBase=${tcbCount}, MySQL=${mysqlCount}`);
-    }
-
-    console.log(`✅ Data consistency verified (${tcbCount} records)`);
-  }
-}
-```
-
-```bash
-npm run verify:data
-```
+- 移除了 CloudBase 相关依赖
+- 直接使用 MySQLUsersRepository
+- 业务层代码无需任何修改
 
 ---
 
-### 阶段 7: 切换到本地 MySQL (1 周)
+### 阶段 6: 验证和切换 (1 天)
 
-#### 7.1 灰度切换
+#### 6.1 数据完整性验证
 
 ```bash
-# .env.local
-MYSQL_PRIMARY=true  # 切换到 MySQL 为主库
-ENABLE_MYSQL_DUAL_WRITE=true  # 继续双写到 CloudBase
+# 验证数据迁移完整性
+mysql -u snapmatch_user -p snapmatch -e "
+  SELECT
+    (SELECT COUNT(*) FROM rbac_users) AS users,
+    (SELECT COUNT(*) FROM rbac_roles) AS roles,
+    (SELECT COUNT(*) FROM rbac_permissions) AS permissions,
+    (SELECT COUNT(*) FROM rbac_user_roles) AS user_roles,
+    (SELECT COUNT(*) FROM rbac_role_permissions) AS role_permissions,
+    (SELECT COUNT(*) FROM auth_sessions) AS sessions;
+"
+
+# 抽样验证关键数据
+mysql -u snapmatch_user -p snapmatch -e "
+  SELECT _id, account, userType, status FROM rbac_users LIMIT 10;
+  SELECT * FROM rbac_roles WHERE status = 1;
+"
 ```
 
-#### 7.2 完全切换
+#### 6.2 切换应用连接
+
+**1. 更新环境变量：**
 
 ```bash
 # .env.local
-ENABLE_MYSQL_DUAL_WRITE=false  # 停止双写
-MYSQL_PRIMARY=true
+MYSQL_HOST=your-mysql-host  # 你的 MySQL 服务器地址
+MYSQL_PORT=3306
+MYSQL_USERNAME=snapmatch_user
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=snapmatch
+```
+
+**2. 重启应用：**
+
+```bash
+npm run build
+npm run start:prod
+```
+
+**3. 验证应用运行：**
+
+```bash
+# 测试用户登录
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"account":"test@example.com","password":"your_password"}'
+
+# 检查应用日志
+tail -f logs/application.log
+```
+
+#### 6.3 回滚方案（如需回滚）
+
+如果迁移后发现问题，可以快速回滚：
+
+```bash
+# 1. 恢复 CloudBase 连接配置
+# .env.local
+CLOUDBASE_ENV=cloud1-0g0w5fgq5ce8c980
+CLOUDBASE_REGION=ap-shanghai
+CLOUDBASE_SECRET_ID=xxx
+CLOUDBASE_SECRET_KEY=xxx
+
+# 2. 修改 users.module.ts，恢复 CloudBase Repository
+# 将 USERS_REPOSITORY 的 provide 改回 CloudBaseUsersRepository
+
+# 3. 重新构建和启动
+npm run build
+npm run start:prod
 ```
 
 ---
@@ -855,6 +807,18 @@ describe('MySQLUsersRepository', () => {
   it('should return user with roles', async () => {
     const user = await repository.findByAccount('test@example.com');
     expect(user.account).toBe('test@example.com');
+    expect(user.roles).toContain(Role.Customer);
+  });
+
+  it('should create user correctly', async () => {
+    const user = await repository.createUser({
+      account: 'newuser@example.com',
+      passwordHash: 'hashed',
+      userType: 'customer',
+      status: 1,
+      roleCodes: [Role.Customer],
+    });
+    expect(user.id).toBeDefined();
   });
 });
 ```
@@ -864,16 +828,11 @@ describe('MySQLUsersRepository', () => {
 ```typescript
 // users/users.service.integration.spec.ts
 describe('UsersService Integration', () => {
-  it('should create user and sync to both databases', async () => {
+  it('should work with MySQL repository', async () => {
+    // 测试完整的用户管理流程
     const user = await usersService.createUser({ ... });
-
-    // 验证 CloudBase
-    const tcbUser = await tcbRepository.findByAccount('test@example.com');
-    expect(tcbUser).toBeDefined();
-
-    // 验证本地 MySQL
-    const mysqlUser = await mysqlRepository.findByAccount('test@example.com');
-    expect(mysqlUser).toBeDefined();
+    const found = await usersService.findById(user.id);
+    expect(found).toBeDefined();
   });
 });
 ```
@@ -884,26 +843,35 @@ describe('UsersService Integration', () => {
 
 ### 风险矩阵（简化后）
 
-| 风险类型         | 风险描述                | 影响  | 概率 | 缓解措施               |
-| ---------------- | ----------------------- | ----- | ---- | ---------------------- |
-| **数据丢失**     | 导出/导入过程中数据丢失 | 🟡 中 | 低   | 使用事务+备份          |
-| **数据不一致**   | 双写过程中数据分歧      | 🟡 中 | 低   | 双写监控+每日校验      |
-| **性能下降**     | 双写导致响应时间增加    | 🟢 低 | 低   | 异步写入               |
-| **业务中断**     | 本地 MySQL 连接失败     | 🟡 中 | 低   | 快速回滚到 CloudBase   |
-| **SQL 语法差异** | 查询语法不兼容          | 🟢 低 | 低   | 差异很小，主要是占位符 |
+| 风险类型         | 风险描述                 | 影响  | 概率 | 缓解措施               |
+| ---------------- | ------------------------ | ----- | ---- | ---------------------- |
+| **数据丢失**     | 导出/导入过程中数据丢失  | 🟡 中 | 低   | 使用事务+备份+验证     |
+| **数据不一致**   | 迁移后数据与原库不符     | 🟡 中 | 低   | 数据完整性校验         |
+| **业务中断**     | MySQL 连接失败或配置错误 | 🟡 中 | 低   | 准备回滚方案           |
+| **SQL 语法差异** | 查询语法不兼容           | 🟢 低 | 低   | 差异很小，主要是占位符 |
+| **性能问题**     | 自建 MySQL 性能不如云库  | 🟢 低 | 低   | 配置优化和索引优化     |
 
 ### 回滚方案
 
-**一键回滚**:
+**快速回滚步骤**:
 
 ```bash
-# 1. 关闭双写
-export ENABLE_MYSQL_DUAL_WRITE=false
+# 1. 恢复 CloudBase 连接配置
+# 修改 .env.local，添加 CloudBase 配置
+CLOUDBASE_ENV=cloud1-0g0w5fgq5ce8c980
+CLOUDBASE_REGION=ap-shanghai
+CLOUDBASE_SECRET_ID=xxx
+CLOUDBASE_SECRET_KEY=xxx
 
-# 2. 重启应用
-npm run dev
+# 2. 恢复 CloudBase Repository
+# 修改 src/users/users.module.ts
+# 将 USERS_REPOSITORY 改回使用 CloudBaseUsersRepository
 
-# ✅ 立即切换回 CloudBase
+# 3. 重新构建和启动
+npm run build
+npm run start:prod
+
+# ✅ 完成回滚
 ```
 
 ---
@@ -917,9 +885,8 @@ npm run dev
 | 阶段 3: 生成 TypeORM 实体 | 1 天       | 实体类创建完成           | 所有 entity 文件      |
 | 阶段 4: 安装依赖配置      | 0.5 天     | 开发环境就绪             | 依赖+配置             |
 | 阶段 5: 实现 Repository   | 2-3 天     | MySQL Repository 完成    | repository 文件       |
-| 阶段 6: 双写运行          | 1-2 周     | 数据一致性验证通过       | 监控日志              |
-| 阶段 7: 切换到本地        | 1 周       | 完全迁移到本地 MySQL     | 生产就绪              |
-| **总计**                  | **2-3 周** | **完全迁移到本地 MySQL** | **生产系统**          |
+| 阶段 6: 验证和切换        | 1 天       | 完成迁移，应用运行       | 生产系统              |
+| **总计**                  | **5-7 天** | **完全迁移到本地 MySQL** | **生产就绪**          |
 
 ---
 
@@ -934,9 +901,9 @@ feat-mywork/apps/backend/
 ├── .env.local                            # 配置 MySQL 连接
 ├── src/
 │   ├── users/
-│   │   ├── users.module.ts               # 添加 MySQL Repository
+│   │   └── users.module.ts               # 替换为 MySQL Repository
 │   └── auth/sessions/
-│       └── sessions.module.ts            # 添加 MySQL Repository
+│       └── sessions.module.ts            # 替换为 MySQL Repository
 ```
 
 ### 需要新增的文件
@@ -944,25 +911,33 @@ feat-mywork/apps/backend/
 ```
 feat-mywork/apps/backend/src/
 ├── database/
-│   ├── mysql.module.ts                   # TypeORM 模块
-│   └── mysql.constants.ts                # MySQL 常量
+│   └── mysql.module.ts                   # TypeORM 模块
 ├── users/
 │   ├── entities/                         # TypeORM 实体（7个）
 │   │   ├── user.entity.ts
 │   │   ├── role.entity.ts
 │   │   ├── permission.entity.ts
 │   │   └── ...
-│   ├── users.repository.mysql.ts         # MySQL 实现
-│   └── dual-write/
-│       └── dual-write-users.repository.ts # 双写包装器
+│   └── users.repository.mysql.ts         # MySQL 实现
 ├── auth/sessions/
 │   ├── entities/
 │   │   └── auth-session.entity.ts
-│   ├── auth-sessions.repository.mysql.ts
-│   └── dual-write/
-│       └── dual-write-sessions.repository.ts
+│   └── auth-sessions.repository.mysql.ts
 └── scripts/
-    └── verify-data-consistency.ts        # 数据一致性校验
+    └── verify-data-integrity.ts          # 数据完整性验证
+```
+
+### 可以删除的文件（迁移完成后）
+
+```
+feat-mywork/apps/backend/src/
+├── database/
+│   ├── cloudbase.module.ts               # CloudBase 模块
+│   └── cloudbase.constants.ts            # CloudBase 常量
+├── users/
+│   └── users.repository.cloudbase.ts     # CloudBase 实现
+└── auth/sessions/
+    └── auth-sessions.repository.cloudbase.ts
 ```
 
 ---
@@ -973,38 +948,46 @@ feat-mywork/apps/backend/src/
 
 - ✅ 所有单元测试通过
 - ✅ 所有集成测试通过
-- ✅ 数据一致性校验 100% 通过
-- ✅ API p95 响应时间 <200ms（几乎无影响）
-- ✅ 双写成功率 >99.9%
+- ✅ 数据完整性验证 100% 通过
+- ✅ API 响应时间正常（<200ms）
+- ✅ 数据库连接稳定
 
 ### 业务指标
 
 - ✅ 无业务中断
 - ✅ 无数据丢失
-- ✅ 无用户感知的降级
+- ✅ 所有功能正常运行
+- ✅ 用户登录和操作正常
 
 ---
 
 ## 📚 总结
 
-此迁移方案采用**渐进式双写策略**，确保平滑过渡：
+此迁移方案采用**直接替换策略**，从 CloudBase MySQL 完全迁移到自建 MySQL：
 
 ### 核心优势
 
 1. **数据库类型相同**: 都是 MySQL，表结构直接复用，无重新设计
 2. **迁移复杂度低**: SQL 语法几乎无差异，主要是占位符变化
-3. **数据安全**: 多重校验机制确保数据一致性
-4. **快速回滚**: 环境变量一键切换回 CloudBase
+3. **数据安全**: 完整的导出导入流程和验证机制
+4. **快速回滚**: 保留 CloudBase 代码，可随时回滚
 5. **架构清晰**: Repository 模式使得迁移代码侵入性小
-6. **周期缩短**: 从 4-6 周缩短到 2-3 周
+6. **周期短**: 5-7 天即可完成迁移
+
+### 迁移策略
+
+- **一次性切换**: 不使用双写，直接替换数据库连接
+- **保留原代码**: CloudBase 相关代码保留，便于回滚
+- **完整验证**: 数据完整性验证 + 功能测试
+- **快速回滚**: 如有问题，可快速切回 CloudBase
 
 ### 可行性结论
 
-✅ **完全可行，强烈建议执行**
+✅ **完全可行，建议执行**
 
 ### 预计周期
 
-**2-3 周**（比原方案缩短 50%）
+**5-7 个工作日**（1周左右）
 
 ### 风险评估
 
@@ -1020,12 +1003,13 @@ feat-mywork/apps/backend/src/
 
 ---
 
-**文档版本**: 2.0 (修正版)
+**文档版本**: 3.0 (直接替换版)
 **最后更新**: 2026-01-02
 **主要变更**:
 
-- 修正架构描述：CloudBase MySQL（托管）+ 数据模型 ORM
-- 简化迁移方案：直接导出表结构和数据
-- 添加 mysqldump 导出命令
-- 缩短预计周期：2-3 周
-- 强调表结构复用，无需重新设计
+- ✅ 移除"主从库"和"双写"概念
+- ✅ 采用直接替换策略：导出数据 → 导入自建 MySQL → 切换连接
+- ✅ 简化迁移流程：从 2-3 周缩短到 5-7 个工作日
+- ✅ 明确迁移意图：完全替换 CloudBase，不再保留作为备份
+- ✅ 保留 CloudBase 代码便于快速回滚
+- ✅ 强调表结构复用，无需重新设计
