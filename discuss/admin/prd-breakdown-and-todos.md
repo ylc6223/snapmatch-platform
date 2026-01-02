@@ -17,6 +17,33 @@
 - **内部管理后台（Admin）**：工作台、作品集管理、交付与选片管理、客户与订单、系统设置（RBAC）
 - **客户 PC 选片端（Client Viewer）**：独立访问入口，沉浸式选片、对比、提交、加片引导
 
+### 1.1.1 关键概念：作品集素材 vs 交付照片（必须区分）
+
+PRD 中“上传图片”在实现层面至少分为两条不同链路，建议统一术语，避免路由/权限/存储/处理混杂：
+
+- **作品集素材**：用于小程序展示/营销内容（作品图、轮播图等），归属「作品集管理（CMS）」模块。
+  - 推荐 Admin 路由入口：`/dashboard/portfolio/works`（作品编辑内上传）、`/dashboard/portfolio/banners`（轮播图配置）
+- **交付照片**：用于客户选片/交付（项目原片、预览图/缩略图、精修交付图），归属「交付与选片管理」模块。
+  - 推荐 Admin 路由入口：`/dashboard/delivery/photos`（照片库），以及后续可扩展项目维度入口（如：`/dashboard/delivery/projects/:id/photos`）
+
+### 1.1.2 上传方案约定：统一“拿上传通行证”，分开“登记入册”
+
+为降低后端重复建设成本，并避免两类上传在权限/归档策略上混用，建议采用：
+
+- **统一签名/STS（拿上传通行证）**：不管上传「作品集素材」还是「交付照片」，都通过同一个接口拿到临时上传凭证：`POST /assets/sign`，并用 `purpose` 区分用途。
+- **分开确认/入库（登记入册）**：文件上传到云存储后，再调用不同的确认接口把文件“绑定到业务”并触发后续处理。
+
+大白话版本（保留给团队对齐用）：
+
+1. **先拿“上传通行证”（签名/STS）**：检查你有没有登录、限制文件大小/类型，给你一个临时凭证让你把文件直接传到云存储。两类上传这一步都一样，所以只做一个 `POST /assets/sign`，请求里带 `purpose=作品集素材/交付照片`。
+
+2. **上传完再“登记入册”（确认/入库/绑定业务）**：文件传完只是“云上有个文件”，系统还不知道它属于哪个作品/哪个项目、要不要加水印，所以这一步按业务分开：
+
+- 交付照片走 `POST /photos/confirm`（绑定项目/相册，触发水印/缩略图处理）
+- 作品集素材走 `POST /works/:id/assets/confirm`（绑定到某个作品/轮播图配置）
+
+更完整的方案说明见：`discuss/admin/upload-assets-signing-scheme.md`。
+
 ### 1.2 假设与约束（落地时需要明确）
 
 - 技术栈：仓库已有 `apps/admin`（Next.js）、`apps/backend`（NestJS），建议继续沿用 BFF 方案（Admin 的 `/api/*` 转发后端）。
@@ -106,7 +133,7 @@
 
 **前端（Admin）**
 
-- 作品 CRUD：多图/视频上传、富文本描述、标签、排序、上下架
+- 作品 CRUD：多图/视频上传、富文本描述、标签、排序、上下架（上传的是「作品集素材」，非交付照片）
 - 分类/标签管理：类目（婚纱/写真…）、标签（风格/场景…）
 - 轮播图配置：首页 banner 列表与排序
 
@@ -136,7 +163,7 @@
 
 **前端（Admin）**
 
-- 批量上传：拖拽、分组（子相册）、断点续传/重试、上传进度
+- 批量上传：拖拽、分组（子相册）、断点续传/重试、上传进度（上传的是「交付照片」）
 - 照片库管理：分组/排序/筛选（原片/预览/精修）、批量操作（标记、移动分组）
 - 处理状态可视化：生成中/可预览/失败重试
 
@@ -261,23 +288,34 @@
 - `GET /auth/me`
 - `POST /auth/logout`
 
-### 6.2 项目与照片
+### 6.2 作品集素材（CMS）
+
+> 说明：此处的“素材”指用于小程序展示/营销的内容资产（非交付照片）。
+
+- `GET /works`（作品列表）
+- `POST /works`（创建/发布作品）
+- `PATCH /works/:id`（编辑作品）
+- `POST /assets/sign`（直传签名/STS，`purpose=portfolio-asset`）
+- `POST /works/:id/assets/confirm`（素材上传完成确认 + 元数据入库）
+- `GET /banners` / `PUT /banners`（轮播图配置）
+
+### 6.3 项目与交付照片
 
 - `GET /projects`（按角色过滤）
 - `POST /projects`
 - `PATCH /projects/:id`
 - `POST /projects/:id/viewer-link`（生成/刷新）
-- `POST /assets/sign`（直传签名/STS）
+- `POST /assets/sign`（直传签名/STS，`purpose=delivery-photo`）
 - `POST /photos/confirm`（上传完成确认 + 元数据入库）
 - `GET /projects/:id/photos`（分组/分页）
 
-### 6.3 Viewer 选片
+### 6.4 Viewer 选片
 
 - `GET /viewer/:token`（拉取项目信息 + 预览图列表 + 套餐规则）
 - `PUT /viewer/:token/selection`（草稿保存，幂等）
 - `POST /viewer/:token/submit`（提交并锁定）
 
-### 6.4 订单
+### 6.5 订单
 
 - `GET /orders`
 - `POST /orders/offline`（线下录入）
@@ -292,12 +330,15 @@
 ### P0（必须有）
 
 - [ ] [BE] 定义 Project/Album/Photo/Selection/ViewerLink 最小数据模型与迁移/初始化
+- [ ] [BE] 作品集管理最小闭环：Works/Categories/Banners 的最小数据模型与 CRUD
 - [ ] [BE] 员工登录打通：`/auth/login`、`/auth/me`、RBAC Guard（最小可用）
 - [ ] [FE-Admin] 登录页接入真实登录（cookie/session/JWT 方案与现有后端对齐）
 - [ ] [FE-Admin] 路由保护与全局 401/403 处理（中间件或布局层保护）
-- [ ] [BE] 直传签名/STS：`/assets/sign` + 上传完成确认 `photos/confirm`
+- [ ] [BE] 直传签名/STS：`/assets/sign`（按 `purpose` 区分作品集素材/交付照片）
+- [ ] [BE] 上传完成确认：作品集素材 `/works/:id/assets/confirm`；交付照片 `/photos/confirm`
 - [ ] [BE] 异步处理 MVP：生成缩略图 + 预览图（带水印），并回写 Photo 状态
 - [ ] [FE-Admin] 项目创建：表单 + 列表/详情（含套餐张数、下载/水印/截止日期）
+- [ ] [FE-Admin] 作品集素材上传：作品编辑内多图/视频上传 + 轮播图素材上传与排序
 - [ ] [FE-Admin] 照片批量上传：拖拽、分组选择、进度/失败重试、状态刷新
 - [ ] [BE] ViewerLink 生成与校验：`/projects/:id/viewer-link`、`GET /viewer/:token`
 - [ ] [FE-Viewer] Viewer 基础：瀑布流/大图切换、键盘操作、喜欢标记

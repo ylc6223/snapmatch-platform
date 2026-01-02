@@ -99,6 +99,7 @@ const data = {
       roles: ["admin"] satisfies Role[],
       items: [
         { title: "选片端预览（Lumina）", url: "/dashboard/dev/client-viewer" },
+        { title: "上传组件预览", url: "/dashboard/dev/upload" },
         { title: "Swagger Docs", url: "/api/docs" }
       ]
     }

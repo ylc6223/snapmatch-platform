@@ -7,6 +7,7 @@ import { PermissionsGuard } from "./auth/guards/permissions.guard";
 import { RolesGuard } from "./auth/guards/roles.guard";
 import { HealthController } from "./health/health.controller";
 import { UsersModule } from "./users/users.module";
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UsersModule } from "./users/users.module";
     UsersModule,
     // 鉴权与权限模块：JWT 签发/解析、登录接口、RBAC（角色/权限）能力。
     AuthModule,
+    AssetsModule,
   ],
   controllers: [HealthController],
   providers: [

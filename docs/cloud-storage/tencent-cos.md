@@ -14,6 +14,7 @@ COS（Cloud Object Storage，对象存储）提供一种“海量文件/对象�
 - 以 **Bucket（存储桶）** 为容器，以 **Object（对象）** 为基本单位存储文件。
 - 每个对象通过 `Key`（类似路径的字符串）唯一标识，例如 `images/2025/01/a.jpg`。
 - 通过 HTTP/HTTPS（COS XML API）对对象进行上传、下载、删除、列举、权限控制等操作。
+  ![alt text](Gemini_Generated_Image_59h0em59h0em59h0.png)
 
 典型场景：
 
