@@ -10,26 +10,27 @@
     "test": "jest",
     "type-check": "tsc --noEmit",
     "hash:password": "ts-node --files ./src/scripts/hash-password.ts",
-    "seed:rbac": "ts-node --files ./src/scripts/seed-rbac.ts"
+    "seed:rbac": "ts-node --files ./src/scripts/seed-rbac.mysql.ts"
   },
   "dependencies": {
-    "@cloudbase/node-sdk": "^3.16.0",
-    "@cloudbase/wx-cloud-client-sdk": "^1.7.2",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/typeorm": "^11.0.0",
     "@nestjs/swagger": "^11.2.3",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "mysql2": "^3.14.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "typeorm": "^0.3.27"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

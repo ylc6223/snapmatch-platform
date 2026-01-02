@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Role } from "../types";
 
 export class AuthUserDto {
-  @ApiProperty({ description: "用户 ID（CloudBase 数据模型 _id）", example: "CRB6R8G480" })
+  @ApiProperty({ description: "用户 ID（rbac_users._id）", example: "CRB6R8G480" })
   id!: string;
 
   @ApiProperty({ description: "账号", example: "admin" })
@@ -23,4 +23,3 @@ export class AuthUserDto {
   })
   permissions!: string[];
 }
-

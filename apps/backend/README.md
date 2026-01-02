@@ -1,12 +1,12 @@
 # Backend (NestJS)
 
-该服务为 `apps/admin`（未来也包括摄影师/客户端）提供 API：**JWT 鉴权 + RBAC 权限控制**，并预留 CloudBase 持久化接入点。
+该服务为 `apps/admin`（未来也包括摄影师/客户端）提供 API：**JWT 鉴权 + RBAC 权限控制**，数据存储使用自建/云 MySQL（TypeORM）。
 
 ## 本地运行
 
 ```bash
-pnpm -C apps/backend install
-pnpm -C apps/backend dev
+pnpm -C feat-mywork/apps/backend install
+pnpm -C feat-mywork/apps/backend dev
 ```
 
 默认端口：`3002`（可通过 `PORT` 覆盖）。
@@ -16,16 +16,15 @@ pnpm -C apps/backend dev
 复制并按需调整：
 
 ```bash
-cp apps/backend/.env.example apps/backend/.env.local
+cp feat-mywork/apps/backend/.env.example feat-mywork/apps/backend/.env.local
 ```
 
 关键变量：
 
 - `JWT_SECRET`：JWT 签名密钥（务必修改）
 - `ADMIN_ORIGIN`：CORS 允许的管理后台 Origin（默认 `http://localhost:3001`）
-- `CLOUDBASE_ENV` / `CLOUDBASE_SECRET_ID` / `CLOUDBASE_SECRET_KEY`：CloudBase Node SDK 初始化所需
-- `CLOUDBASE_MODEL_USERS`：用户数据模型名（默认 `rbac_users`）
-- `CLOUDBASE_MODEL_AUTH_SESSIONS`：会话数据模型名（默认 `auth_sessions`）
+- `DB_HOST` / `DB_PORT` / `DB_USERNAME` / `DB_PASSWORD` / `DB_DATABASE`：MySQL 连接配置
+- `DB_SSL`：云数据库常见（可选），设置为 `true` 启用 TLS
 
 ## Docker/生产部署端口约定
 
@@ -37,7 +36,13 @@ cp apps/backend/.env.example apps/backend/.env.local
 生成密码 hash：
 
 ```bash
-pnpm -C apps/backend hash:password "your-password"
+pnpm -C feat-mywork/apps/backend hash:password "your-password"
+```
+
+写入/更新 RBAC 预置数据（角色、权限点、默认账号）：
+
+```bash
+pnpm -C feat-mywork/apps/backend seed:rbac
 ```
 
 ## API 速览
@@ -49,6 +54,6 @@ pnpm -C apps/backend hash:password "your-password"
 - `GET /health`（Public）：健康检查
 - `GET /api/v1/secure/admin-only`（JWT + role=admin）：示例受保护接口
 
-## CloudBase 部署（建议 CloudRun 容器模式）
+## 容器/生产部署
 
-本服务已读取 `PORT` 环境变量并启用 CORS；可直接用于 CloudBase CloudRun 容器部署（参考仓库 `rules/cloudrun-development/rule.md`）。
+本服务已读取 `PORT` 环境变量并启用 CORS；容器内默认监听 `3000`（见 `apps/backend/Dockerfile`）。

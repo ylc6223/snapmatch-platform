@@ -12,14 +12,13 @@ const jwt_1 = require("@nestjs/jwt");
 const passport_1 = require("@nestjs/passport");
 const config_1 = require("@nestjs/config");
 const users_module_1 = require("../users/users.module");
-const cloudbase_module_1 = require("../database/cloudbase.module");
-const cloudbase_constants_1 = require("../database/cloudbase.constants");
+const mysql_module_1 = require("../database/mysql.module");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const secure_controller_1 = require("./secure.controller");
 const auth_sessions_repository_1 = require("./sessions/auth-sessions.repository");
-const auth_sessions_repository_cloudbase_1 = require("./sessions/auth-sessions.repository.cloudbase");
+const auth_sessions_repository_mysql_1 = require("./sessions/auth-sessions.repository.mysql");
 const auth_sessions_service_1 = require("./sessions/auth-sessions.service");
 function parseJwtExpiresInToSeconds(value) {
     const trimmed = value.trim();
@@ -46,7 +45,7 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
             users_module_1.UsersModule,
-            cloudbase_module_1.CloudbaseModule,
+            mysql_module_1.MysqlModule,
             passport_1.PassportModule,
             jwt_1.JwtModule.registerAsync({
                 inject: [config_1.ConfigService],
@@ -63,8 +62,7 @@ exports.AuthModule = AuthModule = __decorate([
             auth_service_1.AuthService,
             {
                 provide: auth_sessions_repository_1.AUTH_SESSIONS_REPOSITORY,
-                inject: [config_1.ConfigService, cloudbase_constants_1.CLOUDBASE_APP],
-                useFactory: (config, app) => new auth_sessions_repository_cloudbase_1.CloudBaseAuthSessionsRepository(app.models, config),
+                useClass: auth_sessions_repository_mysql_1.MySqlAuthSessionsRepository,
             },
             auth_sessions_service_1.AuthSessionsService,
             jwt_strategy_1.JwtStrategy,

@@ -413,13 +413,15 @@ AND REFERENCED_TABLE_NAME IS NOT NULL;
 
 ```bash
 # ========================================
-# MySQL 配置
+# 数据库配置（通用于本地/自建/云 MySQL）
 # ========================================
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USERNAME=snapmatch_user
-MYSQL_PASSWORD=YourStrongPassword123!
-MYSQL_DATABASE=snapmatch
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=snapmatch_user
+DB_PASSWORD=YourStrongPassword123!
+DB_DATABASE=snapmatch
+# （可选）云数据库常见：开启 SSL
+# DB_SSL=true
 
 # ========================================
 # 双写配置
@@ -436,13 +438,14 @@ MYSQL_READ_ONLY=false
 
 ```bash
 # ========================================
-# MySQL 配置
+# 数据库配置（通用于本地/自建/云 MySQL）
 # ========================================
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USERNAME=snapmatch_user
-MYSQL_PASSWORD=your_password_here
-MYSQL_DATABASE=snapmatch
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=snapmatch_user
+DB_PASSWORD=your_password_here
+DB_DATABASE=snapmatch
+# DB_SSL=true
 
 # ========================================
 # 双写配置
@@ -480,11 +483,12 @@ const mysql = require('mysql2/promise');
 async function testConnection() {
   try {
     const connection = await mysql.createConnection({
-      host: process.env.MYSQL_HOST || 'localhost',
-      port: process.env.MYSQL_PORT || 3306,
-      user: process.env.MYSQL_USERNAME || 'snapmatch_user',
-      password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE || 'snapmatch',
+      host: process.env.DB_HOST || process.env.MYSQL_HOST || 'localhost',
+      port: Number(process.env.DB_PORT || process.env.MYSQL_PORT || 3306),
+      user: process.env.DB_USERNAME || process.env.MYSQL_USERNAME || 'snapmatch_user',
+      password: process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD,
+      database: process.env.DB_DATABASE || process.env.MYSQL_DATABASE || 'snapmatch',
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
     });
 
     console.log('✅ MySQL 连接成功！');
