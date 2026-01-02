@@ -2,9 +2,9 @@
  * 云存储提供商抽象接口
  *
  * 设计目标：
- * 1. 统一不同云存储提供商（七牛云、腾讯云 COS 等）的 API 调用
+ * 1. 统一不同云存储提供商（Cloudflare R2、腾讯云 COS 等）的 API 调用
  * 2. 支持通过环境变量轻松切换存储提供商
- * 3. 便于未来从七牛云迁移到腾讯云 COS
+ * 3. 便于在本地/生产环境切换提供商
  *
  * 使用方式：
  * - 所有云存储操作通过 StorageService 调用
@@ -24,12 +24,66 @@ export interface UploadTokenResult {
   objectKey: string;
   /** 过期时间（秒） */
   expiresIn?: number;
+  /**
+   * 上传策略（可选）
+   *
+   * - s3-presigned-put：S3 兼容的预签名 PUT（uploadUrl 即完整 URL）
+   * - s3-multipart：S3 兼容的分片上传（uploadId + partSize，需要再签名每个 part）
+   */
+  uploadStrategy?: 's3-presigned-put' | 's3-multipart';
+  /** 分片上传 ID（uploadStrategy=s3-multipart 时） */
+  uploadId?: string;
+  /** 分片大小（字节，uploadStrategy=s3-multipart 时） */
+  partSize?: number;
+}
+
+export interface MultipartCompletedPart {
+  partNumber: number;
+  etag: string;
+}
+
+export interface MultipartUploadInitResult {
+  uploadId: string;
+  objectKey: string;
+  partSize: number;
+  expiresIn?: number;
+}
+
+export interface MultipartUploadPartUrlResult {
+  url: string;
+  expiresIn?: number;
+}
+
+/**
+ * 可选的分片上传能力（断点续传）
+ *
+ * 说明：不是所有 provider 都支持；业务侧需根据 providerType/能力做分支。
+ */
+export interface IMultipartUploadProvider {
+  createMultipartUpload(
+    objectKey: string,
+    contentType: string,
+    expiresIn: number,
+  ): Promise<MultipartUploadInitResult>;
+  signUploadPart(
+    objectKey: string,
+    uploadId: string,
+    partNumber: number,
+    expiresIn: number,
+  ): Promise<MultipartUploadPartUrlResult>;
+  completeMultipartUpload(
+    objectKey: string,
+    uploadId: string,
+    parts: MultipartCompletedPart[],
+  ): Promise<void>;
+  abortMultipartUpload(objectKey: string, uploadId: string): Promise<void>;
+  listUploadedParts(objectKey: string, uploadId: string): Promise<MultipartCompletedPart[]>;
 }
 
 /**
  * 云存储提供商接口
  *
- * 所有云存储提供商（七牛云、腾讯云 COS 等）都必须实现此接口
+ * 所有云存储提供商（Cloudflare R2、腾讯云 COS 等）都必须实现此接口
  */
 export interface IStorageProvider {
   /**
@@ -42,13 +96,10 @@ export interface IStorageProvider {
    * @example
    * ```typescript
    * const result = await provider.generateUploadToken('portfolio/assets/2025/01/photo.jpg', 3600);
-   * // 返回：{ token: 'xxx', uploadUrl: 'https://upload.qiniup.com', objectKey: '...', expiresIn: 3600 }
+   * // 返回：{ uploadUrl: 'https://...presigned...', objectKey: '...', expiresIn: 3600 }
    * ```
    */
-  generateUploadToken(
-    objectKey: string,
-    expiresIn: number,
-  ): Promise<UploadTokenResult>;
+  generateUploadToken(objectKey: string, expiresIn: number): Promise<UploadTokenResult>;
 
   /**
    * 获取公开访问 URL

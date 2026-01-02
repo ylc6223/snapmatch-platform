@@ -16,6 +16,7 @@ const permissions_guard_1 = require("./auth/guards/permissions.guard");
 const roles_guard_1 = require("./auth/guards/roles.guard");
 const health_controller_1 = require("./health/health.controller");
 const users_module_1 = require("./users/users.module");
+const assets_module_1 = require("./assets/assets.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -24,10 +25,11 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
-                envFilePath: [".env.local", ".env"],
+                envFilePath: ['.env.local', '.env'],
             }),
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
+            assets_module_1.AssetsModule,
         ],
         controllers: [health_controller_1.HealthController],
         providers: [

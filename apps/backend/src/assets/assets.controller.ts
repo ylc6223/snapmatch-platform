@@ -33,6 +33,12 @@ interface SignAssetResponse {
   objectKey: string;
   /** 过期时间（秒） */
   expiresIn: number;
+  /** 上传策略（可选） */
+  uploadStrategy?: 's3-presigned-put' | 's3-multipart';
+  /** 分片上传 ID（uploadStrategy=s3-multipart 时） */
+  uploadId?: string;
+  /** 分片大小（字节，uploadStrategy=s3-multipart 时） */
+  partSize?: number;
 }
 
 @ApiTags('assets')
@@ -57,7 +63,7 @@ export class AssetsController {
     description:
       '生成文件上传所需的签名凭证。' +
       '支持两种场景：portfolio-asset（作品集素材）和 delivery-photo（交付照片）。' +
-      '前端使用返回的 token 直接上传到七牛云存储。',
+      '前端使用返回的预签名 URL / 分片签名信息直传到对象存储（Cloudflare R2 / 腾讯 COS 等）。',
   })
   @ApiResponse({
     status: 201,
@@ -99,7 +105,93 @@ export class AssetsController {
       uploadUrl: tokenResult.uploadUrl,
       objectKey: tokenResult.objectKey,
       expiresIn: tokenResult.expiresIn || 3600, // 默认 1 小时
+      uploadStrategy: tokenResult.uploadStrategy,
+      uploadId: tokenResult.uploadId,
+      partSize: tokenResult.partSize,
     };
+  }
+}
+
+/**
+ * 分片上传：签名某个 part DTO
+ */
+interface SignUploadPartDto {
+  objectKey: string;
+  uploadId: string;
+  partNumber: number;
+}
+
+interface SignUploadPartResponse {
+  url: string;
+  expiresIn?: number;
+}
+
+interface ListUploadedPartsDto {
+  objectKey: string;
+  uploadId: string;
+}
+
+interface ListUploadedPartsResponse {
+  parts: { partNumber: number; etag: string }[];
+}
+
+interface CompleteMultipartUploadDto {
+  objectKey: string;
+  uploadId: string;
+  parts: { partNumber: number; etag: string }[];
+}
+
+interface CompleteMultipartUploadResponse {
+  ok: true;
+}
+
+interface AbortMultipartUploadDto {
+  objectKey: string;
+  uploadId: string;
+}
+
+interface AbortMultipartUploadResponse {
+  ok: true;
+}
+
+@ApiTags('assets')
+@Controller('assets')
+export class AssetsMultipartController {
+  constructor(private readonly assetsService: AssetsService) {}
+
+  @Post('multipart/sign-part')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '分片上传：签名 part' })
+  async signPart(@Body() dto: SignUploadPartDto): Promise<SignUploadPartResponse> {
+    return this.assetsService.signUploadPart(dto);
+  }
+
+  @Post('multipart/list-parts')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '分片上传：列出已上传 part（用于断点续传）' })
+  async listParts(@Body() dto: ListUploadedPartsDto): Promise<ListUploadedPartsResponse> {
+    const parts = await this.assetsService.listUploadedParts(dto);
+    return { parts };
+  }
+
+  @Post('multipart/complete')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '分片上传：完成合并' })
+  async complete(
+    @Body() dto: CompleteMultipartUploadDto,
+  ): Promise<CompleteMultipartUploadResponse> {
+    return this.assetsService.completeMultipartUpload(dto);
+  }
+
+  @Post('multipart/abort')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '分片上传：中止' })
+  async abort(@Body() dto: AbortMultipartUploadDto): Promise<AbortMultipartUploadResponse> {
+    return this.assetsService.abortMultipartUpload(dto);
   }
 }
 
@@ -206,7 +298,7 @@ export class PhotosController {
   @ApiOperation({
     summary: '确认交付照片上传',
     description:
-      '前端完成文件直传到七牛云后，调用此接口确认上传完成。' +
+      '前端完成文件直传到对象存储后，调用此接口确认上传完成。' +
       '后端将验证文件存在、保存元数据到数据库，并返回各种变体的访问 URL。' +
       'TODO: 异步处理（缩略图、水印）将在后续实现。',
   })
@@ -260,7 +352,7 @@ export class WorksController {
   @ApiOperation({
     summary: '确认作品集素材上传',
     description:
-      '前端完成文件直传到七牛云后，调用此接口确认上传完成。' +
+      '前端完成文件直传到对象存储后，调用此接口确认上传完成。' +
       '后端将验证文件存在、保存元数据到数据库，并返回访问 URL 和缩略图。' +
       'TODO: 异步生成缩略图将在后续实现。',
   })

@@ -11,112 +11,6 @@
 
 ---
 
-## ⚙️ OpenResty 反向代理配置
-
-> **路径说明（1Panel 常见目录映射）：**
->
-> - OpenResty 容器内站点目录通常是：`/www/sites/<domain>/`
-> - 宿主机对应目录通常是：`/opt/1panel/apps/openresty/openresty/www/sites/<domain>/`
-> - Web 官网静态文件根目录为：`.../<domain>/index/`
-
-### 方法 1：通过 1Panel 面板配置（推荐）
-
-1. **登录 1Panel 面板**
-   - 访问: http://你的服务器IP:端口
-
-2. **配置网站**
-   - 导航到：网站 → 找到 `www.thepexels.art`
-   - 点击：设置 → 配置文件
-
-3. **添加反向代理规则**
-
-在 `server` 块中添加以下配置：
-
-```nginx
-server {
-    listen 80;
-    listen 443 ssl http2;
-    server_name www.thepexels.art;
-
-    # SSL 证书配置（1Panel 自动管理）
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-
-    # ========================================
-    # Web 官网 (根路径)
-    # ========================================
-    location / {
-        root /www/sites/www.thepexels.art/index;
-        index index.html;
-        try_files $uri $uri.html $uri/ /index.html;
-        add_header Cache-Control "public, max-age=3600";
-    }
-
-    # ========================================
-    # Admin 后台 (/admin 路径)
-    # ========================================
-	   location /admin {
-        alias /www/sites/www.thepexels.art/admin;
-        index index.html;
-        try_files $uri $uri.html $uri/ /admin/index.html;
-        add_header Cache-Control "no-cache, must-revalidate";
-    }
-
-    # ========================================
-    # API（全量 BFF：先到 Admin(Next)，再由 Admin 转发到 Backend）
-    # ========================================
-    location /api/ {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-
-        # WebSocket 支持
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-
-        # 代理头
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # 超时设置
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-
-        # 缓存控制
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # ========================================
-    # 健康检查端点
-    # ========================================
-    location /health {
-        proxy_pass http://127.0.0.1:3002/health;
-        access_log off;
-    }
-}
-```
-
-4. **重载配置**
-
-   ```bash
-   # 方法 A: 通过 1Panel 面板
-   # 导航到：网站 → 重载配置
-
-   # 方法 B: SSH 命令行
-   docker exec 1panel-openresty openresty -t
-   docker exec 1panel-openresty openresty -s reload
-   ```
-
----
-
-### 方法 2：使用配置脚本
-
-项目中已包含服务器配置脚本 `scripts/server-setup.sh`，但需要根据 1Panel 环境调整。
-
----
-
 ## 🔍 验证部署
 
 ### 1. 检查 Backend 服务状态
@@ -178,17 +72,7 @@ pm2 start ecosystem.config.js
 pm2 save
 ```
 
-### 3. 检查 Web 静态文件
-
-```bash
-# 检查 Web 文件
-ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
-
-# 验证关键文件存在
-test -f /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/index.html && echo "✅ Web 文件存在"
-```
-
-### 4. 测试访问
+### 测试访问
 
 ```bash
 # 测试 Web 官网
@@ -206,68 +90,7 @@ curl https://www.thepexels.art/health
 
 ---
 
-## 🐛 常见问题排查
-
-### 问题 1: 404 Not Found
-
-**原因:** 静态文件未正确部署或路径配置错误
-
-**解决:**
-
-```bash
-# 检查文件是否存在
-ls -la /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
-
-# 检查文件权限
-sudo chown -R www-data:www-data /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
-sudo chmod -R 755 /opt/1panel/apps/openresty/openresty/www/sites/www.thepexels.art/index/
-```
-
-### 问题 2: 502 Bad Gateway (API 请求)
-
-**原因:** Backend 容器未运行或端口映射错误
-
-**解决:**
-
-```bash
-# 检查容器状态
-docker ps | grep snapmatch-backend
-
-# 重启容器
-docker restart snapmatch-backend
-
-# 检查端口监听
-netstat -tlnp | grep 3002
-```
-
-### 问题 3: Admin 路由不工作
-
-**原因:** Next.js basePath 配置问题
-
-**解决:**
-
-- 确保 `apps/admin/next.config.ts` 中 `basePath: '/admin'`
-- 确保 OpenResty 配置中使用 `alias` 而非 `root`
-- 确保 `try_files` 包含 `/admin/index.html`
-
-### 问题 4: CORS 错误
-
-**原因:** Backend 未配置 CORS 或代理头缺失
-
-**解决:**
-检查 Backend 代码中的 CORS 配置，确保允许前端域名。
-
----
-
-## 📊 监控建议
-
-### 1. 设置健康检查监控
-
-使用 UptimeRobot、Prometheus 或其他监控工具定期检查：
-
-- https://www.thepexels.art/health
-
-### 2. 配置日志查看
+### 配置日志查看
 
 ```bash
 # Backend 日志
@@ -294,19 +117,6 @@ tail -f /opt/1panel/apps/openresty/openresty/logs/www.thepexels.art.error.log
    sudo ufw allow 80/tcp
    sudo ufw allow 443/tcp
    sudo ufw enable
-   ```
-
-3. **限制 Admin 访问**
-
-   ```nginx
-   location /admin {
-       # 仅允许特定 IP 访问（可选）
-       # allow 你的IP;
-       # deny all;
-
-          alias /www/sites/www.thepexels.art/admin;
-          try_files $uri $uri.html $uri/ /admin/index.html;
-      }
    ```
 
 ---

@@ -9,4 +9,4 @@
 
 export * from './storage.interface';
 export * from './storage.service';
-export { QiniuStorageProvider } from './providers/qiniu.provider';
+export { R2StorageProvider } from './providers/r2.provider';

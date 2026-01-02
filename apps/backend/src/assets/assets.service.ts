@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { StorageService } from '../common/storage/storage.service';
-import { UploadTokenResult } from '../common/storage/storage.interface';
+import { MultipartCompletedPart, UploadTokenResult } from '../common/storage/storage.interface';
 
 /**
  * 文件大小限制（字节）
@@ -80,9 +80,26 @@ export class AssetsService {
 
     // 4. 生成上传凭证（有效期 1 小时）
     const expiresIn = 3600;
-    const tokenResult = await this.storageService.generateUploadToken(objectKey, expiresIn);
+    const providerType = this.storageService.getProviderType();
+    if (providerType === 'r2') {
+      const init = await this.storageService.createMultipartUpload(
+        objectKey,
+        contentType,
+        expiresIn,
+      );
+      return {
+        token: '',
+        uploadUrl: '',
+        objectKey: init.objectKey,
+        expiresIn: init.expiresIn ?? expiresIn,
+        uploadStrategy: 's3-multipart',
+        uploadId: init.uploadId,
+        partSize: init.partSize,
+      };
+    }
 
-    return tokenResult;
+    const tokenResult = await this.storageService.generateUploadToken(objectKey, expiresIn);
+    return { ...tokenResult, uploadStrategy: 's3-presigned-put' };
   }
 
   /**
@@ -293,7 +310,13 @@ export class AssetsService {
     // });
 
     // 5. 生成访问 URL
-    const url = this.storageService.getPublicUrl(objectKey);
+    //
+    // 作品集素材在生产环境通常走“公开 CDN 域名”；
+    // 但本地/开发环境使用 R2 时未必配置了公开域名，因此在 R2 下回退为临时签名 URL（便于联调）。
+    const url =
+      this.storageService.getProviderType() === 'r2'
+        ? await this.storageService.generatePrivateDownloadUrl(objectKey, 3600)
+        : this.storageService.getPublicUrl(objectKey);
 
     // TODO: 6. 异步生成缩略图（仅图片）
     // const thumbnails = type === 'image' ? {
@@ -317,5 +340,60 @@ export class AssetsService {
       url,
       thumbnails,
     };
+  }
+
+  /**
+   * 分片上传：签名某个 part（用于前端直传）
+   */
+  async signUploadPart(input: { objectKey: string; uploadId: string; partNumber: number }) {
+    if (this.storageService.getProviderType() !== 'r2') {
+      throw new BadRequestException({
+        errorCode: 'MULTIPART_NOT_SUPPORTED',
+        message: '当前存储提供商不支持分片上传',
+      });
+    }
+    const expiresIn = 3600;
+    return this.storageService.signUploadPart(
+      input.objectKey,
+      input.uploadId,
+      input.partNumber,
+      expiresIn,
+    );
+  }
+
+  async listUploadedParts(input: { objectKey: string; uploadId: string }) {
+    if (this.storageService.getProviderType() !== 'r2') {
+      throw new BadRequestException({
+        errorCode: 'MULTIPART_NOT_SUPPORTED',
+        message: '当前存储提供商不支持分片上传',
+      });
+    }
+    return this.storageService.listUploadedParts(input.objectKey, input.uploadId);
+  }
+
+  async completeMultipartUpload(input: {
+    objectKey: string;
+    uploadId: string;
+    parts: MultipartCompletedPart[];
+  }) {
+    if (this.storageService.getProviderType() !== 'r2') {
+      throw new BadRequestException({
+        errorCode: 'MULTIPART_NOT_SUPPORTED',
+        message: '当前存储提供商不支持分片上传',
+      });
+    }
+    await this.storageService.completeMultipartUpload(input.objectKey, input.uploadId, input.parts);
+    return { ok: true as const };
+  }
+
+  async abortMultipartUpload(input: { objectKey: string; uploadId: string }) {
+    if (this.storageService.getProviderType() !== 'r2') {
+      throw new BadRequestException({
+        errorCode: 'MULTIPART_NOT_SUPPORTED',
+        message: '当前存储提供商不支持分片上传',
+      });
+    }
+    await this.storageService.abortMultipartUpload(input.objectKey, input.uploadId);
+    return { ok: true as const };
   }
 }

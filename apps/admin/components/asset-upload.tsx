@@ -25,11 +25,16 @@ type UploadStatus =
 
 type UploadMode = "auto" | "manual";
 
+type UploadStrategy = "s3-presigned-put" | "s3-multipart";
+
 type SignAssetData = {
   token: string;
   uploadUrl: string;
   objectKey: string;
   expiresIn: number;
+  uploadStrategy?: UploadStrategy;
+  uploadId?: string;
+  partSize?: number;
 };
 
 type ConfirmResult = {
@@ -71,33 +76,16 @@ function fileKind(contentType: string) {
 }
 
 function validateFile(purpose: UploadPurpose, file: File) {
-  const kind = fileKind(file.type);
-
   const allowed =
     purpose === "portfolio-asset"
-      ? [
-          "image/jpeg",
-          "image/jpg",
-          "image/png",
-          "image/webp",
-          "image/gif",
-          "video/mp4",
-          "video/mpeg",
-          "video/quicktime",
-          "video/x-msvideo"
-        ]
+      ? ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]
       : ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
   if (!allowed.includes(file.type)) {
     return `不支持的文件类型：${file.type || "unknown"}`;
   }
 
-  const maxSize =
-    purpose === "portfolio-asset"
-      ? kind === "image"
-        ? 20 * 1024 * 1024
-        : 200 * 1024 * 1024
-      : 50 * 1024 * 1024;
+  const maxSize = purpose === "portfolio-asset" ? 20 * 1024 * 1024 : 50 * 1024 * 1024;
 
   if (file.size > maxSize) {
     const maxMb = Math.round(maxSize / 1024 / 1024);
@@ -173,57 +161,95 @@ async function signAsset(input: {
     }
   );
   const data = payload.data;
-  if (!data?.token || !data.uploadUrl || !data.objectKey) {
-    throw new Error("Invalid sign response: missing token/uploadUrl/objectKey");
+  if (!data?.objectKey) throw new Error("Invalid sign response: missing objectKey");
+
+  const strategy: UploadStrategy = data.uploadStrategy ?? "s3-multipart";
+  if (strategy === "s3-multipart") {
+    if (!data.uploadId || !data.partSize) {
+      throw new Error("Invalid sign response: missing uploadId/partSize for multipart upload");
+    }
+  } else if (strategy === "s3-presigned-put") {
+    if (!data.uploadUrl) {
+      throw new Error("Invalid sign response: missing uploadUrl for presigned put");
+    }
   }
   return data;
 }
 
-function uploadToQiniu(input: {
-  uploadUrl: string;
-  token: string;
+async function listUploadedParts(input: { objectKey: string; uploadId: string }) {
+  const payload = await apiFetch<ApiResponse<{ parts: { partNumber: number; etag: string }[] }>>(
+    withAdminBasePath("/api/assets/multipart/list-parts"),
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    }
+  );
+  return payload.data?.parts ?? [];
+}
+
+async function signUploadPart(input: { objectKey: string; uploadId: string; partNumber: number }) {
+  const payload = await apiFetch<ApiResponse<{ url: string }>>(
+    withAdminBasePath("/api/assets/multipart/sign-part"),
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    }
+  );
+  const url = payload.data?.url;
+  if (!url) throw new Error("Invalid sign-part response: missing url");
+  return url;
+}
+
+async function completeMultipartUpload(input: {
   objectKey: string;
-  file: File;
-  onProgress: (percent: number) => void;
+  uploadId: string;
+  parts: { partNumber: number; etag: string }[];
+}) {
+  await apiFetch<ApiResponse<{ ok: true }>>(withAdminBasePath("/api/assets/multipart/complete"), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input)
+  });
+}
+
+function uploadPartWithXhr(input: {
+  url: string;
+  body: Blob;
+  onProgress: (loaded: number) => void;
   signal?: AbortSignal;
 }) {
   const xhr = new XMLHttpRequest();
-
-  const promise = new Promise<{ xhr: XMLHttpRequest; response: unknown }>((resolve, reject) => {
-    xhr.open("POST", input.uploadUrl, true);
+  const promise = new Promise<{ etag: string }>((resolve, reject) => {
+    xhr.open("PUT", input.url, true);
 
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable || event.total <= 0) return;
-      const percent = Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)));
-      input.onProgress(percent);
+      input.onProgress(event.loaded);
     };
 
     xhr.onload = () => {
       const status = xhr.status;
-      const text = xhr.responseText ?? "";
-      let parsed: unknown = null;
-      if (text) {
-        try {
-          parsed = JSON.parse(text) as unknown;
-        } catch {
-          parsed = text;
-        }
-      }
-      if (status >= 200 && status < 300) {
-        resolve({ xhr, response: parsed });
+      if (status < 200 || status >= 300) {
+        reject(
+          new Error(`Upload failed: ${status}${xhr.responseText ? ` ${xhr.responseText}` : ""}`)
+        );
         return;
       }
-      reject(new Error(`Upload failed: ${status}${text ? ` ${text}` : ""}`));
+      const raw = (xhr.getResponseHeader("etag") ?? xhr.getResponseHeader("ETag") ?? "").trim();
+      const etag = raw.startsWith('"') && raw.endsWith('"') ? raw : raw ? `"${raw}"` : "";
+      if (!etag) {
+        reject(new Error("Upload failed: missing ETag response header"));
+        return;
+      }
+      resolve({ etag });
     };
 
     xhr.onerror = () => reject(new Error("Upload failed: network error"));
     xhr.onabort = () => reject(new Error("Upload canceled"));
 
-    const formData = new FormData();
-    formData.append("token", input.token);
-    formData.append("key", input.objectKey);
-    formData.append("file", input.file);
-    xhr.send(formData);
+    xhr.send(input.body);
   });
 
   const abort = () => xhr.abort();
@@ -233,6 +259,84 @@ function uploadToQiniu(input: {
   }
 
   return { xhr, promise };
+}
+
+async function uploadToS3Multipart(input: {
+  objectKey: string;
+  uploadId: string;
+  partSize: number;
+  file: File;
+  onProgress: (percent: number) => void;
+  signal?: AbortSignal;
+  onXhr?: (xhr: XMLHttpRequest) => void;
+}) {
+  const totalParts = Math.ceil(input.file.size / input.partSize);
+  const already = await listUploadedParts({ objectKey: input.objectKey, uploadId: input.uploadId });
+  const completed = new Map<number, string>();
+  for (const p of already) {
+    if (p.partNumber > 0 && p.etag) completed.set(p.partNumber, p.etag);
+  }
+
+  const partBytes = (partNumber: number) => {
+    const start = (partNumber - 1) * input.partSize;
+    const end = Math.min(input.file.size, partNumber * input.partSize);
+    return Math.max(0, end - start);
+  };
+
+  const completedBytes = Array.from(completed.keys()).reduce(
+    (sum, partNumber) => sum + partBytes(partNumber),
+    0
+  );
+  let uploadedBytes = completedBytes;
+
+  const allParts: { partNumber: number; etag: string }[] = Array.from(completed.entries()).map(
+    ([partNumber, etag]) => ({ partNumber, etag })
+  );
+
+  for (let partNumber = 1; partNumber <= totalParts; partNumber += 1) {
+    if (input.signal?.aborted) throw new Error("Upload canceled");
+    if (completed.has(partNumber)) continue;
+
+    const url = await signUploadPart({
+      objectKey: input.objectKey,
+      uploadId: input.uploadId,
+      partNumber
+    });
+    const start = (partNumber - 1) * input.partSize;
+    const end = Math.min(input.file.size, partNumber * input.partSize);
+    const blob = input.file.slice(start, end);
+    const total = blob.size;
+    let currentLoaded = 0;
+
+    const { xhr, promise } = uploadPartWithXhr({
+      url,
+      body: blob,
+      signal: input.signal,
+      onProgress(loaded) {
+        currentLoaded = loaded;
+        const percent = Math.max(
+          0,
+          Math.min(100, Math.round(((uploadedBytes + currentLoaded) / input.file.size) * 100))
+        );
+        input.onProgress(percent);
+      }
+    });
+    input.onXhr?.(xhr);
+
+    const result = await promise;
+    uploadedBytes += total;
+    currentLoaded = 0;
+    completed.set(partNumber, result.etag);
+    allParts.push({ partNumber, etag: result.etag });
+    const percent = Math.max(0, Math.min(100, Math.round((uploadedBytes / input.file.size) * 100)));
+    input.onProgress(percent);
+  }
+
+  await completeMultipartUpload({
+    objectKey: input.objectKey,
+    uploadId: input.uploadId,
+    parts: allParts
+  });
 }
 
 async function confirmAsset(input: {
@@ -316,7 +420,7 @@ export function AssetUpload({
 
   const effectiveConcurrency = Math.max(1, Math.min(6, Math.floor(concurrency)));
 
-  const canAcceptFiles = purpose === "portfolio-asset" ? "image/*,video/*" : "image/*";
+  const canAcceptFiles = "image/*";
 
   React.useEffect(() => {
     itemsRef.current = state.items;
@@ -369,18 +473,37 @@ export function AssetUpload({
             patch: { status: "uploading", progress: 0, objectKey: signed.objectKey }
           });
 
-          const { xhr, promise } = uploadToQiniu({
-            uploadUrl: signed.uploadUrl,
-            token: signed.token,
-            objectKey: signed.objectKey,
-            file: next.file,
-            signal: controller.signal,
-            onProgress: (percent) =>
-              dispatch({ type: "update", id: next.id, patch: { progress: percent } })
-          });
-          xhRsRef.current.set(next.id, xhr);
+          const strategy: UploadStrategy = signed.uploadStrategy ?? "s3-multipart";
 
-          await promise;
+          if (strategy === "s3-multipart") {
+            await uploadToS3Multipart({
+              objectKey: signed.objectKey,
+              uploadId: signed.uploadId!,
+              partSize: signed.partSize!,
+              file: next.file,
+              signal: controller.signal,
+              onXhr: (xhr) => xhRsRef.current.set(next.id, xhr),
+              onProgress: (percent) =>
+                dispatch({ type: "update", id: next.id, patch: { progress: percent } })
+            });
+          } else if (strategy === "s3-presigned-put") {
+            const { xhr, promise } = uploadPartWithXhr({
+              url: signed.uploadUrl,
+              body: next.file,
+              signal: controller.signal,
+              onProgress(loaded) {
+                const percent = Math.max(
+                  0,
+                  Math.min(100, Math.round((loaded / Math.max(1, next.file.size)) * 100))
+                );
+                dispatch({ type: "update", id: next.id, patch: { progress: percent } });
+              }
+            });
+            xhRsRef.current.set(next.id, xhr);
+            await promise;
+          } else {
+            throw new Error(`Unsupported upload strategy: ${String(strategy)}`);
+          }
 
           dispatch({ type: "update", id: next.id, patch: { status: "confirming", progress: 100 } });
           const confirmed = await confirmAsset({

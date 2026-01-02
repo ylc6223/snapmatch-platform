@@ -1,12 +1,12 @@
-import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import { APP_GUARD } from "@nestjs/core";
-import { AuthModule } from "./auth/auth.module";
-import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
-import { PermissionsGuard } from "./auth/guards/permissions.guard";
-import { RolesGuard } from "./auth/guards/roles.guard";
-import { HealthController } from "./health/health.controller";
-import { UsersModule } from "./users/users.module";
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from './auth/guards/permissions.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
+import { HealthController } from './health/health.controller';
+import { UsersModule } from './users/users.module';
 import { AssetsModule } from './assets/assets.module';
 
 @Module({
@@ -14,12 +14,13 @@ import { AssetsModule } from './assets/assets.module';
     // 全局配置模块：读取 .env.local / .env，并提供 ConfigService 给全应用使用。
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [".env.local", ".env"],
+      envFilePath: ['.env.local', '.env'],
     }),
     // 用户相关模块：使用 MySQL 持久化管理员与会话。
     UsersModule,
     // 鉴权与权限模块：JWT 签发/解析、登录接口、RBAC（角色/权限）能力。
     AuthModule,
+    // 资产上传模块：统一签名接口、作品集素材/交付照片确认、云存储抽象层（本地 R2，生产预留 COS）。
     AssetsModule,
   ],
   controllers: [HealthController],
