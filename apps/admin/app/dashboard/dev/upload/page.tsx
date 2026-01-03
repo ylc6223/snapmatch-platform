@@ -206,22 +206,41 @@ export default function Page() {
     setShowConfirmDialog(false);
 
     try {
+      // 计算时间阈值（取两者中较小的）
+      const cleanupThreshold = getCleanupThresholdSeconds();
+      const abortThreshold = getAbortThresholdSeconds();
+
+      // 如果启用了一个或多个限制，使用最小的时间阈值
+      const thresholds: number[] = [];
+      if (cleanupThreshold !== undefined) thresholds.push(cleanupThreshold);
+      if (abortThreshold !== undefined) thresholds.push(abortThreshold);
+
+      const minThreshold = thresholds.length > 0 ? Math.min(...thresholds) : undefined;
+
       const response = await apiFetch<CleanupResult>(
         withAdminBasePath("/api/assets/multipart/cleanup-incomplete"),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
+          body: JSON.stringify(
+            minThreshold ? { olderThanSeconds: minThreshold } : {}
+          ),
         },
       );
 
       const result = response.data || response;
       setCleanupResult(result);
 
+      const filterDesc = minThreshold
+        ? `超过 ${Math.floor(minThreshold / 3600)} 小时的`
+        : "所有";
+
       if (result.failed > 0) {
-        toast.warning(`清理完成：成功 ${result.cleaned} 个，失败 ${result.failed} 个`);
+        toast.warning(
+          `清理完成（${filterDesc}）：成功 ${result.cleaned} 个，失败 ${result.failed} 个`
+        );
       } else {
-        toast.success(`清理完成：成功 ${result.cleaned} 个`);
+        toast.success(`清理完成（${filterDesc}）：成功 ${result.cleaned} 个`);
       }
 
       // 刷新列表
@@ -322,24 +341,24 @@ export default function Page() {
           </div>
         </Card>
 
-        {/* 自动化规则配置 */}
+        {/* 清理配置 */}
         <Card className="rounded-xl shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[19px]">
               <IconAutomation className="size-5" />
-              自动化规则
+              时间限制配置
             </CardTitle>
             <CardDescription className="text-[15px]">
-              配置自动清理和中止未完成上传的规则
+              配置手动清理时的时间过滤规则
             </CardDescription>
           </CardHeader>
           <div className="space-y-6 px-6 pb-6">
-            {/* 自动清理 */}
+            {/* 清理时间限制 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <IconTrash className="text-muted-foreground size-4" />
-                  <Label className="text-[15px] font-medium">自动清理</Label>
+                  <Label className="text-[15px] font-medium">启用时间过滤</Label>
                 </div>
                 <Switch checked={enableAutoCleanup} onCheckedChange={setEnableAutoCleanup} />
               </div>
@@ -347,7 +366,7 @@ export default function Page() {
                 <div className="ml-6 space-y-3 rounded-xl border bg-muted/30 p-4">
                   <div className="flex items-center gap-2">
                     <IconClock className="text-muted-foreground size-4" />
-                    <Label className="text-[15px]">清理超过以下时间的未完成上传：</Label>
+                    <Label className="text-[15px]">只清理超过以下时间的未完成上传：</Label>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-2">
@@ -383,8 +402,8 @@ export default function Page() {
                   </div>
                   <p className="text-muted-foreground text-[13px]">
                     {cleanupThresholdPreset === "custom"
-                      ? `将删除超过 ${cleanupThresholdCustom} 小时的未完成上传`
-                      : `将删除超过 ${
+                      ? `点击清理按钮时，将只删除超过 ${cleanupThresholdCustom} 小时的未完成上传`
+                      : `点击清理按钮时，将只删除超过 ${
                           cleanupThresholdPreset === "1h"
                             ? "1"
                             : cleanupThresholdPreset === "6h"
@@ -400,12 +419,12 @@ export default function Page() {
               )}
             </div>
 
-            {/* 自动中止 */}
+            {/* 中止时间限制 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <IconPlayerStop className="text-muted-foreground size-4" />
-                  <Label className="text-[15px] font-medium">自动中止</Label>
+                  <Label className="text-[15px] font-medium">启用中止限制（额外过滤）</Label>
                 </div>
                 <Switch checked={enableAutoAbort} onCheckedChange={setEnableAutoAbort} />
               </div>
@@ -413,7 +432,7 @@ export default function Page() {
                 <div className="ml-6 space-y-3 rounded-xl border bg-muted/30 p-4">
                   <div className="flex items-center gap-2">
                     <IconClock className="text-muted-foreground size-4" />
-                    <Label className="text-[15px]">中止超过以下时间的上传：</Label>
+                    <Label className="text-[15px]">额外过滤：中止超过以下时间的上传：</Label>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-2">
@@ -448,8 +467,8 @@ export default function Page() {
                   </div>
                   <p className="text-muted-foreground text-[13px]">
                     {abortThresholdPreset === "custom"
-                      ? `将中止超过 ${abortThresholdCustom} 分钟的未完成上传`
-                      : `将中止超过 ${
+                      ? `将同时应用清理限制，取两者中的较小值（额外过滤 ${abortThresholdCustom} 分钟）`
+                      : `将同时应用清理限制，取两者中的较小值（额外过滤 ${
                           abortThresholdPreset === "30m"
                             ? "30"
                             : abortThresholdPreset === "1h"
@@ -457,10 +476,15 @@ export default function Page() {
                               : abortThresholdPreset === "6h"
                                 ? "360"
                                 : "1440"
-                        } 分钟的未完成上传`}
+                        } 分钟）`}
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* 说明 */}
+            <div className="rounded-lg bg-muted/50 p-3 text-[13px] text-muted-foreground">
+              💡 如果未启用任何时间限制，点击&ldquo;清理&rdquo;按钮将删除所有未完成的上传
             </div>
           </div>
         </Card>
@@ -619,16 +643,16 @@ export default function Page() {
             <div className="flex flex-wrap gap-2 pt-2 border-t">
               {enableAutoCleanup && (
                 <Badge variant="default" className="bg-blue-500 rounded-lg text-[13px]">
-                  自动清理
+                  时间过滤
                 </Badge>
               )}
               {enableAutoAbort && (
                 <Badge variant="default" className="bg-orange-500 rounded-lg text-[13px]">
-                  自动中止
+                  中止限制
                 </Badge>
               )}
               {!enableAutoCleanup && !enableAutoAbort && (
-                <span className="text-muted-foreground text-[13px]">手动模式</span>
+                <span className="text-muted-foreground text-[13px]">清理全部</span>
               )}
             </div>
           </div>
@@ -671,6 +695,29 @@ export default function Page() {
             <AlertDialogTitle className="text-[19px]">确认清理未完成的分片上传</AlertDialogTitle>
             <AlertDialogDescription className="text-[15px]">
               确定要清理 <strong>{pendingCleanupCount}</strong> 个未完成的分片上传吗？
+              <br />
+              <br />
+              {(() => {
+                const cleanupThreshold = getCleanupThresholdSeconds();
+                const abortThreshold = getAbortThresholdSeconds();
+                const thresholds: number[] = [];
+                if (cleanupThreshold !== undefined) thresholds.push(cleanupThreshold);
+                if (abortThreshold !== undefined) thresholds.push(abortThreshold);
+                const minThreshold = thresholds.length > 0 ? Math.min(...thresholds) : undefined;
+
+                if (minThreshold) {
+                  return (
+                    <span className="text-muted-foreground">
+                      将清理超过 <strong>{Math.floor(minThreshold / 3600)} 小时</strong> 的上传
+                    </span>
+                  );
+                }
+                return (
+                  <span className="text-muted-foreground">
+                    将清理 <strong>所有</strong> 未完成的上传
+                  </span>
+                );
+              })()}
               <br />
               <span className="text-destructive">此操作不可逆！</span>
             </AlertDialogDescription>
