@@ -1,3 +1,16 @@
+/**
+ * 资产上传组件
+ *
+ * 支持功能：
+ * - 拖拽上传和文件选择
+ * - 多文件并发上传（可配置并发数）
+ * - 支持 S3 分片上传和预签名 URL 上传
+ * - 自动/手动上传模式
+ * - 断点续传（分片上传）
+ * - 上传进度实时显示
+ * - 失败重试
+ */
+
 "use client";
 
 import * as React from "react";
@@ -12,80 +25,106 @@ import type { ApiResponse } from "@/lib/api/response";
 import { withAdminBasePath } from "@/lib/routing/base-path";
 import { cn } from "@/lib/utils";
 
+// ==================== 类型定义 ====================
+
+/** 上传目的类型 */
 type UploadPurpose = "portfolio-asset" | "delivery-photo";
 
+/** 上传状态 */
 type UploadStatus =
-  | "queued"
-  | "signing"
-  | "uploading"
-  | "confirming"
-  | "success"
-  | "error"
-  | "canceled";
+  | "queued"       // 排队中
+  | "signing"      // 获取签名中
+  | "uploading"    // 上传中
+  | "confirming"   // 确认中
+  | "success"      // 成功
+  | "error"        // 失败
+  | "canceled";    // 已取消
 
+/** 上传模式：自动上传或手动触发 */
 type UploadMode = "auto" | "manual";
 
+/** 上传策略：S3 预签名 PUT 或 S3 分片上传 */
 type UploadStrategy = "s3-presigned-put" | "s3-multipart";
 
+/** 签名响应数据 */
 type SignAssetData = {
-  token: string;
-  uploadUrl: string;
-  objectKey: string;
-  expiresIn: number;
-  uploadStrategy?: UploadStrategy;
-  uploadId?: string;
-  partSize?: number;
+  token: string;              // 上传令牌
+  uploadUrl: string;          // 预签名上传 URL（用于 presigned-put 策略）
+  objectKey: string;          // 对象存储键名
+  expiresIn: number;          // 过期时间（秒）
+  uploadStrategy?: UploadStrategy;  // 上传策略
+  uploadId?: string;          // 分片上传 ID（用于 multipart 策略）
+  partSize?: number;          // 分片大小（字节，用于 multipart 策略）
 };
 
+/** 确认结果 */
 type ConfirmResult = {
-  raw: unknown;
+  raw: unknown;               // 原始响应数据
 };
 
+/** 上传项 */
 type UploadItem = {
-  id: string;
-  file: File;
-  status: UploadStatus;
-  progress: number;
-  objectKey: string | null;
-  errorMessage: string | null;
-  confirm: ConfirmResult | null;
+  id: string;                 // 唯一标识
+  file: File;                 // 文件对象
+  status: UploadStatus;       // 当前状态
+  progress: number;           // 上传进度（0-100）
+  objectKey: string | null;   // 对象存储键名
+  errorMessage: string | null;// 错误信息
+  confirm: ConfirmResult | null;  // 确认结果
 };
 
+/** 组件状态 */
 type State = {
-  items: UploadItem[];
-  isDragActive: boolean;
+  items: UploadItem[];        // 上传队列
+  isDragActive: boolean;      // 是否正在拖拽
 };
 
+/** 状态管理 Action */
 type Action =
-  | { type: "drag_active"; value: boolean }
-  | { type: "add_files"; files: File[]; purpose: UploadPurpose }
-  | { type: "remove"; id: string }
-  | { type: "clear_finished" }
+  | { type: "drag_active"; value: boolean }  // 更新拖拽状态
+  | { type: "add_files"; files: File[]; purpose: UploadPurpose }  // 添加文件
+  | { type: "remove"; id: string }          // 移除文件
+  | { type: "clear_finished" }              // 清理已完成项
   | {
-      type: "update";
+      type: "update";                       // 更新上传项状态
       id: string;
       patch: Partial<
         Pick<UploadItem, "status" | "progress" | "objectKey" | "errorMessage" | "confirm">
       >;
     };
 
+// ==================== 工具函数 ====================
+
+/**
+ * 根据内容类型获取文件种类
+ * @param contentType - 文件的 MIME 类型
+ * @returns 文件种类：image | video | unknown
+ */
 function fileKind(contentType: string) {
   if (contentType.startsWith("image/")) return "image";
   if (contentType.startsWith("video/")) return "video";
   return "unknown";
 }
 
+/**
+ * 验证文件是否符合上传要求
+ * @param purpose - 上传目的
+ * @param file - 待验证的文件
+ * @returns 验证错误信息，null 表示通过验证
+ */
 function validateFile(purpose: UploadPurpose, file: File) {
+  // 根据上传目的定义允许的文件类型
   const allowed =
     purpose === "portfolio-asset"
-      ? ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]
-      : ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+      ? ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]  // 支持动图
+      : ["image/jpeg", "image/jpg", "image/png", "image/webp"];             // 交付照片不支持动图
 
   if (!allowed.includes(file.type)) {
     return `不支持的文件类型：${file.type || "unknown"}`;
   }
 
-  const maxSize = purpose === "portfolio-asset" ? 20 * 1024 * 1024 : 50 * 1024 * 1024;
+  // 根据上传目的定义文件大小限制
+  const maxSize = purpose === "portfolio-asset" ? 20 * 1024 * 1024 : 50 * 1024 * 1024;  // 20MB vs 50MB
 
   if (file.size > maxSize) {
     const maxMb = Math.round(maxSize / 1024 / 1024);
@@ -96,6 +135,11 @@ function validateFile(purpose: UploadPurpose, file: File) {
   return null;
 }
 
+/**
+ * 格式化字节为可读的大小
+ * @param bytes - 字节数
+ * @returns 格式化后的字符串（如 "1.5 MB"）
+ */
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   const kb = bytes / 1024;
@@ -106,17 +150,23 @@ function formatBytes(bytes: number) {
   return `${gb.toFixed(2)} GB`;
 }
 
+// ==================== 状态管理 ====================
+
+/**
+ * Reducer: 管理组件状态
+ */
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "drag_active":
       return { ...state, isDragActive: action.value };
     case "add_files": {
+      // 验证并添加文件到队列
       const next = action.files.map((file) => {
         const error = validateFile(action.purpose, file);
         return {
-          id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+          id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,  // 生成唯一 ID
           file,
-          status: error ? ("error" as const) : ("queued" as const),
+          status: error ? ("error" as const) : ("queued" as const),  // 验证失败则为错误状态
           progress: 0,
           objectKey: null,
           errorMessage: error,
@@ -126,13 +176,16 @@ function reducer(state: State, action: Action): State {
       return { ...state, items: [...next, ...state.items] };
     }
     case "remove":
+      // 移除指定文件
       return { ...state, items: state.items.filter((item) => item.id !== action.id) };
     case "clear_finished":
+      // 清理已完成或已取消的文件
       return {
         ...state,
         items: state.items.filter((item) => !["success", "canceled"].includes(item.status))
       };
     case "update":
+      // 更新文件状态
       return {
         ...state,
         items: state.items.map((item) =>
@@ -144,13 +197,19 @@ function reducer(state: State, action: Action): State {
   }
 }
 
+// ==================== API 函数 ====================
+
+/**
+ * 请求资产上传签名
+ * 根据文件信息和上传目的，获取上传所需的签名信息
+ */
 async function signAsset(input: {
   purpose: UploadPurpose;
   filename: string;
   contentType: string;
   size: number;
-  projectId?: string;
-  workId?: string;
+  projectId?: string;     // 交付照片需要
+  workId?: string;        // 作品集素材需要
 }) {
   const payload = await apiFetch<ApiResponse<SignAssetData>>(
     withAdminBasePath("/api/assets/sign"),
@@ -163,6 +222,7 @@ async function signAsset(input: {
   const data = payload.data;
   if (!data?.objectKey) throw new Error("Invalid sign response: missing objectKey");
 
+  // 验证响应数据的完整性
   const strategy: UploadStrategy = data.uploadStrategy ?? "s3-multipart";
   if (strategy === "s3-multipart") {
     if (!data.uploadId || !data.partSize) {
@@ -176,6 +236,9 @@ async function signAsset(input: {
   return data;
 }
 
+/**
+ * 列出已上传的分片（用于断点续传）
+ */
 async function listUploadedParts(input: { objectKey: string; uploadId: string }) {
   const payload = await apiFetch<ApiResponse<{ parts: { partNumber: number; etag: string }[] }>>(
     withAdminBasePath("/api/assets/multipart/list-parts"),
@@ -188,6 +251,9 @@ async function listUploadedParts(input: { objectKey: string; uploadId: string })
   return payload.data?.parts ?? [];
 }
 
+/**
+ * 请求分片上传的预签名 URL
+ */
 async function signUploadPart(input: { objectKey: string; uploadId: string; partNumber: number }) {
   const payload = await apiFetch<ApiResponse<{ url: string }>>(
     withAdminBasePath("/api/assets/multipart/sign-part"),
@@ -202,6 +268,9 @@ async function signUploadPart(input: { objectKey: string; uploadId: string; part
   return url;
 }
 
+/**
+ * 完成分片上传，合并所有分片
+ */
 async function completeMultipartUpload(input: {
   objectKey: string;
   uploadId: string;
@@ -214,21 +283,29 @@ async function completeMultipartUpload(input: {
   });
 }
 
+// ==================== 上传逻辑 ====================
+
+/**
+ * 使用 XMLHttpRequest 上传单个文件/分片
+ * 提供进度回调和取消能力
+ */
 function uploadPartWithXhr(input: {
   url: string;
   body: Blob;
-  onProgress: (loaded: number) => void;
-  signal?: AbortSignal;
+  onProgress: (loaded: number) => void;  // 进度回调，参数为已上传字节数
+  signal?: AbortSignal;                   // 用于取消上传
 }) {
   const xhr = new XMLHttpRequest();
   const promise = new Promise<{ etag: string }>((resolve, reject) => {
     xhr.open("PUT", input.url, true);
 
+    // 监听上传进度
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable || event.total <= 0) return;
       input.onProgress(event.loaded);
     };
 
+    // 上传完成
     xhr.onload = () => {
       const status = xhr.status;
       if (status < 200 || status >= 300) {
@@ -237,6 +314,7 @@ function uploadPartWithXhr(input: {
         );
         return;
       }
+      // 从响应头中获取 ETag（用于 S3 分片上传）
       const raw = (xhr.getResponseHeader("etag") ?? xhr.getResponseHeader("ETag") ?? "").trim();
       const etag = raw.startsWith('"') && raw.endsWith('"') ? raw : raw ? `"${raw}"` : "";
       if (!etag) {
@@ -252,6 +330,7 @@ function uploadPartWithXhr(input: {
     xhr.send(input.body);
   });
 
+  // 支持通过 AbortSignal 取消上传
   const abort = () => xhr.abort();
   if (input.signal) {
     if (input.signal.aborted) abort();
@@ -261,22 +340,29 @@ function uploadPartWithXhr(input: {
   return { xhr, promise };
 }
 
+/**
+ * S3 分片上传
+ * 支持断点续传，自动跳过已上传的分片
+ */
 async function uploadToS3Multipart(input: {
   objectKey: string;
   uploadId: string;
-  partSize: number;
+  partSize: number;       // 每个分片的大小（字节）
   file: File;
-  onProgress: (percent: number) => void;
+  onProgress: (percent: number) => void;  // 总体进度百分比
   signal?: AbortSignal;
-  onXhr?: (xhr: XMLHttpRequest) => void;
+  onXhr?: (xhr: XMLHttpRequest) => void;  // 用于保存 XHR 引用以便取消
 }) {
   const totalParts = Math.ceil(input.file.size / input.partSize);
+
+  // 获取已上传的分片（断点续传）
   const already = await listUploadedParts({ objectKey: input.objectKey, uploadId: input.uploadId });
   const completed = new Map<number, string>();
   for (const p of already) {
     if (p.partNumber > 0 && p.etag) completed.set(p.partNumber, p.etag);
   }
 
+  // 计算已完成的字节数，用于进度计算
   const partBytes = (partNumber: number) => {
     const start = (partNumber - 1) * input.partSize;
     const end = Math.min(input.file.size, partNumber * input.partSize);
@@ -289,14 +375,17 @@ async function uploadToS3Multipart(input: {
   );
   let uploadedBytes = completedBytes;
 
+  // 收集所有分片信息
   const allParts: { partNumber: number; etag: string }[] = Array.from(completed.entries()).map(
     ([partNumber, etag]) => ({ partNumber, etag })
   );
 
+  // 逐个上传分片
   for (let partNumber = 1; partNumber <= totalParts; partNumber += 1) {
     if (input.signal?.aborted) throw new Error("Upload canceled");
-    if (completed.has(partNumber)) continue;
+    if (completed.has(partNumber)) continue;  // 跳过已上传的分片
 
+    // 获取分片上传的预签名 URL
     const url = await signUploadPart({
       objectKey: input.objectKey,
       uploadId: input.uploadId,
@@ -308,12 +397,14 @@ async function uploadToS3Multipart(input: {
     const total = blob.size;
     let currentLoaded = 0;
 
+    // 上传分片
     const { xhr, promise } = uploadPartWithXhr({
       url,
       body: blob,
       signal: input.signal,
       onProgress(loaded) {
         currentLoaded = loaded;
+        // 计算总体进度（包括已完成的分片）
         const percent = Math.max(
           0,
           Math.min(100, Math.round(((uploadedBytes + currentLoaded) / input.file.size) * 100))
@@ -332,6 +423,7 @@ async function uploadToS3Multipart(input: {
     input.onProgress(percent);
   }
 
+  // 完成分片上传，合并所有分片
   await completeMultipartUpload({
     objectKey: input.objectKey,
     uploadId: input.uploadId,
@@ -339,6 +431,10 @@ async function uploadToS3Multipart(input: {
   });
 }
 
+/**
+ * 确认资产上传完成
+ * 根据上传目的调用不同的确认接口
+ */
 async function confirmAsset(input: {
   purpose: UploadPurpose;
   objectKey: string;
@@ -346,6 +442,7 @@ async function confirmAsset(input: {
   projectId?: string;
   workId?: string;
 }) {
+  // 交付照片确认
   if (input.purpose === "delivery-photo") {
     if (!input.projectId) throw new Error("delivery-photo 需要 projectId");
     return apiFetch<ApiResponse<unknown>>(withAdminBasePath("/api/photos/confirm"), {
@@ -361,6 +458,7 @@ async function confirmAsset(input: {
     });
   }
 
+  // 作品集素材确认
   if (!input.workId) throw new Error("portfolio-asset 需要 workId");
   const kind = fileKind(input.file.type);
   if (kind !== "image" && kind !== "video")
@@ -382,17 +480,24 @@ async function confirmAsset(input: {
   );
 }
 
+// ==================== 组件定义 ====================
+
+/** 资产上传组件属性 */
 export type AssetUploadProps = {
-  purpose: UploadPurpose;
-  workId?: string;
-  projectId?: string;
-  multiple?: boolean;
-  concurrency?: number;
-  mode?: UploadMode;
-  className?: string;
-  onAllComplete?: (items: UploadItem[]) => void;
+  purpose: UploadPurpose;                        // 上传目的
+  workId?: string;                               // 作品 ID（作品集素材需要）
+  projectId?: string;                            // 项目 ID（交付照片需要）
+  multiple?: boolean;                            // 是否支持多文件选择
+  concurrency?: number;                          // 并发上传数（1-6）
+  mode?: UploadMode;                             // 上传模式：自动或手动
+  className?: string;                            // 自定义样式类名
+  onAllComplete?: (items: UploadItem[]) => void;  // 所有文件上传完成回调
 };
 
+/**
+ * 资产上传组件
+ * 提供拖拽上传、文件选择、并发上传、进度显示、失败重试等功能
+ */
 export function AssetUpload({
   purpose,
   workId,
@@ -403,21 +508,26 @@ export function AssetUpload({
   className,
   onAllComplete
 }: AssetUploadProps) {
+  // 状态管理
   const [state, dispatch] = React.useReducer(reducer, { items: [], isDragActive: false });
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const controllersRef = React.useRef(new Map<string, AbortController>());
-  const xhRsRef = React.useRef(new Map<string, XMLHttpRequest>());
-  const inFlightIdsRef = React.useRef(new Set<string>());
-  const activeCountRef = React.useRef(0);
-  const pumpScheduledRef = React.useRef(false);
-  const schedulePumpRef = React.useRef<() => void>(() => {});
+  // 并发控制相关的 Ref
+  const controllersRef = React.useRef(new Map<string, AbortController>());  // 用于取消上传
+  const xhRsRef = React.useRef(new Map<string, XMLHttpRequest>());          // XHR 实例
+  const inFlightIdsRef = React.useRef(new Set<string>());                  // 正在上传的文件 ID
+  const activeCountRef = React.useRef(0);                                   // 当前活跃上传数
+  const pumpScheduledRef = React.useRef(false);                            // 是否已调度 pump
+  const schedulePumpRef = React.useRef<() => void>(() => {});              // 调度 pump 的函数
+
+  // 保存最新值的 Ref（避免闭包陷阱）
   const itemsRef = React.useRef<UploadItem[]>([]);
   const purposeRef = React.useRef(purpose);
   const workIdRef = React.useRef(workId);
   const projectIdRef = React.useRef(projectId);
   const onAllCompleteRef = React.useRef(onAllComplete);
 
+  // 限制并发数在 1-6 之间
   const effectiveConcurrency = Math.max(1, Math.min(6, Math.floor(concurrency)));
 
   const canAcceptFiles = "image/*";
@@ -432,12 +542,19 @@ export function AssetUpload({
     onAllCompleteRef.current = onAllComplete;
   }, [onAllComplete, projectId, purpose, workId]);
 
+  /**
+   * Pump: 上传调度器
+   * 负责从队列中取出待上传文件，维持并发数限制，执行完整上传流程
+   */
   const pump = React.useCallback(async () => {
+    // 循环处理，直到达到并发限制或队列为空
     while (activeCountRef.current < effectiveConcurrency) {
+      // 查找下一个待上传的文件
       const next = itemsRef.current.find(
         (item) => item.status === "queued" && !inFlightIdsRef.current.has(item.id)
       );
       if (!next) {
+        // 检查是否所有文件都已完成
         if (
           activeCountRef.current === 0 &&
           itemsRef.current.some((i) => i.status === "success") &&
@@ -450,14 +567,19 @@ export function AssetUpload({
         return;
       }
 
+      // 增加活跃计数并标记为处理中
       activeCountRef.current += 1;
       inFlightIdsRef.current.add(next.id);
       dispatch({ type: "update", id: next.id, patch: { status: "signing", errorMessage: null } });
 
+      // 创建取消控制器
       const controller = new AbortController();
       controllersRef.current.set(next.id, controller);
+
+      // 执行上传流程（立即执行，不等待）
       (async () => {
         try {
+          // 1. 获取上传签名
           const signed = await signAsset({
             purpose: purposeRef.current,
             filename: next.file.name,
@@ -473,9 +595,11 @@ export function AssetUpload({
             patch: { status: "uploading", progress: 0, objectKey: signed.objectKey }
           });
 
+          // 2. 根据策略上传文件
           const strategy: UploadStrategy = signed.uploadStrategy ?? "s3-multipart";
 
           if (strategy === "s3-multipart") {
+            // 分片上传（大文件）
             await uploadToS3Multipart({
               objectKey: signed.objectKey,
               uploadId: signed.uploadId!,
@@ -487,6 +611,7 @@ export function AssetUpload({
                 dispatch({ type: "update", id: next.id, patch: { progress: percent } })
             });
           } else if (strategy === "s3-presigned-put") {
+            // 预签名 URL 上传（小文件）
             const { xhr, promise } = uploadPartWithXhr({
               url: signed.uploadUrl,
               body: next.file,
@@ -505,6 +630,7 @@ export function AssetUpload({
             throw new Error(`Unsupported upload strategy: ${String(strategy)}`);
           }
 
+          // 3. 确认上传完成
           dispatch({ type: "update", id: next.id, patch: { status: "confirming", progress: 100 } });
           const confirmed = await confirmAsset({
             purpose: purposeRef.current,
@@ -514,12 +640,14 @@ export function AssetUpload({
             workId: workIdRef.current
           });
 
+          // 4. 标记为成功
           dispatch({
             type: "update",
             id: next.id,
             patch: { status: "success", confirm: { raw: confirmed }, errorMessage: null }
           });
         } catch (error) {
+          // 错误处理
           const message =
             error instanceof ApiError
               ? getApiErrorMessage(error, "上传失败")
@@ -536,6 +664,7 @@ export function AssetUpload({
             }
           });
         } finally {
+          // 清理资源并触发下一轮调度
           controllersRef.current.delete(next.id);
           xhRsRef.current.delete(next.id);
           activeCountRef.current -= 1;
@@ -546,6 +675,7 @@ export function AssetUpload({
     }
   }, [effectiveConcurrency]);
 
+  // Pump 调度函数（防抖，避免重复执行）
   schedulePumpRef.current = () => {
     if (pumpScheduledRef.current) return;
     pumpScheduledRef.current = true;
@@ -557,23 +687,27 @@ export function AssetUpload({
 
   const startPump = React.useCallback(() => schedulePumpRef.current(), []);
 
+  // 触发文件选择
   const pickFiles = React.useCallback(() => fileInputRef.current?.click(), []);
 
+  // 处理文件添加
   const onFiles = React.useCallback(
     (files: File[]) => {
       if (files.length === 0) return;
       dispatch({ type: "add_files", files: multiple ? files : files.slice(0, 1), purpose });
-      if (mode === "auto") startPump();
+      if (mode === "auto") startPump();  // 自动模式：立即开始上传
     },
     [mode, multiple, purpose, startPump]
   );
 
+  // 处理文件输入框变化
   const onInputChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const files = Array.from(event.target.files ?? []);
     onFiles(files);
-    event.target.value = "";
+    event.target.value = "";  // 重置 input，允许重复选择同一文件
   };
 
+  // 处理文件拖放
   const onDrop: React.DragEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
     dispatch({ type: "drag_active", value: false });
@@ -581,11 +715,13 @@ export function AssetUpload({
     onFiles(files);
   };
 
+  // 取消上传
   const cancel = (id: string) => {
     controllersRef.current.get(id)?.abort();
     xhRsRef.current.get(id)?.abort();
   };
 
+  // 重试上传
   const retry = (id: string) => {
     dispatch({
       type: "update",
@@ -595,12 +731,15 @@ export function AssetUpload({
     startPump();
   };
 
+  // 统计数据
   const queuedCount = state.items.filter((i) => i.status === "queued").length;
   const uploadingCount = state.items.filter((i) =>
     ["signing", "uploading", "confirming"].includes(i.status)
   ).length;
   const hasBlockingConfig =
     (purpose === "delivery-photo" && !projectId) || (purpose === "portfolio-asset" && !workId);
+
+  // ==================== 渲染 UI ====================
 
   return (
     <div className={cn("grid gap-4 lg:grid-cols-[1.05fr_0.95fr]", className)}>
@@ -813,6 +952,11 @@ export function AssetUpload({
   );
 }
 
+// ==================== 辅助函数 ====================
+
+/**
+ * 获取上传状态的中文标签
+ */
 function statusLabel(status: UploadStatus) {
   switch (status) {
     case "queued":
