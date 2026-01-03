@@ -22,6 +22,13 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
   const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
   const { startTransition } = useThemeTransition()
+  const [mounted, setMounted] = React.useState(false)
+  
+  // 等待客户端挂载后再渲染主题按钮，避免 SSR hydration 不匹配
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+  
   const currentTheme = resolvedTheme === "dark" ? "dark" : "light"
 
   const crumbs = React.useMemo(() => {
@@ -68,13 +75,15 @@ export function SiteHeader({ tabbarRoutes }: { tabbarRoutes?: TabbarRoute[] }) {
           </BreadcrumbList>
         </Breadcrumb>
         <div className="ml-auto flex items-center gap-2">
-          <ThemeToggleButton
-            theme={currentTheme}
-            start="top-right"
-            onClick={() =>
-              startTransition(() => setTheme(currentTheme === "dark" ? "light" : "dark"))
-            }
-          />
+          {mounted && (
+            <ThemeToggleButton
+              theme={currentTheme}
+              start="top-right"
+              onClick={() =>
+                startTransition(() => setTheme(currentTheme === "dark" ? "light" : "dark"))
+              }
+            />
+          )}
         </div>
       </div>
       {tabbarRoutes?.length ? <DashboardTabbar routes={tabbarRoutes} /> : null}
