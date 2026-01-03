@@ -471,7 +471,7 @@ export default function Page() {
                         <SelectTrigger className="h-10 rounded-lg">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[100]">
                           <SelectItem value="1h">1 小时</SelectItem>
                           <SelectItem value="6h">6 小时</SelectItem>
                           <SelectItem value="24h">24 小时</SelectItem>
@@ -537,7 +537,7 @@ export default function Page() {
                         <SelectTrigger className="h-10 rounded-lg">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[100]">
                           <SelectItem value="30m">30 分钟</SelectItem>
                           <SelectItem value="1h">1 小时</SelectItem>
                           <SelectItem value="6h">6 小时</SelectItem>
