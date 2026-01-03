@@ -10,7 +10,6 @@ import {
   IconTrash,
   IconClock,
   IconSettings,
-  IconPlayerPlay,
   IconPlayerStop,
   IconChevronRight,
   IconChevronDown,
@@ -18,7 +17,6 @@ import {
   IconRefresh,
   IconAlertTriangle,
   IconCheck,
-  IconDashboard,
   IconAutomation,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
@@ -102,13 +100,6 @@ export default function Page() {
   const [abortThresholdPreset, setAbortThresholdPreset] = React.useState<string>("1h");
   const [abortThresholdCustom, setAbortThresholdCustom] = React.useState<string>("1");
 
-  // 定时执行配置
-  const [scheduledInterval, setScheduledInterval] = React.useState<string>("60");
-  const [isScheduledRunning, setIsScheduledRunning] = React.useState(false);
-  const scheduledTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const lastExecutionTimeRef = React.useRef<Date | null>(null);
-  const lastExecutionResultRef = React.useRef<string>("");
-
   // 确认对话框状态
   const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
   const [pendingCleanupCount, setPendingCleanupCount] = React.useState(0);
@@ -173,112 +164,6 @@ export default function Page() {
         expanded: false,
       }))
       .sort((a, b) => a.path.localeCompare(b.path));
-  };
-
-  // 清理定时器
-  React.useEffect(() => {
-    return () => {
-      if (scheduledTimerRef.current) {
-        clearInterval(scheduledTimerRef.current);
-      }
-    };
-  }, []);
-
-  // 执行定时任务
-  const performScheduledTask = async () => {
-    const results: string[] = [];
-    const startTime = new Date();
-
-    try {
-      if (enableAutoCleanup) {
-        const cleanupThreshold = getCleanupThresholdSeconds();
-        const cleanupResponse = await apiFetch<CleanupResult>(
-          withAdminBasePath("/api/assets/multipart/cleanup-incomplete"),
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(cleanupThreshold ? { olderThanSeconds: cleanupThreshold } : {}),
-          },
-        );
-
-        const cleanupResult = cleanupResponse.data || cleanupResponse;
-        if (cleanupResult.cleaned > 0) {
-          results.push(`清理：成功 ${cleanupResult.cleaned} 个`);
-        }
-        if (cleanupResult.failed > 0) {
-          results.push(`清理失败：${cleanupResult.failed} 个`);
-        }
-      }
-
-      if (enableAutoAbort) {
-        const abortThreshold = getAbortThresholdSeconds();
-        const abortResponse = await apiFetch<CleanupResult>(
-          withAdminBasePath("/api/assets/multipart/cleanup-incomplete"),
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(abortThreshold ? { olderThanSeconds: abortThreshold } : {}),
-          },
-        );
-
-        const abortResult = abortResponse.data || abortResponse;
-        if (abortResult.cleaned > 0) {
-          results.push(`中止：成功 ${abortResult.cleaned} 个`);
-        }
-        if (abortResult.failed > 0) {
-          results.push(`中止失败：${abortResult.failed} 个`);
-        }
-      }
-
-      lastExecutionTimeRef.current = startTime;
-      const resultSummary = results.length > 0 ? results.join("，") : "无需操作（未启用自动化规则）";
-      lastExecutionResultRef.current = resultSummary;
-
-      if (results.length === 0) {
-        toast.info("定时任务执行完成：未启用任何自动化规则");
-      } else if (results.some((r) => r.includes("失败"))) {
-        toast.warning("定时任务执行完成：部分操作失败", { description: resultSummary });
-      } else {
-        toast.success("定时任务执行完成", { description: resultSummary });
-      }
-    } catch (error) {
-      console.error("Scheduled task failed:", error);
-      toast.error("定时任务执行失败：" + (error instanceof Error ? error.message : String(error)));
-      lastExecutionResultRef.current = "执行失败";
-    }
-  };
-
-  // 切换定时任务
-  const toggleScheduledTask = () => {
-    if (isScheduledRunning) {
-      // 停止定时任务
-      if (scheduledTimerRef.current) {
-        clearInterval(scheduledTimerRef.current);
-        scheduledTimerRef.current = null;
-      }
-      setIsScheduledRunning(false);
-      toast.info("定时任务已停止");
-    } else {
-      // 启动定时任务
-      if (!enableAutoCleanup && !enableAutoAbort) {
-        toast.error("请先启用至少一个自动化规则");
-        return;
-      }
-
-      const intervalMs = Number.parseInt(scheduledInterval, 10) * 60 * 1000;
-      if (Number.isNaN(intervalMs) || intervalMs < 60000) {
-        toast.error("执行间隔必须大于等于 1 分钟");
-        return;
-      }
-
-      // 立即执行一次
-      performScheduledTask();
-
-      // 设置定时器
-      scheduledTimerRef.current = setInterval(performScheduledTask, intervalMs);
-      setIsScheduledRunning(true);
-      toast.success(`定时任务已启动，每 ${scheduledInterval} 分钟执行一次`);
-    }
   };
 
   // 查看未完成上传
@@ -577,70 +462,6 @@ export default function Page() {
                 </div>
               )}
             </div>
-
-            {/* 定时执行 */}
-            <div className="rounded-xl border bg-muted/30 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <IconDashboard className="text-primary size-4" />
-                  <div>
-                    <div className="text-[15px] font-medium">定时执行自动化任务</div>
-                    <div className="text-muted-foreground text-[13px]">
-                      {enableAutoCleanup || enableAutoAbort
-                        ? "已启用自动化规则，可配置定时执行"
-                        : "请先启用至少一个自动化规则"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-[13px] text-muted-foreground">执行间隔（分钟）</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="1440"
-                    value={scheduledInterval}
-                    onChange={(e) => setScheduledInterval(e.target.value)}
-                    className="h-10 rounded-lg"
-                    placeholder="60"
-                    disabled={isScheduledRunning}
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    variant={isScheduledRunning ? "destructive" : "default"}
-                    size="sm"
-                    onClick={toggleScheduledTask}
-                    className="w-full rounded-lg h-10"
-                    disabled={!enableAutoCleanup && !enableAutoAbort}
-                  >
-                    {isScheduledRunning ? (
-                      <>
-                        <IconPlayerStop className="mr-2 size-4" />
-                        停止定时任务
-                      </>
-                    ) : (
-                      <>
-                        <IconPlayerPlay className="mr-2 size-4" />
-                        启动定时任务
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-              {isScheduledRunning && (
-                <div className="mt-3 rounded-lg bg-primary/10 p-3">
-                  <div className="text-primary text-[15px] font-medium">● 定时任务运行中</div>
-                  <div className="text-muted-foreground text-[13px]">
-                    每 {scheduledInterval} 分钟执行一次
-                    {lastExecutionTimeRef.current &&
-                      `（上次执行：${lastExecutionTimeRef.current.toLocaleTimeString()}）`}
-                    {lastExecutionResultRef.current && ` - ${lastExecutionResultRef.current}`}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </Card>
 
@@ -806,16 +627,7 @@ export default function Page() {
                   自动中止
                 </Badge>
               )}
-              {isScheduledRunning && (
-                <Badge variant="outline" className="rounded-lg text-[13px]">
-                  <span className="relative flex h-2 w-2 mr-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                  </span>
-                  运行中
-                </Badge>
-              )}
-              {!enableAutoCleanup && !enableAutoAbort && !isScheduledRunning && (
+              {!enableAutoCleanup && !enableAutoAbort && (
                 <span className="text-muted-foreground text-[13px]">手动模式</span>
               )}
             </div>
