@@ -25,7 +25,7 @@
   - 为什么选择 Tailwind CSS
 - 存储与基础设施
   - 为什么选择 Cloudflare R2
-  - 为什么选择 CloudBase
+  - 为什么选择 Docker
 - 技术栈对比分析
 
 ### 第三部分：技术选型工具与方法
@@ -94,9 +94,9 @@ graph TD
     C --> C3[数据库: MySQL/PostgreSQL/MongoDB]
     C --> C4[ORM: TypeORM/Prisma]
 
-    D --> D1[云服务: CloudBase/AWS/阿里云]
+    D --> D1[云服务: AWS/阿里云]
     D --> D2[存储: R2/S3/OSS]
-    D --> D3[CDN: Cloudflare/CloudBase]
+    D --> D3[CDN: Cloudflare]
     D --> D4[监控: 自建/云服务]
 
     E --> E1[语言: TypeScript/JavaScript]
@@ -552,11 +552,11 @@ PoC 范围：
    GROUP BY DATE(created_at);
    ```
 
-2. **CloudBase 原生支持 MySQL**：
-   - 无缝集成
-   - 自动备份
-   - 高可用部署
-   - 运维便捷
+2. **Docker 友好**：
+   - 官方镜像支持完善
+   - 容器化部署简单
+   - 数据持久化方便
+   - 易于扩展
 
 3. **成熟稳定**：
    - 久经考验（20+ 年历史）
@@ -828,19 +828,18 @@ PoC 范围：
 - Cloudflare R2 ✅（最终选择）
 - AWS S3
 - 阿里云 OSS
-- 七牛云
 
 **选型对比**：
 
-| 维度         | Cloudflare R2 | AWS S3     | 阿里云 OSS  | 七牛云      |
-| ------------ | ------------- | ---------- | ----------- | ----------- |
-| **出口流量** | ✅ 免费       | ❌ 昂贵    | ❌ 昂贵     | ⚠️ 有限免费 |
-| **延迟**     | ✅ 全球低延迟 | ⚠️ 区域化  | ⚠️ 区域化   | ⚠️ 区域化   |
-| **API**      | ✅ S3 兼容    | ✅ S3 原生 | ❌ 独立 API | ❌ 独立 API |
-| **价格**     | ✅ 低廉       | ⚠️ 中等    | ⚠️ 中等     | ✅ 低廉     |
-| **可靠性**   | ✅ 高         | ✅ 高      | ✅ 高       | ✅ 高       |
-| **文档**     | ⚠️ 较简略     | ✅ 完善    | ✅ 完善     | ✅ 完善     |
-| **社区**     | ⚠️ 较小       | ✅ 庞大    | ✅ 庞大     | ✅ 国内大   |
+| 维度         | Cloudflare R2 | AWS S3     | 阿里云 OSS  |
+| ------------ | ------------- | ---------- | ----------- |
+| **出口流量** | ✅ 免费       | ❌ 昂贵    | ❌ 昂贵     |
+| **延迟**     | ✅ 全球低延迟 | ⚠️ 区域化  | ⚠️ 区域化   |
+| **API**      | ✅ S3 兼容    | ✅ S3 原生 | ❌ 独立 API |
+| **价格**     | ✅ 低廉       | ⚠️ 中等    | ⚠️ 中等     |
+| **可靠性**   | ✅ 高         | ✅ 高      | ✅ 高       |
+| **文档**     | ⚠️ 较简略     | ✅ 完善    | ✅ 完善     |
+| **社区**     | ⚠️ 较小       | ✅ 庞大    | ✅ 庞大     |
 
 **最终选择：Cloudflare R2**
 
@@ -851,7 +850,6 @@ PoC 范围：
    ```typescript
    // 传统存储：出口流量费用高昂
    AWS S3: $0.09/GB (出口流量)
-   阿里云 OSS: ¥0.50/GB (出口流量)
 
    // R2：完全免费
    Cloudflare R2: $0/GB (出口流量) ✅
@@ -937,83 +935,99 @@ PoC 范围：
 - ❌ 功能相对少 → ✅ 核心功能完善
 - ❌ 新产品 → ✅ Cloudflare 生态完善
 
-#### 2.3.2 为什么选择 CloudBase
+#### 2.3.2 为什么选择 Docker
 
 **备选方案**：
 
-- CloudBase ✅（最终选择）
-- AWS (EC2 + RDS + S3)
-- 阿里云（ECS + RDS + OSS）
+- Docker ✅（最终选择）
+- Kubernetes
+- AWS (EC2 + RDS)
+- 阿里云 ECS
 - 自建服务器
 
 **选型对比**：
 
-| 维度         | CloudBase   | AWS         | 阿里云      | 自建        |
-| ------------ | ----------- | ----------- | ----------- | ----------- |
-| **部署难度** | ✅ 简单     | ⚠️ 复杂     | ⚠️ 复杂     | ❌ 非常复杂 |
-| **运维成本** | ✅ 低       | ⚠️ 中等     | ⚠️ 中等     | ❌ 高       |
-| **MySQL**    | ✅ 托管     | ⚠️ 需配置   | ⚠️ 需配置   | ❌ 需维护   |
-| **扩展性**   | ✅ 自动     | ✅ 手动     | ✅ 手动     | ❌ 困难     |
-| **成本**     | ✅ 按量     | ⚠️ 复杂计费 | ⚠️ 复杂计费 | ⚠️ 固定成本 |
-| **学习曲线** | ⚠️ 需学习   | ⚠️ 需学习   | ⚠️ 需学习   | ⚠️ 需学习   |
-| **生态**     | ⚠️ 国内为主 | ✅ 全球     | ✅ 国内     | ❌ 无       |
+| 维度         | Docker  | Kubernetes | AWS     | 自建        |
+| ------------ | ------- | ---------- | ------- | ----------- |
+| **部署难度** | ✅ 简单 | ❌ 复杂    | ⚠️ 中等 | ❌ 非常复杂 |
+| **运维成本** | ✅ 低   | ❌ 高      | ⚠️ 中等 | ❌ 高       |
+| **学习曲线** | ✅ 平缓 | ❌ 陡峭    | ⚠️ 中等 | ⚠️ 高       |
+| **扩展性**   | ⚠️ 手动 | ✅ 自动    | ✅ 自动 | ❌ 困难     |
+| **成本**     | ✅ 低   | ❌ 高      | ⚠️ 中高 | ⚠️ 中等     |
+| **灵活性**   | ✅ 高   | ✅ 高      | ⚠️ 受限 | ✅ 最高     |
+| **便携性**   | ✅ 优秀 | ✅ 优秀    | ❌ 无   | ❌ 无       |
 
-**最终选择：CloudBase**
+**最终选择：Docker**
 
 **理由**：
 
-1. **一体化解决方案**：
+1. **环境一致性**：
 
-   ```
-   CloudBase 提供：
-   ✅ 云托管（CloudRun） - 后端部署
-   ✅ MySQL - 托管数据库
-   ✅ 云存储 - 文件存储（可选，我们用 R2）
-   ✅ 静态网站托管 - 前端部署
-   ✅ 身份认证 - 用户认证（可选）
-   ✅ 监控日志 - 运维工具
+   ```dockerfile
+   # 多阶段构建，确保环境一致
+   FROM node:20-alpine AS deps
+   FROM node:20-alpine AS build
+   FROM node:20-alpine AS runner
+
+   # 开发、测试、生产环境完全一致
    ```
 
-2. **运维简单**：
+   - 开发环境 = 测试环境 = 生产环境
+   - 消除"在我机器上能跑"的问题
+   - 依赖版本锁定
+
+2. **部署简单**：
 
    ```bash
-   # 一键部署
-   tcb deploy
+   # 构建镜像
+   docker build -t snapmatch-backend .
 
-   # 自动扩缩容
-   # 自动备份
-   # 自动监控
+   # 运行容器
+   docker run -p 3000:3000 snapmatch-backend
+
+   # 或使用 docker-compose
+   docker-compose up -d
    ```
 
-3. **按量付费成本可控**：
-   - 免费额度（新用户）
-   - 按实际使用量计费
-   - 适合初创项目
+3. **资源隔离**：
+   - CPU、内存限制
+   - 独立文件系统
+   - 网络隔离
+   - 进程隔离
 
-4. **国内访问友好**：
-   - 国内网络优化
-   - 无需备案（云托管）
-   - 延迟低
+4. **快速回滚**：
 
-5. **团队熟悉**：
-   - 学习成本可控
-   - 中文文档完善
+   ```bash
+   # 版本标记
+   docker build -t snapmatch-backend:v1.0 .
+   docker build -t snapmatch-backend:v1.1 .
+
+   # 快速回滚
+   docker stop snapmatch-v1.1
+   docker run -d --name snapmatch-v1.0 snapmatch-backend:v1.0
+   ```
+
+5. **团队友好**：
+   - 学习曲线平缓
+   - 丰富的镜像资源
+   - 社区支持强大
+   - 文档完善
 
 **权衡**：
 
-- ❌ Vendor Lock-in → ✅ 通过抽象层降低依赖
-- ❌ 生态不如 AWS → ✅ 满足当前需求
-- ❌ 文档英文为主 → ✅ 中文资源尚可
+- ❌ 手动扩展 → ✅ 小规模项目无需自动扩容
+- ❌ 需要手动编排 → ✅ Docker Compose 足够使用
+- ❌ 单机部署 → ✅ 可通过 Docker Swarm 或 Kubernetes 演进
 
 ### 2.4 技术栈全景图
 
 ```mermaid
 graph TB
     subgraph "前端技术栈"
-        A1[Next.js 14]
-        A2[React 18]
+        A1[Next.js 16]
+        A2[React 19]
         A3[TypeScript]
-        A4[shadcn/ui]
+        A4[Radix UI]
         A5[Tailwind CSS]
         A6[Zustand]
         A7[React Query]
@@ -1044,7 +1058,7 @@ graph TB
     end
 
     subgraph "基础设施"
-        C1[CloudBase]
+        C1[Docker]
         C2[Cloudflare R2]
         C3[GitHub Actions]
 
@@ -1061,19 +1075,19 @@ graph TB
 
 ### 2.5 技术栈总结表
 
-| 层次         | 技术选型       | 理由总结                     | 备选方案           |
-| ------------ | -------------- | ---------------------------- | ------------------ |
-| **前端框架** | Next.js 14     | 全栈能力、性能优异、生态丰富 | React + Vite       |
-| **UI 库**    | shadcn/ui      | 完全控制、现代设计、Tailwind | Ant Design, MUI    |
-| **样式**     | Tailwind CSS   | 开发快、体积小、一致性高     | CSS Modules        |
-| **状态管理** | Zustand        | 轻量、简单、TypeScript 友好  | Redux Toolkit      |
-| **后端框架** | NestJS         | 企业级、TypeScript 原生      | Express, Fastify   |
-| **运行时**   | Node.js 20     | 团队熟悉、生态成熟           | Bun, Deno          |
-| **数据库**   | MySQL 8.0      | 关系型适合、CloudBase 支持   | PostgreSQL         |
-| **ORM**      | TypeORM        | TypeScript 原生、装饰器语法  | Prisma             |
-| **存储**     | Cloudflare R2  | 零出口费、全球 CDN、S3 兼容  | AWS S3, 阿里云 OSS |
-| **部署**     | CloudBase      | 一体化、运维简单、按量付费   | AWS, 阿里云        |
-| **CI/CD**    | GitHub Actions | 免费、集成好、配置简单       | GitLab CI          |
+| 层次         | 技术选型       | 理由总结                       | 备选方案            |
+| ------------ | -------------- | ------------------------------ | ------------------- |
+| **前端框架** | Next.js 16     | 全栈能力、性能优异、生态丰富   | React + Vite        |
+| **UI 库**    | Radix UI       | 完全控制、现代设计、可访问性   | Ant Design, MUI     |
+| **样式**     | Tailwind CSS   | 开发快、体积小、一致性高       | CSS Modules         |
+| **状态管理** | Zustand        | 轻量、简单、TypeScript 友好    | Redux Toolkit       |
+| **后端框架** | NestJS         | 企业级、TypeScript 原生        | Express, Fastify    |
+| **运行时**   | Node.js 20     | 团队熟悉、生态成熟             | Bun, Deno           |
+| **数据库**   | MySQL 8.0      | 关系型适合、事务支持           | PostgreSQL          |
+| **ORM**      | TypeORM        | TypeScript 原生、装饰器语法    | Prisma              |
+| **存储**     | Cloudflare R2  | 零出口费、全球 CDN、S3 兼容    | AWS S3, 阿里云 OSS  |
+| **部署**     | Docker         | 环境一致性、部署简单、快速回滚 | Kubernetes, AWS ECS |
+| **CI/CD**    | GitHub Actions | 免费、集成好、配置简单         | GitLab CI           |
 
 ---
 
@@ -1783,7 +1797,7 @@ PV：< 1 万/月
 ✅ 选择：
 
 - 单体应用（NestJS）
-- CloudBase 托管
+- Docker 部署
 - MySQL 单实例
 - 简单日志监控
 
@@ -2391,11 +2405,11 @@ Week 4: 全面测试
 
 **技术栈**：
 
-- 前端：Next.js 14 + React 18 + shadcn/ui
+- 前端：Next.js 16 + React 19 + Radix UI
 - 后端：NestJS + Node.js 20
 - 数据库：MySQL 8.0
 - 存储：Cloudflare R2
-- 部署：CloudBase
+- 部署：Docker
 
 **目标**：
 
