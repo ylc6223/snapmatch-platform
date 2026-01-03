@@ -295,7 +295,7 @@ function DeleteConfirmDialog({
             确认删除
           </DialogTitle>
           <DialogDescription>
-            确定要删除分类"【{category?.name}】"吗？
+            确定要删除分类&ldquo;【{category?.name}】&rdquo;吗？
             {category && category.workCount > 0 && (
               <span className="block mt-2 text-amber-600 dark:text-amber-400">
                 ⚠️ 该分类下有 {category.workCount} 个作品，删除后需要重新分配作品分类。
