@@ -321,7 +321,6 @@ interface IStorageService {
 **未来预留**：
 
 - **COSProvider**（腾讯云 COS）：待实现
-- **QiniuProvider**（七牛云）：已移除（可参考历史记录）
 
 ---
 
