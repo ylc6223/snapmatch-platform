@@ -195,6 +195,45 @@ export interface IMultipartUploadProvider {
    * ```
    */
   listUploadedParts(objectKey: string, uploadId: string): Promise<MultipartCompletedPart[]>;
+
+  /**
+   * 列出所有未完成的分片上传
+   *
+   * @returns 未完成的分片上传列表
+   *
+   * @example
+   * ```typescript
+   * const uploads = await provider.listMultipartUploads();
+   * // 返回：[
+   * //   { objectKey: 'portfolio/assets/2025/01/video.mp4', uploadId: 'upload-123', initiated: new Date() },
+   * //   { objectKey: 'portfolio/assets/2025/01/photo.jpg', uploadId: 'upload-456', initiated: new Date() }
+   * // ]
+   * ```
+   */
+  listMultipartUploads(): Promise<
+    Array<{
+      objectKey: string;
+      uploadId: string;
+      initiated: Date;
+    }>
+  >;
+
+  /**
+   * 清理所有未完成的分片上传
+   *
+   * @returns 清理的数量和详情
+   *
+   * @example
+   * ```typescript
+   * const result = await provider.cleanupIncompleteUploads();
+   * // 返回：{ cleaned: 5, failed: 0, details: [...] }
+   * ```
+   */
+  cleanupIncompleteUploads(): Promise<{
+    cleaned: number;
+    failed: number;
+    details: Array<{ objectKey: string; uploadId: string; success: boolean; error?: string }>;
+  }>;
 }
 
 /**

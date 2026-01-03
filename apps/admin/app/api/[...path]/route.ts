@@ -69,9 +69,14 @@ async function proxyToBackend(request: NextRequest, accessToken: string | null, 
   const incomingUrl = new URL(request.url);
   const pathname = incomingUrl.pathname;
 
-  const backendPath = pathname.startsWith("/api/")
-    ? `/api/v1${pathname.slice("/api".length)}`
-    : pathname;
+  // 处理路径转换：
+  // - /admin/api/xxx → /api/v1/xxx (去掉 /admin 前缀，添加 /api/v1 前缀)
+  // - /api/xxx → /api/v1/xxx (已有 /api 前缀，添加 v1 版本)
+  const backendPath = pathname.startsWith("/admin/api/")
+    ? `/api/v1${pathname.slice("/admin/api".length)}`
+    : pathname.startsWith("/api/")
+      ? `/api/v1${pathname.slice("/api".length)}`
+      : pathname;
   const backendUrl = new URL(`${backendPath}${incomingUrl.search}`, backendBaseUrl);
 
   const headers = pickForwardHeaders(request.headers);

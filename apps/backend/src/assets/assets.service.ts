@@ -396,4 +396,122 @@ export class AssetsService {
     await this.storageService.abortMultipartUpload(input.objectKey, input.uploadId);
     return { ok: true as const };
   }
+
+  /**
+   * 列出所有未完成的分片上传
+   * @param olderThanSeconds 可选：只返回超过此时间（秒）的未完成上传
+   */
+  async listIncompleteUploads(olderThanSeconds?: number) {
+    if (this.storageService.getProviderType() !== 'r2') {
+      throw new BadRequestException({
+        errorCode: 'FEATURE_NOT_SUPPORTED',
+        message: '当前存储提供商不支持列出未完成上传',
+      });
+    }
+
+    const uploads = await this.storageService.listMultipartUploads();
+
+    console.log('[AssetsService] listIncompleteUploads result:', {
+      uploadsCount: uploads.length,
+      firstUpload: uploads[0],
+      filter: olderThanSeconds ? `older than ${olderThanSeconds}s` : 'no filter',
+    });
+
+    // 如果指定了时间过滤，筛选出超过指定时间的上传
+    let filteredUploads = uploads;
+    if (olderThanSeconds && olderThanSeconds > 0) {
+      const cutoffDate = new Date(Date.now() - olderThanSeconds * 1000);
+      filteredUploads = uploads.filter((upload) => upload.initiated < cutoffDate);
+      console.log('[AssetsService] after time filter:', {
+        beforeCount: uploads.length,
+        afterCount: filteredUploads.length,
+        cutoffDate: cutoffDate.toISOString(),
+      });
+    }
+
+    const result = {
+      uploads: filteredUploads.map((upload) => ({
+        objectKey: upload.objectKey,
+        uploadId: upload.uploadId,
+        initiated: upload.initiated.toISOString(),
+      })),
+      total: filteredUploads.length,
+    };
+
+    console.log('[AssetsService] returning to controller:', {
+      uploadsCount: result.uploads.length,
+      total: result.total,
+    });
+
+    return result;
+  }
+
+  /**
+   * 清理所有未完成的分片上传
+   * @param olderThanSeconds 可选：只清理超过此时间（秒）的未完成上传
+   */
+  async cleanupIncompleteUploads(olderThanSeconds?: number) {
+    if (this.storageService.getProviderType() !== 'r2') {
+      throw new BadRequestException({
+        errorCode: 'FEATURE_NOT_SUPPORTED',
+        message: '当前存储提供商不支持清理未完成上传',
+      });
+    }
+
+    // 如果指定了时间过滤，先列出并筛选
+    if (olderThanSeconds && olderThanSeconds > 0) {
+      const uploads = await this.storageService.listMultipartUploads();
+      const cutoffDate = new Date(Date.now() - olderThanSeconds * 1000);
+      const filteredUploads = uploads.filter((upload) => upload.initiated < cutoffDate);
+
+      console.log('[AssetsService] cleanup with filter:', {
+        totalUploads: uploads.length,
+        toCleanup: filteredUploads.length,
+        cutoffDate: cutoffDate.toISOString(),
+      });
+
+      // 只清理筛选出的上传
+      const details: Array<{ objectKey: string; uploadId: string; success: boolean; error?: string }> =
+        [];
+      let cleaned = 0;
+      let failed = 0;
+
+      for (const upload of filteredUploads) {
+        try {
+          await this.storageService.abortMultipartUpload(upload.objectKey, upload.uploadId);
+          cleaned++;
+          details.push({
+            objectKey: upload.objectKey,
+            uploadId: upload.uploadId,
+            success: true,
+          });
+        } catch (error) {
+          failed++;
+          details.push({
+            objectKey: upload.objectKey,
+            uploadId: upload.uploadId,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
+      return {
+        cleaned,
+        failed,
+        total: cleaned + failed,
+        details,
+      };
+    }
+
+    // 没有时间过滤，清理所有未完成的上传
+    const result = await this.storageService.cleanupIncompleteUploads();
+
+    return {
+      cleaned: result.cleaned,
+      failed: result.failed,
+      total: result.cleaned + result.failed,
+      details: result.details,
+    };
+  }
 }

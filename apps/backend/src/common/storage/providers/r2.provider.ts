@@ -18,6 +18,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListMultipartUploadsCommand,
   ListPartsCommand,
   PutObjectCommand,
   S3Client,
@@ -234,5 +235,88 @@ export class R2StorageProvider implements IMultipartUploadProvider {
     }
 
     return parts;
+  }
+
+  async listMultipartUploads(): Promise<
+    Array<{
+      objectKey: string;
+      uploadId: string;
+      initiated: Date;
+    }>
+  > {
+    const uploads: Array<{ objectKey: string; uploadId: string; initiated: Date }> = [];
+    let keyMarker: string | undefined;
+    let uploadIdMarker: string | undefined;
+
+    // R2 兼容 S3 的分页参数
+    while (true) {
+      const result = await this.client.send(
+        new ListMultipartUploadsCommand({
+          Bucket: this.bucket,
+          KeyMarker: keyMarker,
+          UploadIdMarker: uploadIdMarker,
+        }),
+      );
+
+      // 调试日志
+      console.log('[R2Provider] ListMultipartUploads result:', {
+        bucket: this.bucket,
+        uploadsCount: result.Uploads?.length || 0,
+        isTruncated: result.IsTruncated,
+        uploads: result.Uploads?.slice(0, 3), // 只打印前 3 个
+      });
+
+      const page = (result.Uploads ?? []).map((upload) => ({
+        objectKey: upload.Key ?? '',
+        uploadId: upload.UploadId ?? '',
+        initiated: upload.Initiated ? new Date(upload.Initiated) : new Date(),
+      }));
+      uploads.push(...page);
+
+      if (!result.IsTruncated) break;
+      keyMarker = result.NextKeyMarker;
+      uploadIdMarker = result.NextUploadIdMarker;
+      if (!keyMarker && !uploadIdMarker) break;
+    }
+
+    console.log('[R2Provider] ListMultipartUploads total:', uploads.length);
+    return uploads;
+  }
+
+  async cleanupIncompleteUploads(): Promise<{
+    cleaned: number;
+    failed: number;
+    details: Array<{ objectKey: string; uploadId: string; success: boolean; error?: string }>;
+  }> {
+    // 1. 列出所有未完成的分片上传
+    const uploads = await this.listMultipartUploads();
+
+    const details: Array<{ objectKey: string; uploadId: string; success: boolean; error?: string }> =
+      [];
+    let cleaned = 0;
+    let failed = 0;
+
+    // 2. 逐个中止
+    for (const upload of uploads) {
+      try {
+        await this.abortMultipartUpload(upload.objectKey, upload.uploadId);
+        cleaned++;
+        details.push({
+          objectKey: upload.objectKey,
+          uploadId: upload.uploadId,
+          success: true,
+        });
+      } catch (error) {
+        failed++;
+        details.push({
+          objectKey: upload.objectKey,
+          uploadId: upload.uploadId,
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return { cleaned, failed, details };
   }
 }

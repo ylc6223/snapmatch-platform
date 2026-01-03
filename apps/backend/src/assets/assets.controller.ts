@@ -154,6 +154,37 @@ interface AbortMultipartUploadResponse {
   ok: true;
 }
 
+interface ListIncompleteUploadsDto {
+  /** 可选：只返回超过此时间（秒）的未完成上传 */
+  olderThanSeconds?: number;
+}
+
+interface ListIncompleteUploadsResponse {
+  uploads: Array<{
+    objectKey: string;
+    uploadId: string;
+    initiated: string;
+  }>;
+  total: number;
+}
+
+interface CleanupIncompleteUploadsDto {
+  /** 可选：只清理超过此时间（秒）的未完成上传 */
+  olderThanSeconds?: number;
+}
+
+interface CleanupIncompleteUploadsResponse {
+  cleaned: number;
+  failed: number;
+  total: number;
+  details: Array<{
+    objectKey: string;
+    uploadId: string;
+    success: boolean;
+    error?: string;
+  }>;
+}
+
 @ApiTags('assets')
 @Controller('assets')
 export class AssetsMultipartController {
@@ -192,6 +223,38 @@ export class AssetsMultipartController {
   @ApiOperation({ summary: '分片上传：中止' })
   async abort(@Body() dto: AbortMultipartUploadDto): Promise<AbortMultipartUploadResponse> {
     return this.assetsService.abortMultipartUpload(dto);
+  }
+
+  @Post('multipart/list-incomplete')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '列出所有未完成的分片上传',
+    description: '列出 R2 存储桶中所有未完成的分片上传，用于清理孤儿分片。支持按时间过滤。',
+  })
+  async listIncomplete(@Body() dto: ListIncompleteUploadsDto = {}): Promise<ListIncompleteUploadsResponse> {
+    const result = await this.assetsService.listIncompleteUploads(dto.olderThanSeconds);
+    console.log('[AssetsController] listIncomplete returning:', {
+      uploadsCount: result.uploads.length,
+      total: result.total,
+      resultKeys: Object.keys(result),
+      filter: dto.olderThanSeconds ? `older than ${dto.olderThanSeconds}s` : 'no filter',
+    });
+    return result;
+  }
+
+  @Post('multipart/cleanup-incomplete')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '清理所有未完成的分片上传',
+    description:
+      '清理 R2 存储桶中所有未完成的分片上传，释放存储空间。' +
+      '适用于因 CORS 配置错误或网络中断导致的未完成上传。支持按时间过滤。',
+  })
+  async cleanupIncomplete(@Body() dto: CleanupIncompleteUploadsDto = {}): Promise<CleanupIncompleteUploadsResponse> {
+    console.log('[AssetsController] cleanupIncomplete called with filter:', dto.olderThanSeconds || 'none');
+    return this.assetsService.cleanupIncompleteUploads(dto.olderThanSeconds);
   }
 }
 

@@ -139,6 +139,32 @@ export class StorageService implements IStorageProvider {
     return provider.listUploadedParts(objectKey, uploadId);
   }
 
+  async listMultipartUploads(): Promise<
+    Array<{
+      objectKey: string;
+      uploadId: string;
+      initiated: Date;
+    }>
+  > {
+    const provider = this.provider as IStorageProvider & Partial<IMultipartUploadProvider>;
+    if (!provider.listMultipartUploads) {
+      throw new Error(`当前存储提供商不支持列出未完成上传：${this.providerType}`);
+    }
+    return provider.listMultipartUploads();
+  }
+
+  async cleanupIncompleteUploads(): Promise<{
+    cleaned: number;
+    failed: number;
+    details: Array<{ objectKey: string; uploadId: string; success: boolean; error?: string }>;
+  }> {
+    const provider = this.provider as IStorageProvider & Partial<IMultipartUploadProvider>;
+    if (!provider.cleanupIncompleteUploads) {
+      throw new Error(`当前存储提供商不支持清理未完成上传：${this.providerType}`);
+    }
+    return provider.cleanupIncompleteUploads();
+  }
+
   /**
    * 获取公开访问 URL
    */
