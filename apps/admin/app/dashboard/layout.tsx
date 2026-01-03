@@ -2,8 +2,8 @@ import React from "react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
+import { AppSidebar } from "@/components/navigation/app-sidebar"
+import { SiteHeader } from "@/components/layout/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 import { getAdminAccessToken } from "@/lib/auth/session"

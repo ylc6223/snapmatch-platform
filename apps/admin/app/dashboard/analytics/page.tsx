@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { ChartAreaInteractive } from "@/components/shared/charts/chart-area-interactive";
 import { ExampleDataTable } from "@/components/data-table";
-import { SectionCards } from "@/components/section-cards";
+import { SectionCards } from "@/components/shared/cards/section-cards";
 import { generateMeta } from "@/lib/utils";
 
 import data from "../data.json";

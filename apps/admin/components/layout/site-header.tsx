@@ -4,7 +4,7 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 
-import { DashboardTabbar, type TabbarRoute } from "@/components/dashboard-tabbar"
+import { DashboardTabbar, type TabbarRoute } from "@/components/navigation/dashboard-tabbar"
 import {
   Breadcrumb,
   BreadcrumbItem,

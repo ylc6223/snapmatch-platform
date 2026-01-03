@@ -3,7 +3,7 @@ import { generateMeta } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
-import { SessionExpiredDialog } from "@/components/session-expired-dialog";
+import { SessionExpiredDialog } from "@/components/dialogs/session-expired-dialog";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateMeta({

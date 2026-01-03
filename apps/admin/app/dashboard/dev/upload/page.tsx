@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { AssetUpload } from "@/components/asset-upload";
+import { AssetUpload } from "@/components/features/upload/asset-upload";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

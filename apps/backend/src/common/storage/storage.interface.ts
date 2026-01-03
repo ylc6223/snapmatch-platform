@@ -37,20 +37,43 @@ export interface UploadTokenResult {
   partSize?: number;
 }
 
+/**
+ * 分片上传已完成的分片信息
+ *
+ * 用于完成分片上传时，指定已上传成功的分片列表
+ */
 export interface MultipartCompletedPart {
+  /** 分片编号（从 1 开始） */
   partNumber: number;
+  /** 分片的 ETag 值，用于验证分片完整性 */
   etag: string;
 }
 
+/**
+ * 分片上传初始化结果
+ *
+ * 返回分片上传会话的标识信息和参数
+ */
 export interface MultipartUploadInitResult {
+  /** 分片上传会话 ID，用于后续上传、完成、取消操作 */
   uploadId: string;
+  /** 对象存储键（文件路径） */
   objectKey: string;
+  /** 建议的分片大小（字节） */
   partSize: number;
+  /** 上传会话过期时间（秒） */
   expiresIn?: number;
 }
 
+/**
+ * 分片上传部分签名 URL 结果
+ *
+ * 返回用于上传单个分片的预签名 URL
+ */
 export interface MultipartUploadPartUrlResult {
+  /** 预签名的分片上传 URL */
   url: string;
+  /** URL 过期时间（秒） */
   expiresIn?: number;
 }
 
@@ -60,23 +83,117 @@ export interface MultipartUploadPartUrlResult {
  * 说明：不是所有 provider 都支持；业务侧需根据 providerType/能力做分支。
  */
 export interface IMultipartUploadProvider {
+  /**
+   * 初始化分片上传会话
+   *
+   * @param objectKey 对象存储路径
+   * @param contentType 文件 MIME 类型
+   * @param expiresIn 上传会话过期时间（秒）
+   * @returns 分片上传会话信息（包含 uploadId 和建议的 partSize）
+   *
+   * @example
+   * ```typescript
+   * const result = await provider.createMultipartUpload(
+   *   'portfolio/assets/2025/01/large-video.mp4',
+   *   'video/mp4',
+   *   86400
+   * );
+   * // 返回：{ uploadId: '...', objectKey: '...', partSize: 5242880, expiresIn: 86400 }
+   * ```
+   */
   createMultipartUpload(
     objectKey: string,
     contentType: string,
     expiresIn: number,
   ): Promise<MultipartUploadInitResult>;
+
+  /**
+   * 生成单个分片的签名上传 URL
+   *
+   * @param objectKey 对象存储路径
+   * @param uploadId 分片上传会话 ID
+   * @param partNumber 分片编号（从 1 开始）
+   * @param expiresIn 签名 URL 过期时间（秒）
+   * @returns 分片上传的预签名 URL
+   *
+   * @example
+   * ```typescript
+   * const result = await provider.signUploadPart(
+   *   'portfolio/assets/2025/01/large-video.mp4',
+   *   'upload-id-123',
+   *   1,
+   *   3600
+   * );
+   * // 返回：{ url: 'https://...?partNumber=1&uploadId=...', expiresIn: 3600 }
+   * ```
+   */
   signUploadPart(
     objectKey: string,
     uploadId: string,
     partNumber: number,
     expiresIn: number,
   ): Promise<MultipartUploadPartUrlResult>;
+
+  /**
+   * 完成分片上传
+   *
+   * @param objectKey 对象存储路径
+   * @param uploadId 分片上传会话 ID
+   * @param parts 已上传成功的分片列表（按分片编号排序）
+   * @returns Promise<void>
+   *
+   * @example
+   * ```typescript
+   * await provider.completeMultipartUpload(
+   *   'portfolio/assets/2025/01/large-video.mp4',
+   *   'upload-id-123',
+   *   [
+   *     { partNumber: 1, etag: 'etag1' },
+   *     { partNumber: 2, etag: 'etag2' },
+   *     { partNumber: 3, etag: 'etag3' }
+   *   ]
+   * );
+   * ```
+   */
   completeMultipartUpload(
     objectKey: string,
     uploadId: string,
     parts: MultipartCompletedPart[],
   ): Promise<void>;
+
+  /**
+   * 取消分片上传
+   *
+   * @param objectKey 对象存储路径
+   * @param uploadId 分片上传会话 ID
+   * @returns Promise<void>
+   *
+   * @example
+   * ```typescript
+   * await provider.abortMultipartUpload(
+   *   'portfolio/assets/2025/01/large-video.mp4',
+   *   'upload-id-123'
+   * );
+   * ```
+   */
   abortMultipartUpload(objectKey: string, uploadId: string): Promise<void>;
+
+  /**
+   * 列出已上传的分片
+   *
+   * @param objectKey 对象存储路径
+   * @param uploadId 分片上传会话 ID
+   * @returns 已成功上传的分片列表
+   *
+   * @example
+   * ```typescript
+   * const parts = await provider.listUploadedParts(
+   *   'portfolio/assets/2025/01/large-video.mp4',
+   *   'upload-id-123'
+   * );
+   * // 返回：[{ partNumber: 1, etag: '...' }, { partNumber: 2, etag: '...' }]
+   * ```
+   */
   listUploadedParts(objectKey: string, uploadId: string): Promise<MultipartCompletedPart[]>;
 }
 
