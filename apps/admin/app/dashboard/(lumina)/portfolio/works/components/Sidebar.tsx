@@ -142,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   }, []);
 
   return (
-    <nav ref={sidebarRef} className="fixed left-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-6 py-5 px-1.5 rounded-full bg-card/80 backdrop-blur-xl border border-border shadow-2xl shadow-black/5 dark:shadow-black/20 transition-all duration-500" style={{ width: '3rem' }}>
+    <nav ref={sidebarRef} className="fixed left-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-6 py-5 px-1.5 rounded-xl bg-card/80 backdrop-blur-xl border border-border shadow-2xl shadow-black/5 dark:shadow-black/20 transition-all duration-500" style={{ width: '3rem' }}>
 
       {/* Logo / 品牌 - 主页图标 */}
       <Tooltip>
