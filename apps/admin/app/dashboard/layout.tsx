@@ -2,9 +2,7 @@ import React from "react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { AppSidebar } from "@/components/navigation/app-sidebar"
-import { SiteHeader } from "@/components/layout/site-header"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { DashboardLayoutClient } from "./dashboard-layout-client"
 
 import { getAdminAccessToken } from "@/lib/auth/session"
 import type { AuthUser } from "@/lib/auth/types"
@@ -107,16 +105,8 @@ export default async function Page({ children }: { children: React.ReactNode }) 
   const tabs = await getDashboardTabs()
 
   return (
-    <SidebarProvider
-      className="h-svh overflow-hidden"
-    >
-      <AppSidebar user={user} />
-      <SidebarInset className="flex-1 min-h-0 overflow-hidden">
-        <SiteHeader tabbarRoutes={tabs} />
-        <div className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain">
-          <main className="flex flex-col gap-4 p-4 pt-0">{children}</main>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <DashboardLayoutClient user={user} tabs={tabs}>
+      {children}
+    </DashboardLayoutClient>
   )
 }
