@@ -380,6 +380,14 @@ export default function Page() {
           </div>
         </div>
 
+        {/* 简化的注意事项 Alert */}
+        <Alert className="rounded-lg border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20">
+          <IconAlertTriangle className="text-amber-600 dark:text-amber-400 size-4" />
+          <AlertDescription className="text-[13px] text-amber-900 dark:text-amber-200">
+            清理操作不可逆，请谨慎操作。建议在低峰期执行批量清理。
+          </AlertDescription>
+        </Alert>
+
         {/* 上传测试工具 */}
         <Card className="rounded-xl shadow-md">
           <CardHeader>
@@ -785,53 +793,32 @@ export default function Page() {
                 )}
               </Button>
             )}
-          </div>
-        </Card>
 
-        {/* 状态统计 */}
-        <Card className="rounded-xl shadow-md">
-          <CardHeader>
-            <CardTitle className="text-[19px]">当前状态</CardTitle>
-            <CardDescription className="text-[15px]">自动化规则和定时任务状态</CardDescription>
-          </CardHeader>
-          <div className="space-y-4 px-6 pb-6">
-            {enableAutoCleanup || enableAutoAbort ? (
-              <div className="space-y-2">
-                <div className="text-[15px] font-medium">已启用规则</div>
-                <div className="flex flex-wrap gap-2">
-                  {enableAutoCleanup && (
-                    <Badge variant="default" className="bg-blue-500 rounded-lg">
-                      自动清理
-                    </Badge>
-                  )}
-                  {enableAutoAbort && (
-                    <Badge variant="default" className="bg-orange-500 rounded-lg">
-                      自动中止
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-muted-foreground text-[15px]">手动模式</div>
-            )}
-
-            {isScheduledRunning && (
-              <>
-                <div className="h-px bg-border" />
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-[15px]">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                    </span>
-                    定时任务运行中
-                  </div>
-                  <div className="text-muted-foreground text-[13px]">
-                    每 {scheduledInterval} 分钟执行一次
-                  </div>
-                </div>
-              </>
-            )}
+            {/* 简化的状态栏 */}
+            <div className="flex flex-wrap gap-2 pt-2 border-t">
+              {enableAutoCleanup && (
+                <Badge variant="default" className="bg-blue-500 rounded-lg text-[13px]">
+                  自动清理
+                </Badge>
+              )}
+              {enableAutoAbort && (
+                <Badge variant="default" className="bg-orange-500 rounded-lg text-[13px]">
+                  自动中止
+                </Badge>
+              )}
+              {isScheduledRunning && (
+                <Badge variant="outline" className="rounded-lg text-[13px]">
+                  <span className="relative flex h-2 w-2 mr-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                  </span>
+                  运行中
+                </Badge>
+              )}
+              {!enableAutoCleanup && !enableAutoAbort && !isScheduledRunning && (
+                <span className="text-muted-foreground text-[13px]">手动模式</span>
+              )}
+            </div>
           </div>
         </Card>
 
@@ -863,22 +850,6 @@ export default function Page() {
             </div>
           </Card>
         )}
-
-        {/* 帮助信息 */}
-        <Card className="rounded-xl shadow-md bg-amber-50/50 dark:bg-amber-950/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[19px] text-amber-900 dark:text-amber-100">
-              <IconAlertTriangle className="size-5" />
-              注意事项
-            </CardTitle>
-          </CardHeader>
-          <div className="space-y-2 px-6 pb-6 text-[13px] text-amber-900 dark:text-amber-200">
-            <p>• 因 CORS 配置错误或网络中断可能导致未完成的分片上传占用存储空间</p>
-            <p>• 清理操作不可逆，请谨慎操作</p>
-            <p>• 建议在低峰期执行批量清理操作</p>
-            <p>• 定时任务会在后台自动执行，不需要手动干预</p>
-          </div>
-        </Card>
       </div>
 
       {/* 确认对话框 */}
