@@ -275,7 +275,7 @@ export default function Page() {
       {/* 左侧主操作区 */}
       <div className="@xl/main:col-span-2 space-y-6">
         {/* 标题 */}
-        <div className="flex items-center justify-between mt-4 sm:mt-0">
+        <div className="flex items-center justify-between mt-6 sm:mt-8">
           <div>
             <h1 className="text-[26px] font-semibold tracking-tight text-foreground">分片上传管理</h1>
             <p className="text-muted-foreground mt-1 text-[15px]">
