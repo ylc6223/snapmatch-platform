@@ -100,6 +100,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   const { startTransition } = useThemeTransition();
   const currentTheme = resolvedTheme === "dark" ? "dark" : "light";
 
+  // 防止 hydration 不匹配
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // 退出登录逻辑
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -199,13 +206,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
 
       <div className="mt-auto pt-4 border-t border-border w-full flex flex-col items-center gap-4">
          {/* 主题切换按钮 */}
-         <button
-            onClick={handleThemeToggle}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all hover:rotate-12 transform duration-300"
-            title={currentTheme === "dark" ? "切换亮色模式" : "切换暗色模式"}
-         >
-            {currentTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-         </button>
+         {!mounted ? (
+           // 服务端渲染占位符，防止 hydration 不匹配
+           <div className="w-9 h-9 rounded-full bg-muted/50" />
+         ) : (
+           <button
+              onClick={handleThemeToggle}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all hover:rotate-12 transform duration-300"
+              title={currentTheme === "dark" ? "切换亮色模式" : "切换暗色模式"}
+           >
+              {currentTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+           </button>
+         )}
 
          {/* 用户头像菜单（如果有） */}
          {user && (
