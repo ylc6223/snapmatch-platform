@@ -13,10 +13,10 @@ import { ViewerModule } from './viewer/viewer.module';
 
 @Module({
   imports: [
-    // 全局配置模块：读取 .env.local / .env，并提供 ConfigService 给全应用使用。
+    // 全局配置模块：读取 .env.worktree.local / .env.local / .env，并提供 ConfigService 给全应用使用。
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: ['.env.worktree.local', '.env.local', '.env'],
     }),
     // 用户相关模块：使用 MySQL 持久化管理员与会话。
     UsersModule,

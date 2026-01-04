@@ -2,10 +2,22 @@ import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Q
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { Role } from "../auth/types";
+import { UserStatus } from "../database/entities/rbac-user.entity";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { ListUsersQuery } from "./dto/list-users.query";
 import { UpdateUserDto } from "./dto/update-user.dto";
+
+/**
+ * 将 DTO 的数字状态 (0 | 1) 转换为 UserStatus 枚举
+ * 1 -> UserStatus.ACTIVE
+ * 0 -> UserStatus.INACTIVE
+ * null -> null
+ */
+function toUserStatus(status: 0 | 1 | null | undefined): UserStatus | null {
+  if (status === null || status === undefined) return null;
+  return status === 1 ? UserStatus.ACTIVE : UserStatus.INACTIVE;
+}
 
 @ApiTags("users")
 @ApiBearerAuth()
@@ -27,7 +39,7 @@ export class UsersAdminController {
       page,
       pageSize,
       query: query.q ?? null,
-      status: query.status ?? null,
+      status: toUserStatus(query.status),
       sortBy: query.sortBy ?? null,
       sortOrder: query.sortOrder ?? null,
     });
@@ -46,7 +58,7 @@ export class UsersAdminController {
       account: dto.account,
       password: dto.password,
       roleCodes: dto.roleCodes,
-      status: dto.status ?? 1,
+      status: toUserStatus(dto.status ?? 1) ?? UserStatus.ACTIVE,
     });
   }
 
@@ -57,7 +69,7 @@ export class UsersAdminController {
       id,
       password: dto.password ?? null,
       roleCodes: dto.roleCodes ?? null,
-      status: dto.status ?? null,
+      status: toUserStatus(dto.status),
     });
     if (!updated) throw new NotFoundException({ code: 404, message: "用户不存在" });
     return updated;

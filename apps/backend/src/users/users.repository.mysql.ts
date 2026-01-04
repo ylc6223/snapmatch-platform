@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { Role } from "../auth/types";
+import { UserStatus } from "../database/entities/rbac-user.entity";
 import { RbacPermissionEntity } from "../database/entities/rbac-permission.entity";
 import { RbacRolePermissionEntity } from "../database/entities/rbac-role-permission.entity";
 import { RbacRoleEntity } from "../database/entities/rbac-role.entity";
@@ -33,10 +34,31 @@ function toRoles(values: unknown): Role[] {
   return items.filter((v): v is Role => allowed.has(v)) as Role[];
 }
 
-function toNumber(value: unknown): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "string") return Number(value);
-  return Number(value ?? 0);
+/**
+ * 将数据库值转换为 UserStatus 枚举
+ * 数据库可能存储：字符串枚举值 ("active", "inactive", "pending") 或 数字 (0, 1)
+ */
+function toUserStatus(value: unknown): UserStatus {
+  // 如果已经是 UserStatus 枚举，直接返回
+  if (value === UserStatus.ACTIVE || value === UserStatus.INACTIVE || value === UserStatus.PENDING) {
+    return value as UserStatus;
+  }
+
+  // 如果是数字，转换为枚举
+  if (typeof value === "number") {
+    return value === 1 ? UserStatus.ACTIVE : UserStatus.INACTIVE;
+  }
+
+  // 如果是字符串，尝试匹配枚举
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase().trim();
+    if (normalized === "active" || normalized === "1") return UserStatus.ACTIVE;
+    if (normalized === "inactive" || normalized === "0") return UserStatus.INACTIVE;
+    if (normalized === "pending") return UserStatus.PENDING;
+  }
+
+  // 默认返回 ACTIVE
+  return UserStatus.ACTIVE;
 }
 
 function generateId34Safe(): string {
@@ -74,7 +96,7 @@ export class MySqlUsersRepository implements UsersRepository {
     const accountValue = typeof row.account === "string" ? row.account : "";
     if (!userId || !accountValue) return null;
 
-    const statusValue = toNumber(row.status) === 1 ? 1 : 0;
+    const statusValue = toUserStatus(row.status);
     const roles = toRoles(row.roles);
     const permissions = splitCsv(row.permissions);
 
@@ -101,7 +123,7 @@ export class MySqlUsersRepository implements UsersRepository {
       .leftJoin(RbacRoleEntity, "r", "r.id = ur.roleId AND r.status = 1")
       .leftJoin(RbacRolePermissionEntity, "rp", "rp.roleId = r.id")
       .leftJoin(RbacPermissionEntity, "p", "p.id = rp.permissionId AND p.status = 1")
-      .where("u.account = :account AND u.status = 1", { account: normalized })
+      .where("u.account = :account AND u.status = :status", { account: normalized, status: UserStatus.ACTIVE })
       .groupBy("u.id")
       .getRawOne<Record<string, unknown>>();
 
@@ -109,8 +131,8 @@ export class MySqlUsersRepository implements UsersRepository {
     const id = typeof row.id === "string" ? row.id : "";
     const accountValue = typeof row.account === "string" ? row.account : "";
     const passwordHash = typeof row.passwordHash === "string" ? row.passwordHash : "";
-    const status = typeof row.status === "number" ? row.status : Number(row.status ?? 0);
-    if (!id || !accountValue || !passwordHash || status !== 1) return null;
+    const status = toUserStatus(row.status);
+    if (!id || !accountValue || !passwordHash || status !== UserStatus.ACTIVE) return null;
 
     return {
       id,
@@ -134,7 +156,7 @@ export class MySqlUsersRepository implements UsersRepository {
       .leftJoin(RbacRoleEntity, "r", "r.id = ur.roleId AND r.status = 1")
       .leftJoin(RbacRolePermissionEntity, "rp", "rp.roleId = r.id")
       .leftJoin(RbacPermissionEntity, "p", "p.id = rp.permissionId AND p.status = 1")
-      .where("u.id = :id AND u.status = 1", { id })
+      .where("u.id = :id AND u.status = :status", { id, status: UserStatus.ACTIVE })
       .groupBy("u.id")
       .getRawOne<Record<string, unknown>>();
 
@@ -142,8 +164,8 @@ export class MySqlUsersRepository implements UsersRepository {
     const userId = typeof row.id === "string" ? row.id : "";
     const accountValue = typeof row.account === "string" ? row.account : "";
     const passwordHash = typeof row.passwordHash === "string" ? row.passwordHash : "";
-    const status = typeof row.status === "number" ? row.status : Number(row.status ?? 0);
-    if (!userId || !accountValue || !passwordHash || status !== 1) return null;
+    const status = toUserStatus(row.status);
+    if (!userId || !accountValue || !passwordHash || status !== UserStatus.ACTIVE) return null;
 
     return {
       id: userId,
@@ -188,7 +210,7 @@ export class MySqlUsersRepository implements UsersRepository {
       qb.andWhere("LOWER(u.account) LIKE :accountLike", { accountLike: `%${query}%` });
       countQb.andWhere("LOWER(u.account) LIKE :accountLike", { accountLike: `%${query}%` });
     }
-    if (status !== null && (status === 0 || status === 1)) {
+    if (status !== null) {
       qb.andWhere("u.status = :status", { status });
       countQb.andWhere("u.status = :status", { status });
     }
@@ -207,7 +229,7 @@ export class MySqlUsersRepository implements UsersRepository {
         const id = typeof row.id === "string" ? row.id : "";
         const accountValue = typeof row.account === "string" ? row.account : "";
         if (!id || !accountValue) return null;
-        const statusValue = toNumber(row.status) === 1 ? 1 : 0;
+        const statusValue = toUserStatus(row.status);
         return {
           id,
           account: accountValue,
