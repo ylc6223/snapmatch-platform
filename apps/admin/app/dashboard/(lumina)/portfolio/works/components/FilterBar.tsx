@@ -150,18 +150,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({ viewMode, setViewMode }) =
               )}
           </button>
 
-          {/* 分隔线 */}
-          <div className={`w-px h-6 bg-border mx-0.5 md:mx-1 shrink-0 ${isSearchFocused ? 'hidden md:block' : 'hidden lg:block'}`} />
-
-          {/* 计数徽章 */}
-          <div className={`
-              hidden lg:flex items-center px-2 text-xs font-bold text-muted-foreground uppercase tracking-wider shrink-0 transition-opacity duration-300
-              ${isSearchFocused ? 'opacity-50' : 'opacity-100'}
-          `}>
-             共 {MOCK_PHOTOS.length} 个作品
-          </div>
-
-          <div className={`hidden lg:block w-px h-6 bg-border mx-1 shrink-0 ${isSearchFocused ? 'hidden md:block' : 'block'}`} />
 
           {/* 视图切换 */}
           <button
