@@ -31,6 +31,7 @@
     "eslint-plugin-better-tailwindcss": "^3.8.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.379.0",
+    "motion": "^12.23.26",
     "next": "16.1.0",
     "next-themes": "^0.3.0",
     "radix-ui": "latest",

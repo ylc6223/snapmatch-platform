@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { DataSource, Repository } from "typeorm";
+import { UserStatus } from "../database/entities/rbac-user.entity";
 import { AuthSessionEntity } from "../database/entities/auth-session.entity";
 import { RbacPermissionEntity } from "../database/entities/rbac-permission.entity";
 import { RbacRoleDataScopeEntity } from "../database/entities/rbac-role-data-scope.entity";
@@ -18,7 +19,7 @@ type SeedUser = {
   account: string;
   passwordHash: string;
   roleCodes: ("admin" | "photographer" | "sales" | "customer")[];
-  status: number;
+  status: UserStatus;
 };
 
 type RoleSeed = { code: string; name: string; status: number };
@@ -199,7 +200,7 @@ async function upsertUser(repo: Repository<RbacUserEntity>, user: SeedUser): Pro
     createdAt: now,
     updatedAt: now,
   });
-  await repo.insert(created);
+  await repo.save(created);
   return created;
 }
 
@@ -269,10 +270,10 @@ async function main() {
   const visitorHash = await resolvePasswordHash("visitor");
 
   const seedUsers: SeedUser[] = [
-    { envType: "admin", account: "admin", passwordHash: adminHash, roleCodes: ["admin"], status: 1 },
-    { envType: "photographer", account: "photographer", passwordHash: photographerHash, roleCodes: ["photographer"], status: 1 },
-    { envType: "sales", account: "sales", passwordHash: salesHash, roleCodes: ["sales"], status: 1 },
-    { envType: "visitor", account: "visitor", passwordHash: visitorHash, roleCodes: ["customer"], status: 1 },
+    { envType: "admin", account: "admin", passwordHash: adminHash, roleCodes: ["admin"], status: UserStatus.ACTIVE },
+    { envType: "photographer", account: "photographer", passwordHash: photographerHash, roleCodes: ["photographer"], status: UserStatus.ACTIVE },
+    { envType: "sales", account: "sales", passwordHash: salesHash, roleCodes: ["sales"], status: UserStatus.ACTIVE },
+    { envType: "visitor", account: "visitor", passwordHash: visitorHash, roleCodes: ["customer"], status: UserStatus.ACTIVE },
   ];
 
   const ds = buildDataSource();

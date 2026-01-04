@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { Role } from "../auth/types";
+import { UserStatus } from "../database/entities/rbac-user.entity";
 import { RbacPermissionEntity } from "../database/entities/rbac-permission.entity";
 import { RbacRolePermissionEntity } from "../database/entities/rbac-role-permission.entity";
 import { RbacRoleEntity } from "../database/entities/rbac-role.entity";
@@ -287,7 +288,7 @@ export class MySqlUsersRepository implements UsersRepository {
       status: input.status,
       createdAt: now,
       updatedAt: now,
-    } satisfies Partial<RbacUserEntity>);
+    });
 
     await this.setUserRoles(createdId, input.roleCodes);
 
@@ -297,17 +298,17 @@ export class MySqlUsersRepository implements UsersRepository {
   }
 
   async updateUser(input: UpdateUserInput): Promise<AdminUser | null> {
-    const patch: Partial<RbacUserEntity> = {};
+    const patch: Partial<Pick<RbacUserEntity, "passwordHash" | "status" | "updatedAt">> = {};
     if (typeof input.passwordHash === "string" && input.passwordHash.trim().length > 0) {
       patch.passwordHash = input.passwordHash;
     }
-    if (input.status === 0 || input.status === 1) {
+    if (input.status) {
       patch.status = input.status;
     }
 
     if (Object.keys(patch).length > 0) {
       patch.updatedAt = Date.now();
-      await this.users.update({ id: input.id }, patch);
+      await this.users.update({ id: input.id }, patch as object);
     }
 
     if (Array.isArray(input.roleCodes)) {
@@ -320,7 +321,7 @@ export class MySqlUsersRepository implements UsersRepository {
   async disableUser(id: string): Promise<boolean> {
     const existing = await this.findAdminUserById(id);
     if (!existing) return false;
-    await this.users.update({ id }, { status: 0, updatedAt: Date.now() });
+    await this.users.update({ id }, { status: UserStatus.INACTIVE, updatedAt: Date.now() });
     return true;
   }
 }

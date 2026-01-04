@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StorageService } from '../common/storage/storage.service';
 import { MultipartCompletedPart, UploadTokenResult } from '../common/storage/storage.interface';
-import { PhotoEntity } from '../database/entities/photo.entity';
+import { PhotoEntity, PhotoStatus } from '../database/entities/photo.entity';
 import { ProjectsService } from '../projects/projects.service';
 
 /**
@@ -237,9 +237,7 @@ export class AssetsService {
       fileSize: confirmDto.size,
       width: null,
       height: null, // TODO: 后续从 EXIF 或图像处理中提取尺寸
-      status: 'ready',
-      selected: false,
-      selectedAt: null,
+      status: PhotoStatus.READY,
       createdAt: now,
     });
 

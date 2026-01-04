@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from "@nestjs/common
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { nanoid } from "nanoid";
-import { ProjectEntity } from "../database/entities/project.entity";
+import { ProjectEntity, ProjectStatus } from "../database/entities/project.entity";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectResponseDto } from "./dto/project-response.dto";
@@ -31,9 +31,12 @@ export class ProjectsService {
       id: projectId,
       name: createProjectDto.name,
       description: createProjectDto.description || null,
+      customerId: createProjectDto.customerId,
+      packageId: createProjectDto.packageId,
+      shootDate: createProjectDto.shootDate || null,
       token,
       expiresAt: createProjectDto.expiresAt || null,
-      status: "active",
+      status: ProjectStatus.PENDING,
       photoCount: 0,
       createdAt: now,
       updatedAt: now,
@@ -84,8 +87,11 @@ export class ProjectsService {
       throw new NotFoundException(`项目不存在`);
     }
 
-    // 检查项目状态
-    if (project.status !== "active") {
+    // 检查项目状态：允许待选片和选片中的项目访问
+    if (
+      project.status !== ProjectStatus.PENDING &&
+      project.status !== ProjectStatus.SELECTING
+    ) {
       throw new ConflictException(`该项目已不可用`);
     }
 
