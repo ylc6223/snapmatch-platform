@@ -18,7 +18,7 @@ export const projects: Project[] = [
     status: 'active',
     date: '2026年1月14日',
     photoCount: 1240,
-    coverImage: 'https://images.unsplash.com/photo-1519331379826-b10a524e66c4?w=800&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80',
   },
   {
     id: '2',
@@ -28,7 +28,7 @@ export const projects: Project[] = [
     status: 'selection',
     date: '2026年1月10日',
     photoCount: 450,
-    coverImage: 'https://images.unsplash.com/photo-1551298370119-f7b64c9d518c?w=800&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80',
   },
   {
     id: '3',
@@ -38,7 +38,7 @@ export const projects: Project[] = [
     status: 'editing',
     date: '2026年1月05日',
     photoCount: 120,
-    coverImage: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80',
   },
   {
     id: '4',
@@ -68,6 +68,6 @@ export const projects: Project[] = [
     status: 'delivered',
     date: '2025年12月15日',
     photoCount: 600,
-    coverImage: 'https://images.unsplash.com/photo-1495704907664-81f74bc7c679?w=800&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1604975999044-188783d54fb3?w=800&q=80',
   },
 ];
