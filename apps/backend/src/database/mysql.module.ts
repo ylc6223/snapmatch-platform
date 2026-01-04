@@ -3,6 +3,8 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigService } from "@nestjs/config";
 import type { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { AuthSessionEntity } from "./entities/auth-session.entity";
+import { ProjectEntity } from "./entities/project.entity";
+import { PhotoEntity } from "./entities/photo.entity";
 import { RbacPermissionEntity } from "./entities/rbac-permission.entity";
 import { RbacRoleDataScopeEntity } from "./entities/rbac-role-data-scope.entity";
 import { RbacRolePermissionEntity } from "./entities/rbac-role-permission.entity";
@@ -56,6 +58,8 @@ function buildTypeOrmOptions(config: ConfigService): TypeOrmModuleOptions {
       RbacUserRoleEntity,
       RbacRolePermissionEntity,
       RbacRoleDataScopeEntity,
+      ProjectEntity,
+      PhotoEntity,
     ]),
   ],
   exports: [TypeOrmModule],

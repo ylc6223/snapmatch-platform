@@ -787,28 +787,6 @@ R2 存储桶
 ]
 ```
 
-**方案 2：通过 Wrangler CLI 配置**
-
-创建 `cors.json` 文件：
-
-```json
-[
-  {
-    "AllowedOrigins": ["http://localhost:3001"],
-    "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
-    "AllowedHeaders": ["*"],
-    "ExposeHeaders": ["ETag"],
-    "MaxAgeSeconds": 3600
-  }
-]
-```
-
-然后应用配置：
-
-```bash
-wrangler r2 bucket put your-bucket-name --cors-config cors.json
-```
-
 ##### CORS 配置参数说明
 
 | 参数             | 说明                 | 推荐值                                                                   |

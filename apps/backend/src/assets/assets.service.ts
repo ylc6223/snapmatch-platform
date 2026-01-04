@@ -1,7 +1,11 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { StorageService } from '../common/storage/storage.service';
 import { MultipartCompletedPart, UploadTokenResult } from '../common/storage/storage.interface';
+import { PhotoEntity } from '../database/entities/photo.entity';
+import { ProjectsService } from '../projects/projects.service';
 
 /**
  * 文件大小限制（字节）
@@ -49,7 +53,12 @@ type UploadPurpose = 'portfolio-asset' | 'delivery-photo';
 
 @Injectable()
 export class AssetsService {
-  constructor(private readonly storageService: StorageService) {}
+  constructor(
+    private readonly storageService: StorageService,
+    @InjectRepository(PhotoEntity)
+    private readonly photoRepository: Repository<PhotoEntity>,
+    private readonly projectsService: ProjectsService,
+  ) {}
 
   /**
    * 生成上传凭证
@@ -214,20 +223,30 @@ export class AssetsService {
     }
 
     // 2. 生成照片 ID
-    const photoId = `photo_${uuidv4()}`;
+    const photoId = `pho_${uuidv4().replace(/-/g, '').substring(0, 16)}`;
 
-    // TODO: 3. 保存照片元数据到数据库（Photo 表）
-    // await this.photosRepository.create({
-    //   id: photoId,
-    //   projectId,
-    //   albumId: confirmDto.albumId,
-    //   objectKey,
-    //   filename: confirmDto.filename,
-    //   size: confirmDto.size,
-    //   contentType: confirmDto.contentType,
-    //   exif: confirmDto.exif,
-    //   status: 'processing',
-    // });
+    // 3. 保存照片元数据到数据库（Photo 表）
+    const now = Date.now();
+    const photo = this.photoRepository.create({
+      id: photoId,
+      projectId: confirmDto.projectId,
+      filename: confirmDto.filename,
+      originalKey: objectKey,
+      previewKey: objectKey, // TODO: 暂时使用原图，后续替换为带水印预览图
+      thumbKey: null, // TODO: 暂时为空，后续生成缩略图后更新
+      fileSize: confirmDto.size,
+      width: null,
+      height: null, // TODO: 后续从 EXIF 或图像处理中提取尺寸
+      status: 'ready',
+      selected: false,
+      selectedAt: null,
+      createdAt: now,
+    });
+
+    await this.photoRepository.save(photo);
+
+    // 4. 更新项目的照片计数
+    await this.projectsService.incrementPhotoCount(confirmDto.projectId);
 
     // 4. 生成各种变体的 URL
     const originalUrl = await this.storageService.generatePrivateDownloadUrl(objectKey, 3600);
