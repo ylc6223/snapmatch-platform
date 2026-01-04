@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Home, LayoutGrid, Image, FolderOpen, Settings, Moon, Sun, User } from 'lucide-react';
+import { Home, LayoutGrid, Image, FolderOpen, Settings, Moon, Sun, User, CreditCard, Bell, LogOut } from 'lucide-react';
 import type { AuthUser } from '@/lib/auth/types';
 import { useThemeTransition } from '@/components/ui/theme-toggle-button';
 import { canAccess } from '@/lib/auth/can';
@@ -13,6 +14,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { withAdminBasePath } from '@/lib/routing/base-path';
+import { apiFetch } from '@/lib/api/client';
 
 // 从主 dashboard 复制的菜单数据类型
 type MenuItem = {
@@ -92,9 +95,20 @@ interface SidebarProps {
  */
 export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const { startTransition } = useThemeTransition();
   const currentTheme = resolvedTheme === "dark" ? "dark" : "light";
+
+  // 退出登录逻辑
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiFetch(withAdminBasePath("/api/auth/logout"), { method: "POST" }).catch(() => null);
+    },
+    onSuccess: () => {
+      router.replace("/login");
+    },
+  });
 
   // 根据用户权限过滤菜单
   const navItems = React.useMemo(() => {
@@ -120,6 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
 
   // 子菜单展开状态管理
   const [expandedMenu, setExpandedMenu] = React.useState<string | null>(null);
+  const [isUserMenuExpanded, setIsUserMenuExpanded] = React.useState(false);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
 
   const toggleMenu = (href: string, e?: React.MouseEvent) => {
@@ -132,6 +147,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
         setExpandedMenu(null);
+        setIsUserMenuExpanded(false);
       }
     };
 
@@ -191,17 +207,79 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
             {currentTheme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
          </button>
 
-         {/* 用户头像（如果有） */}
+         {/* 用户头像菜单（如果有） */}
          {user && (
-           <Link href="/dashboard/settings/accounts" className="relative">
-             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-border hover:border-primary transition-colors flex items-center justify-center bg-primary/10">
-               {user.avatar ? (
-                 <img src={user.avatar} alt={user.name || '用户'} className="w-full h-full object-cover" />
-               ) : (
-                 <User size={18} className="text-primary" />
-               )}
-             </div>
-           </Link>
+           <div className="relative">
+             <Tooltip>
+               <TooltipTrigger asChild>
+                 <button
+                   onClick={() => setIsUserMenuExpanded(!isUserMenuExpanded)}
+                   className="w-9 h-9 rounded-full overflow-hidden border-2 border-border hover:border-primary transition-colors flex items-center justify-center bg-primary/10 hover:ring-2 hover:ring-primary/20"
+                   title="用户菜单"
+                 >
+                   {user.avatar ? (
+                     <img src={user.avatar} alt={user.name || '用户'} className="w-full h-full object-cover" />
+                   ) : (
+                     <User size={18} className="text-primary" />
+                   )}
+                 </button>
+               </TooltipTrigger>
+               <TooltipContent side="right" align="center">
+                 <p>用户菜单</p>
+               </TooltipContent>
+             </Tooltip>
+
+             {/* 用户菜单弹出层 */}
+             {isUserMenuExpanded && (
+               <div className="absolute left-full top-0 ml-2 min-w-[200px] bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xl shadow-black/10 overflow-hidden z-50">
+                 <div className="p-2">
+                   {/* 用户信息头部 */}
+                   <div className="px-3 py-2 border-b border-border mb-2">
+                     <p className="text-sm font-medium">{user.name || '用户'}</p>
+                     <p className="text-xs text-muted-foreground">{user.account || ''}</p>
+                   </div>
+
+                   {/* 菜单项 */}
+                   <Link
+                     href="/dashboard/settings/accounts"
+                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                     onClick={() => setIsUserMenuExpanded(false)}
+                   >
+                     <User size={16} />
+                     <span>账号设置</span>
+                   </Link>
+                   <Link
+                     href="/dashboard/settings/billing"
+                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                     onClick={() => setIsUserMenuExpanded(false)}
+                   >
+                     <CreditCard size={16} />
+                     <span>账单管理</span>
+                   </Link>
+                   <Link
+                     href="/dashboard/settings/notifications"
+                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                     onClick={() => setIsUserMenuExpanded(false)}
+                   >
+                     <Bell size={16} />
+                     <span>通知设置</span>
+                   </Link>
+                   <div className="border-t border-border my-1" />
+                   <button
+                     className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                     onClick={() => {
+                       setIsUserMenuExpanded(false);
+                       logoutMutation.mutate();
+                     }}
+                     disabled={logoutMutation.isPending}
+                   >
+                     <LogOut size={16} />
+                     <span>{logoutMutation.isPending ? '退出中...' : '退出登录'}</span>
+                   </button>
+                 </div>
+               </div>
+             )}
+           </div>
          )}
       </div>
     </nav>
