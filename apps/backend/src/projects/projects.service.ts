@@ -54,9 +54,20 @@ export class ProjectsService {
   async findAll(viewerBaseUrl: string): Promise<ProjectResponseDto[]> {
     const projects = await this.projectRepository.find({
       order: { createdAt: "DESC" },
+      relations: ["photos"], // 加载照片关系
     });
 
-    return projects.map((p) => ProjectResponseDto.fromEntity(p, viewerBaseUrl));
+    // 为每个项目查找第一张照片用于封面
+    const result: ProjectResponseDto[] = [];
+    for (const project of projects) {
+      const firstPhoto = project.photos && project.photos.length > 0
+        ? project.photos.sort((a, b) => a.createdAt - b.createdAt)[0]
+        : undefined;
+
+      result.push(ProjectResponseDto.fromEntity(project, viewerBaseUrl, firstPhoto));
+    }
+
+    return result;
   }
 
   /**
@@ -66,13 +77,21 @@ export class ProjectsService {
     id: string,
     viewerBaseUrl: string,
   ): Promise<ProjectResponseDto> {
-    const project = await this.projectRepository.findOne({ where: { id } });
+    const project = await this.projectRepository.findOne({
+      where: { id },
+      relations: ["photos"], // 加载照片关系
+    });
 
     if (!project) {
       throw new NotFoundException(`项目 ${id} 不存在`);
     }
 
-    return ProjectResponseDto.fromEntity(project, viewerBaseUrl);
+    // 获取第一张照片用于封面
+    const firstPhoto = project.photos && project.photos.length > 0
+      ? project.photos.sort((a, b) => a.createdAt - b.createdAt)[0]
+      : undefined;
+
+    return ProjectResponseDto.fromEntity(project, viewerBaseUrl, firstPhoto);
   }
 
   /**
@@ -82,7 +101,10 @@ export class ProjectsService {
     token: string,
     viewerBaseUrl: string,
   ): Promise<ProjectResponseDto> {
-    const project = await this.projectRepository.findOne({ where: { token } });
+    const project = await this.projectRepository.findOne({
+      where: { token },
+      relations: ["photos"], // 加载照片关系
+    });
 
     if (!project) {
       throw new NotFoundException(`项目不存在`);
@@ -101,7 +123,12 @@ export class ProjectsService {
       throw new ConflictException(`该项目已过期`);
     }
 
-    return ProjectResponseDto.fromEntity(project, viewerBaseUrl);
+    // 获取第一张照片用于封面
+    const firstPhoto = project.photos && project.photos.length > 0
+      ? project.photos.sort((a, b) => a.createdAt - b.createdAt)[0]
+      : undefined;
+
+    return ProjectResponseDto.fromEntity(project, viewerBaseUrl, firstPhoto);
   }
 
   /**
@@ -112,7 +139,10 @@ export class ProjectsService {
     updateProjectDto: UpdateProjectDto,
     viewerBaseUrl: string,
   ): Promise<ProjectResponseDto> {
-    const project = await this.projectRepository.findOne({ where: { id } });
+    const project = await this.projectRepository.findOne({
+      where: { id },
+      relations: ["photos"], // 加载照片关系
+    });
 
     if (!project) {
       throw new NotFoundException(`项目 ${id} 不存在`);
@@ -123,7 +153,12 @@ export class ProjectsService {
 
     const saved = await this.projectRepository.save(project);
 
-    return ProjectResponseDto.fromEntity(saved, viewerBaseUrl);
+    // 获取第一张照片用于封面
+    const firstPhoto = saved.photos && saved.photos.length > 0
+      ? saved.photos.sort((a, b) => a.createdAt - b.createdAt)[0]
+      : undefined;
+
+    return ProjectResponseDto.fromEntity(saved, viewerBaseUrl, firstPhoto);
   }
 
   /**

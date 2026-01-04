@@ -10,19 +10,7 @@ import { bigintMsTransformer } from "./bigint-ms.transformer";
 import { PhotoEntity } from "./photo.entity";
 import { CustomerEntity } from "./customer.entity";
 import { PackageEntity } from "./package.entity";
-
-/**
- * 项目状态枚举
- */
-export enum ProjectStatus {
-  PENDING = "pending", // 待选片
-  SELECTING = "selecting", // 选片中
-  SUBMITTED = "submitted", // 已提交
-  RETOUCHING = "retouching", // 修图中
-  PENDING_CONFIRMATION = "pending_confirmation", // 待确认
-  DELIVERED = "delivered", // 已交付
-  CANCELLED = "cancelled", // 已取消
-}
+import { ProjectStatus } from "@snapmatch/shared-types";
 
 @Entity({ name: "projects" })
 export class ProjectEntity {
@@ -99,6 +87,12 @@ export class ProjectEntity {
    */
   @Column({ name: "photoCount", type: "int", default: 0 })
   photoCount!: number;
+
+  /**
+   * 项目封面图（存储 Key，为空时使用第一张照片）
+   */
+  @Column({ name: "coverImage", type: "varchar", length: 512, nullable: true })
+  coverImage!: string | null;
 
   /**
    * 创建时间（时间戳）
