@@ -48,7 +48,12 @@ export class ViewerService {
   async getPhotosByProjectId(
     projectId: string,
     customerId: string,
-  ): Promise<PhotoEntity[]> {
+  ): Promise<Array<PhotoEntity & {
+      liked: boolean;
+      inAlbum: boolean;
+      retouch: boolean;
+      markedAt: number | null;
+    }>> {
     const photos = await this.photoRepository.find({
       where: { projectId },
       order: { createdAt: "DESC" },
@@ -72,12 +77,7 @@ export class ViewerService {
         retouch: selectionItem?.flags.includes(PhotoFlag.RETOUCH) || false,
         markedAt: selectionItem?.markedAt || null,
       };
-    }) as typeof photo & {
-      liked: boolean;
-      inAlbum: boolean;
-      retouch: boolean;
-      markedAt: number | null;
-    };
+    });
   }
 
   /**

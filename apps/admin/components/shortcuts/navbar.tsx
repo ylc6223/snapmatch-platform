@@ -1,9 +1,32 @@
+"use client";
+
 import React from 'react';
 import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CommandInput } from '@/components/ui/command';
+import { SearchInput, SearchResult } from '@/components/ui/search-input';
+import { toast } from 'sonner';
 
 export function Navbar() {
+  const router = useRouter();
+
+  const handleSearchSelect = (item: SearchResult) => {
+    // 显示选中的项目信息
+    toast.success(`已选择项目: ${item.name}`, {
+      description: `客户: ${item.customerName || '未知'} | 状态: ${item.status}`,
+      action: {
+        label: '查看项目',
+        onClick: () => {
+          // TODO: 跳转到项目详情页
+          // router.push(`/dashboard/projects/${item.id}`);
+          console.log('跳转到项目:', item.id);
+        },
+      },
+    });
+
+    console.log('选中的项目:', item);
+  };
+
   return (
     <nav className="flex items-center justify-between px-8 py-4 bg-background sticky top-0 z-50 border-b border-border">
       {/* Left: Logo placeholder */}
@@ -11,10 +34,9 @@ export function Navbar() {
 
       {/* Center: Search */}
       <div className="flex-1 max-w-xl mx-8">
-        <CommandInput
+        <SearchInput
           placeholder="搜索项目、客户或照片..."
-          className="h-10 bg-primary/5 dark:bg-primary/10 border border-border focus-within:bg-background focus-within:border-primary/30 rounded-md"
-          wrapperClassName="border-0 px-3 gap-2"
+          onSelect={handleSearchSelect}
         />
       </div>
 

@@ -6,6 +6,7 @@ import { ProjectEntity, ProjectStatus } from "../database/entities/project.entit
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectResponseDto } from "./dto/project-response.dto";
+import { SearchProjectDto, SearchResponseDto, SearchResultItemDto } from "./dto/search-project.dto";
 
 @Injectable()
 export class ProjectsService {
@@ -150,5 +151,40 @@ export class ProjectsService {
    */
   async decrementPhotoCount(projectId: string): Promise<void> {
     await this.projectRepository.decrement({ id: projectId }, "photoCount", 1);
+  }
+
+  /**
+   * 搜索项目（按项目名称或客户名称）
+   */
+  async search(
+    searchDto: SearchProjectDto,
+    viewerBaseUrl: string,
+  ): Promise<SearchResponseDto> {
+    const { query, limit = 10 } = searchDto;
+
+    // 使用 QueryBuilder 实现模糊搜索
+    const queryBuilder = this.projectRepository
+      .createQueryBuilder("project")
+      .leftJoinAndSelect("project.customer", "customer")
+      .where("(project.name LIKE :query OR customer.name LIKE :query)", {
+        query: `%${query}%`,
+      })
+      .orderBy("project.createdAt", "DESC")
+      .limit(limit);
+
+    const [projects, total] = await queryBuilder.getManyAndCount();
+
+    const results: SearchResultItemDto[] = projects.map((project) => ({
+      id: project.id,
+      name: project.name,
+      customerName: project.customer?.name,
+      status: project.status,
+      viewerUrl: `${viewerBaseUrl}/viewer/${project.token}`,
+    }));
+
+    return {
+      results,
+      total,
+    };
   }
 }

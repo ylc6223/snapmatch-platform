@@ -3,7 +3,6 @@ import { Injectable } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { Role } from "../auth/types";
-import { UserStatus } from "../database/entities/rbac-user.entity";
 import { RbacPermissionEntity } from "../database/entities/rbac-permission.entity";
 import { RbacRolePermissionEntity } from "../database/entities/rbac-role-permission.entity";
 import { RbacRoleEntity } from "../database/entities/rbac-role.entity";

@@ -42,12 +42,7 @@ export class ViewerController {
       project.customerId,
     );
 
-    return photos.map((photo: typeof photo & {
-      liked: boolean;
-      inAlbum: boolean;
-      retouch: boolean;
-      markedAt: number | null;
-    }) => ({
+    return photos.map((photo) => ({
       id: photo.id,
       filename: photo.filename,
       previewKey: photo.previewKey,

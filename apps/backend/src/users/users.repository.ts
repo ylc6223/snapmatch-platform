@@ -1,4 +1,5 @@
 import type { Role } from "../auth/types";
+import { UserStatus } from "../database/entities/rbac-user.entity";
 
 // 用户领域模型（最小化）：用于认证与权限控制。
 export type User = {
@@ -8,8 +9,6 @@ export type User = {
   roles: Role[];
   permissions: string[];
 };
-
-export type UserStatus = 0 | 1;
 
 export type UserRoleInfo = {
   code: Role;
