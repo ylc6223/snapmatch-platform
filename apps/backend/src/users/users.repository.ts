@@ -17,14 +17,13 @@ export type UserRoleInfo = {
 };
 
 export type AdminUser = Omit<User, "passwordHash"> & {
-  userType: string;
   status: UserStatus;
 };
 
 export type ListUsersInput = {
   query?: string | null;
   status?: UserStatus | null;
-  sortBy?: "account" | "userType" | "status" | null;
+  sortBy?: "account" | "status" | null;
   sortOrder?: "asc" | "desc" | null;
   page: number;
   pageSize: number;
@@ -40,17 +39,15 @@ export type ListUsersResult = {
 export type CreateUserInput = {
   account: string;
   passwordHash: string;
-  userType: string;
-  status: UserStatus;
   roleCodes: Role[];
+  status: UserStatus;
 };
 
 export type UpdateUserInput = {
   id: string;
   passwordHash?: string | null;
-  userType?: string | null;
-  status?: UserStatus | null;
   roleCodes?: Role[] | null;
+  status?: UserStatus | null;
 };
 
 // 用户仓库接口：用于隔离存储层（MySQL/未来其它实现）。

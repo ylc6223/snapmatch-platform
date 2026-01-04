@@ -57,7 +57,6 @@ export class MySqlUsersRepository implements UsersRepository {
       .createQueryBuilder("u")
       .select("u.id", "id")
       .addSelect("u.account", "account")
-      .addSelect("u.userType", "userType")
       .addSelect("u.status", "status")
       .addSelect("GROUP_CONCAT(DISTINCT r.code)", "roles")
       .addSelect("GROUP_CONCAT(DISTINCT p.code)", "permissions")
@@ -75,16 +74,16 @@ export class MySqlUsersRepository implements UsersRepository {
     const accountValue = typeof row.account === "string" ? row.account : "";
     if (!userId || !accountValue) return null;
 
-    const userType = typeof row.userType === "string" ? row.userType : "";
     const statusValue = toNumber(row.status) === 1 ? 1 : 0;
+    const roles = toRoles(row.roles);
+    const permissions = splitCsv(row.permissions);
 
     return {
       id: userId,
       account: accountValue,
-      userType,
       status: statusValue,
-      roles: toRoles(row.roles),
-      permissions: splitCsv(row.permissions),
+      roles,
+      permissions,
     };
   }
 
@@ -165,7 +164,6 @@ export class MySqlUsersRepository implements UsersRepository {
 
     const allowedSortBy: Record<NonNullable<ListUsersInput["sortBy"]>, string> = {
       account: "u.account",
-      userType: "u.userType",
       status: "u.status",
     };
     const sortBy = input.sortBy ?? null;
@@ -176,7 +174,6 @@ export class MySqlUsersRepository implements UsersRepository {
       .createQueryBuilder("u")
       .select("u.id", "id")
       .addSelect("u.account", "account")
-      .addSelect("u.userType", "userType")
       .addSelect("u.status", "status")
       .addSelect("GROUP_CONCAT(DISTINCT r.code)", "roles")
       .addSelect("GROUP_CONCAT(DISTINCT p.code)", "permissions")
@@ -210,12 +207,10 @@ export class MySqlUsersRepository implements UsersRepository {
         const id = typeof row.id === "string" ? row.id : "";
         const accountValue = typeof row.account === "string" ? row.account : "";
         if (!id || !accountValue) return null;
-        const userType = typeof row.userType === "string" ? row.userType : "";
         const statusValue = toNumber(row.status) === 1 ? 1 : 0;
         return {
           id,
           account: accountValue,
-          userType,
           status: statusValue,
           roles: toRoles(row.roles),
           permissions: splitCsv(row.permissions),
@@ -227,20 +222,12 @@ export class MySqlUsersRepository implements UsersRepository {
   }
 
   async listRoles(): Promise<UserRoleInfo[]> {
-    const allowed = new Set<string>(Object.values(Role));
-    const records = await this.roles.find({
-      where: { status: 1 },
-      order: { code: "ASC" },
-    });
-    return records
-      .map((record) => {
-        const code = record.code;
-        const name = record.name;
-        if (typeof code !== "string" || typeof name !== "string") return null;
-        if (!allowed.has(code)) return null;
-        return { code: code as Role, name } satisfies UserRoleInfo;
-      })
-      .filter((v): v is UserRoleInfo => Boolean(v));
+    return [
+      { code: Role.Admin, name: "管理员" },
+      { code: Role.Photographer, name: "摄影师" },
+      { code: Role.Sales, name: "销售" },
+      { code: Role.Customer, name: "客户" },
+    ];
   }
 
   private async setUserRoles(userId: string, roleCodes: Role[]) {
@@ -297,7 +284,6 @@ export class MySqlUsersRepository implements UsersRepository {
       id: createdId,
       account: normalizedAccount,
       passwordHash: input.passwordHash,
-      userType: input.userType,
       status: input.status,
       createdAt: now,
       updatedAt: now,
@@ -314,9 +300,6 @@ export class MySqlUsersRepository implements UsersRepository {
     const patch: Partial<RbacUserEntity> = {};
     if (typeof input.passwordHash === "string" && input.passwordHash.trim().length > 0) {
       patch.passwordHash = input.passwordHash;
-    }
-    if (typeof input.userType === "string") {
-      patch.userType = input.userType;
     }
     if (input.status === 0 || input.status === 1) {
       patch.status = input.status;

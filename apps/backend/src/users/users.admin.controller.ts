@@ -45,9 +45,8 @@ export class UsersAdminController {
     return this.users.createUser({
       account: dto.account,
       password: dto.password,
-      userType: dto.userType ?? "sales",
+      roleCodes: dto.roleCodes,
       status: dto.status ?? 1,
-      roleCodes: dto.roleCodes ?? [],
     });
   }
 
@@ -57,9 +56,8 @@ export class UsersAdminController {
     const updated = await this.users.updateUser({
       id,
       password: dto.password ?? null,
-      userType: dto.userType ?? null,
-      status: dto.status ?? null,
       roleCodes: dto.roleCodes ?? null,
+      status: dto.status ?? null,
     });
     if (!updated) throw new NotFoundException({ code: 404, message: "用户不存在" });
     return updated;

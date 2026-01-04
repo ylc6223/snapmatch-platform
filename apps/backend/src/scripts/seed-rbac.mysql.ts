@@ -17,7 +17,7 @@ type SeedUser = {
   envType: EnvType;
   account: string;
   passwordHash: string;
-  userType: "photographer" | "sales" | "customer";
+  roleCodes: ("admin" | "photographer" | "sales" | "customer")[];
   status: number;
 };
 
@@ -187,7 +187,7 @@ async function upsertUser(repo: Repository<RbacUserEntity>, user: SeedUser): Pro
   if (existing) {
     await repo.update(
       { id: existing.id },
-      { passwordHash: user.passwordHash, userType: user.userType, status: user.status, updatedAt: now },
+      { passwordHash: user.passwordHash, status: user.status, updatedAt: now },
     );
     return (await repo.findOneOrFail({ where: { id: existing.id } })) as RbacUserEntity;
   }
@@ -195,7 +195,6 @@ async function upsertUser(repo: Repository<RbacUserEntity>, user: SeedUser): Pro
     id: generateId34Safe(),
     account,
     passwordHash: user.passwordHash,
-    userType: user.userType,
     status: user.status,
     createdAt: now,
     updatedAt: now,
@@ -270,10 +269,10 @@ async function main() {
   const visitorHash = await resolvePasswordHash("visitor");
 
   const seedUsers: SeedUser[] = [
-    { envType: "admin", account: "admin", passwordHash: adminHash, userType: "photographer", status: 1 },
-    { envType: "photographer", account: "photographer", passwordHash: photographerHash, userType: "photographer", status: 1 },
-    { envType: "sales", account: "sales", passwordHash: salesHash, userType: "sales", status: 1 },
-    { envType: "visitor", account: "visitor", passwordHash: visitorHash, userType: "customer", status: 1 },
+    { envType: "admin", account: "admin", passwordHash: adminHash, roleCodes: ["admin"], status: 1 },
+    { envType: "photographer", account: "photographer", passwordHash: photographerHash, roleCodes: ["photographer"], status: 1 },
+    { envType: "sales", account: "sales", passwordHash: salesHash, roleCodes: ["sales"], status: 1 },
+    { envType: "visitor", account: "visitor", passwordHash: visitorHash, roleCodes: ["customer"], status: 1 },
   ];
 
   const ds = buildDataSource();

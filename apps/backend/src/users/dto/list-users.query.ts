@@ -26,12 +26,12 @@ export class ListUsersQuery {
   @IsIn([0, 1])
   status?: 0 | 1;
 
-  @ApiPropertyOptional({ description: "排序字段", enum: ["account", "userType", "status"], example: "account" })
+  @ApiPropertyOptional({ description: "排序字段", enum: ["account", "status"], example: "account" })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
-  @IsIn(["account", "userType", "status"])
-  sortBy?: "account" | "userType" | "status";
+  @IsIn(["account", "status"])
+  sortBy?: "account" | "status";
 
   @ApiPropertyOptional({ description: "排序方向", enum: ["asc", "desc"], example: "asc" })
   @IsOptional()
