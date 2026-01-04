@@ -1,12 +1,14 @@
 import React from 'react';
 import { FileImage } from 'lucide-react';
-import { Project } from '@/app/dashboard/shortcuts/data';
+import { Project, statusColors } from '@/app/dashboard/shortcuts/data';
 
 interface ProjectCardProps {
   project: Project;
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const statusColor = statusColors[project.status];
+
   return (
     <div className="group flex flex-col gap-3 cursor-pointer">
       {/* Image Area - No hover lift */}
@@ -29,7 +31,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         <div className="flex items-center gap-2 mt-1.5">
            <span className="text-xs font-medium text-muted-foreground">{project.type}</span>
-           <span className="text-[10px] text-muted-foreground/30">●</span>
+           <span className={`text-[10px] ${statusColor}`}>●</span>
            <span className="text-xs text-muted-foreground font-medium">{project.date}</span>
         </div>
       </div>

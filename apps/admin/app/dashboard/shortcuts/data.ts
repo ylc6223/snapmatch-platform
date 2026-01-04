@@ -9,6 +9,41 @@ export enum ProjectStatus {
   CANCELLED = 'cancelled',              // 已取消
 }
 
+// Status color mapping for visual indicators
+export const statusColors: Record<ProjectStatus, string> = {
+  // 待选片 - 琥珀色 (警告/等待)
+  [ProjectStatus.PENDING]: 'text-amber-500',
+
+  // 选片中 - 蓝色 (进行中/活跃)
+  [ProjectStatus.SELECTING]: 'text-blue-500',
+
+  // 已提交 - 靛蓝色 (已提交待处理)
+  [ProjectStatus.SUBMITTED]: 'text-indigo-500',
+
+  // 修图中 - 青色 (修图工作)
+  [ProjectStatus.RETOUCHING]: 'text-cyan-500',
+
+  // 待确认 - 橙色 (需要用户确认)
+  [ProjectStatus.PENDING_CONFIRMATION]: 'text-orange-500',
+
+  // 已交付 - 绿色 (成功完成)
+  [ProjectStatus.DELIVERED]: 'text-green-500',
+
+  // 已取消 - 灰色 (无效状态)
+  [ProjectStatus.CANCELLED]: 'text-gray-400',
+};
+
+// Status label mapping for Chinese display
+export const statusLabels: Record<ProjectStatus, string> = {
+  [ProjectStatus.PENDING]: '待选片',
+  [ProjectStatus.SELECTING]: '选片中',
+  [ProjectStatus.SUBMITTED]: '已提交',
+  [ProjectStatus.RETOUCHING]: '修图中',
+  [ProjectStatus.PENDING_CONFIRMATION]: '待确认',
+  [ProjectStatus.DELIVERED]: '已交付',
+  [ProjectStatus.CANCELLED]: '已取消',
+};
+
 export interface Project {
   id: string;
   title: string;
