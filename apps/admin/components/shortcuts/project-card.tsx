@@ -10,7 +10,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div className="group flex flex-col gap-3 cursor-pointer">
       {/* Image Area - No hover lift */}
-      <div className="relative aspect-[16/10] overflow-hidden rounded-md bg-gray-100 border border-gray-100">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-md bg-muted border border-border">
         <img
           src={project.coverImage}
           alt={project.title}
@@ -22,15 +22,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
       {/* Content Area - Minimal */}
       <div className="flex flex-col px-0.5">
         <div className="flex items-start justify-between gap-4">
-            <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-black transition-colors">
+            <h3 className="text-base font-bold text-foreground leading-tight group-hover:text-foreground transition-colors">
                 {project.title}
             </h3>
         </div>
 
         <div className="flex items-center gap-2 mt-1.5">
-           <span className="text-xs font-medium text-gray-500">{project.type}</span>
-           <span className="text-[10px] text-gray-300">●</span>
-           <span className="text-xs text-gray-400 font-medium">{project.date}</span>
+           <span className="text-xs font-medium text-muted-foreground">{project.type}</span>
+           <span className="text-[10px] text-muted-foreground/30">●</span>
+           <span className="text-xs text-muted-foreground font-medium">{project.date}</span>
         </div>
       </div>
     </div>

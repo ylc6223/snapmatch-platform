@@ -17,11 +17,11 @@ export function FeaturedProjects() {
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6 px-1">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
           <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
           精选 & 活跃项目
         </h2>
-        <button className="text-sm font-medium text-gray-500 hover:text-black flex items-center gap-1 transition-colors">
+        <button className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
           查看全部 <ArrowRight size={16} />
         </button>
       </div>
@@ -65,8 +65,8 @@ export function FeaturedProjects() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden md:flex invisible opacity-0 group-hover/carousel:visible group-hover/carousel:opacity-100 transition-all duration-300 left-2 top-1/2 -translate-y-1/2 h-16 w-10 bg-white/90 hover:bg-white text-gray-900 border-0 shadow-lg rounded-lg" />
-        <CarouselNext className="hidden md:flex invisible opacity-0 group-hover/carousel:visible group-hover/carousel:opacity-100 transition-all duration-300 right-2 top-1/2 -translate-y-1/2 h-16 w-10 bg-white/90 hover:bg-white text-gray-900 border-0 shadow-lg rounded-lg" />
+        <CarouselPrevious className="hidden md:flex invisible opacity-0 group-hover/carousel:visible group-hover/carousel:opacity-100 transition-all duration-300 left-2 top-1/2 -translate-y-1/2 h-16 w-10 bg-background/90 backdrop-blur-sm hover:bg-background text-foreground border border-border shadow-lg rounded-lg" />
+        <CarouselNext className="hidden md:flex invisible opacity-0 group-hover/carousel:visible group-hover/carousel:opacity-100 transition-all duration-300 right-2 top-1/2 -translate-y-1/2 h-16 w-10 bg-background/90 backdrop-blur-sm hover:bg-background text-foreground border border-border shadow-lg rounded-lg" />
       </Carousel>
     </section>
   );

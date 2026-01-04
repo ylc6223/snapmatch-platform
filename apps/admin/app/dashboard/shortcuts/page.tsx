@@ -7,16 +7,18 @@ import { FilterBar } from '@/components/shortcuts/filter-bar';
 import { ProjectGrid } from '@/components/shortcuts/project-grid';
 
 export default function Page() {
+  const [activeFilter, setActiveFilter] = React.useState('全部');
+
   return (
-    <div className="min-h-screen bg-gray-50/50 font-sans text-gray-900 selection:bg-gray-200">
+    <div className="min-h-screen font-sans text-foreground bg-background selection:bg-accent selection:text-accent-foreground">
       <Navbar />
 
       <main className="max-w-[1600px] mx-auto px-6 sm:px-8">
         <FeaturedProjects />
 
         <div className="mt-2">
-          <FilterBar />
-          <ProjectGrid />
+          <FilterBar activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <ProjectGrid activeFilter={activeFilter} />
         </div>
       </main>
     </div>
