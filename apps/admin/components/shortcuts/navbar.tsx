@@ -1,7 +1,7 @@
 import React from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { CommandInput } from '@/components/ui/command';
 
 export function Navbar() {
   return (
@@ -10,14 +10,12 @@ export function Navbar() {
       <div className="w-40"></div>
 
       {/* Center: Search */}
-      <div className="flex-1 max-w-xl mx-8 relative">
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 group-focus-within:text-foreground transition-colors" />
-          <Input
-            className="w-full pl-10 bg-primary/5 dark:bg-primary/10 border border-border focus:bg-background focus:border-primary/30 transition-all rounded-md h-10"
-            placeholder="搜索项目、客户或照片..."
-          />
-        </div>
+      <div className="flex-1 max-w-xl mx-8">
+        <CommandInput
+          placeholder="搜索项目、客户或照片..."
+          className="h-10 bg-primary/5 dark:bg-primary/10 border border-border focus-within:bg-background focus-within:border-primary/30 rounded-md"
+          wrapperClassName="border-0 px-3 gap-2"
+        />
       </div>
 
       {/* Right: Actions */}
