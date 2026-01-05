@@ -75,9 +75,8 @@ jobs:
       # ========== Backend 构建与部署 ==========
 
       - name: 构建 Backend Docker 镜像
-        working-directory: apps/backend
         run: |
-          docker build -t snapmatch-backend:${{ github.ref_name }} .
+          docker build -f apps/backend/Dockerfile -t snapmatch-backend:${{ github.ref_name }} .
           docker tag snapmatch-backend:${{ github.ref_name }} snapmatch-backend:latest
 
       - name: 保存 Docker 镜像
