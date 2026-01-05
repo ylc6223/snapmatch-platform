@@ -3,12 +3,12 @@ import Link from "next/link";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { page_routes } from "@/lib/routes-config";
-import Anchor from "../anchor";
+import Anchor from "../shared/anchor";
 import Logo from "./logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import Icon from "../icon";
+import Icon from "../shared/icon";
 import { ChevronDown, LockIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
 

@@ -14,9 +14,9 @@ interface DashboardLayoutClientProps {
     href: string;
     label: string;
     meta: {
-      affixTab?: boolean;
-      closable?: boolean;
-      keepAlive?: boolean;
+      affixTab?: boolean | undefined;
+      closable?: boolean | undefined;
+      keepAlive?: boolean | undefined;
     };
   }>;
   children: React.ReactNode;
@@ -50,7 +50,7 @@ export function DashboardLayoutClient({
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar user={user} />
       <SidebarInset className="flex-1 min-h-0 overflow-hidden">
-        <SiteHeader tabbarRoutes={tabs} />
+        <SiteHeader tabbarRoutes={tabs as any} />
         <div className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain">
           <main className="flex flex-col gap-4 p-4 pt-0">{children}</main>
         </div>

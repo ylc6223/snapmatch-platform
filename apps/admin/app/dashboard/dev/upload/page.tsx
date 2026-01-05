@@ -181,7 +181,7 @@ export default function Page() {
         },
       );
 
-      const result = response.data || response;
+      const result = response;
       setIncompleteUploads(result.uploads || []);
       setDirectoryUploads(groupUploadsByDirectory(result.uploads || []));
       setShowUploadsList(true);
@@ -228,7 +228,7 @@ export default function Page() {
         },
       );
 
-      const result = response.data || response;
+      const result = response;
       setCleanupResult(result);
 
       const filterDesc = minThreshold

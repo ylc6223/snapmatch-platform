@@ -120,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   // 根据用户权限过滤菜单
   const navItems = React.useMemo(() => {
     if (!user) return [];
-    return DASHBOARD_NAV_ITEMS.filter((item) => canAccess(user, item));
+    return DASHBOARD_NAV_ITEMS.filter((item) => canAccess(user, item as any));
   }, [user]);
 
   // 判断当前路由是否激活
@@ -191,10 +191,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
           return (
             <NavItem
               key={item.url}
-              icon={<Icon size={20} />}
+              icon={Icon ? <Icon className="w-5 h-5" /> : undefined}
               label={item.title}
               href={item.url}
-              subItems={item.items}
+              subItems={item.items?.map(i => ({ title: i.title, href: i.url }))}
               active={isActive(item.url)}
               isExpanded={expandedMenu === item.url}
               onToggle={(e) => toggleMenu(item.url, e)}
@@ -229,11 +229,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
                    className="w-9 h-9 rounded-full overflow-hidden border-2 border-border hover:border-primary transition-colors flex items-center justify-center bg-primary/10 hover:ring-2 hover:ring-primary/20"
                    title="用户菜单"
                  >
-                   {user.avatar ? (
-                     <img src={user.avatar} alt={user.name || '用户'} className="w-full h-full object-cover" />
-                   ) : (
-                     <User size={18} className="text-primary" />
-                   )}
+                   <User size={18} className="text-primary" />
                  </button>
                </TooltipTrigger>
                <TooltipContent side="right" align="center">
@@ -247,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
                  <div className="p-2">
                    {/* 用户信息头部 */}
                    <div className="px-3 py-2 border-b border-border mb-2">
-                     <p className="text-sm font-medium">{user.name || '用户'}</p>
+                     <p className="text-sm font-medium">用户</p>
                      <p className="text-xs text-muted-foreground">{user.account || ''}</p>
                    </div>
 
