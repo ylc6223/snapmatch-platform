@@ -38,15 +38,29 @@ RUN pnpm --filter @snapmatch/backend build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# 安装 pnpm
+RUN corepack enable pnpm
+
 # 创建非 root 用户 (安全最佳实践)
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
-USER nestjs
+
+# 复制 monorepo 配置文件
+COPY --from=build --chown=nestjs:nodejs /app/package.json ./package.json
+COPY --from=build --chown=nestjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# 复制 backend 的 package.json
+COPY --from=build --chown=nestjs:nodejs /app/apps/backend/package.json ./apps/backend/package.json
+
+# 安装生产依赖（需要 root 权限）
+USER root
+RUN pnpm install --prod --frozen-lockfile
 
 # 复制构建产物
-COPY --from=build --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=build --chown=nestjs:nodejs /app/node_modules ./node_modules
-COPY --from=build --chown=nestjs:nodejs /app/package.json ./
+COPY --from=build --chown=nestjs:nodejs /app/apps/backend/dist ./dist
+
+# 切换到非 root 用户
+USER nestjs
 
 # 环境变量 (运行时通过 --env-file 注入)
 ENV NODE_ENV=production
