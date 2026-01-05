@@ -4,7 +4,7 @@ WORKDIR /app
 RUN corepack enable pnpm
 
 # 复制 monorepo 根目录的依赖文件
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
@@ -20,7 +20,7 @@ RUN corepack enable pnpm
 COPY --from=deps /app/node_modules ./node_modules
 
 # 复制 monorepo 配置文件（必需）
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
 
 # 复制源码
 COPY apps/backend ./apps/backend
@@ -45,12 +45,20 @@ RUN corepack enable pnpm
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# 复制生产依赖（从 build 阶段）
-COPY --from=build --chown=nestjs:nodejs /app/node_modules ./node_modules
+# 复制 monorepo 配置文件和 package.json
+COPY --from=build --chown=nestjs:nodejs /app/package.json ./package.json
+COPY --from=build --chown=nestjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=build --chown=nestjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=build --chown=nestjs:nodejs /app/apps/backend/package.json ./apps/backend/package.json
+COPY --from=build --chown=nestjs:nodejs /app/packages/shared-types/package.json ./packages/shared-types/package.json
 
 # 复制构建产物
+COPY --from=build --chown=nestjs:nodejs /app/packages/shared-types/dist ./packages/shared-types/dist
 COPY --from=build --chown=nestjs:nodejs /app/apps/backend/dist ./dist
-COPY --from=build --chown=nestjs:nodejs /app/apps/backend/package.json ./package.json
+
+# 重新安装生产依赖（避免符号链接问题）
+USER root
+RUN pnpm install --prod --frozen-lockfile --no-optional
 
 # 切换到非 root 用户
 USER nestjs
