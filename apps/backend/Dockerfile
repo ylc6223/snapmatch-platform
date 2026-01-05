@@ -47,22 +47,23 @@ RUN corepack enable pnpm
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# 复制 monorepo 配置文件和所有 package.json（pnpm 需要验证完整工作区）
+# 复制 monorepo 配置文件
 COPY --from=build --chown=nestjs:nodejs /app/package.json ./package.json
 COPY --from=build --chown=nestjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=build --chown=nestjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# 复制所有工作区的 package.json（pnpm workspace 需要）
 COPY --from=build --chown=nestjs:nodejs /app/apps/web/package.json ./apps/web/package.json
 COPY --from=build --chown=nestjs:nodejs /app/apps/admin/package.json ./apps/admin/package.json
 COPY --from=build --chown=nestjs:nodejs /app/apps/backend/package.json ./apps/backend/package.json
 COPY --from=build --chown=nestjs:nodejs /app/packages/shared-types/package.json ./packages/shared-types/package.json
 
+# 复制 node_modules（从 deps 阶段，已包含所有依赖）
+COPY --from=deps --chown=nestjs:nodejs /app/node_modules ./node_modules
+
 # 复制构建产物
 COPY --from=build --chown=nestjs:nodejs /app/packages/shared-types/dist ./packages/shared-types/dist
 COPY --from=build --chown=nestjs:nodejs /app/apps/backend/dist ./dist
-
-# 重新安装生产依赖（避免符号链接问题）
-USER root
-RUN pnpm install --prod --no-optional
 
 # 切换到非 root 用户
 USER nestjs
