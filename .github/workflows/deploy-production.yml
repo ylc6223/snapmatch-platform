@@ -117,7 +117,7 @@ jobs:
           rsync -az --info=progress2 --partial --append-verify \
             -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
             snapmatch-platform-src.tar.gz snapmatch-platform-src.tar.gz.sha256 \
-            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/snapmatch-platform-src.tar.gz"
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
 
       - name: 在服务器上构建并启动 Backend
         uses: appleboy/ssh-action@v1.0.3
@@ -145,10 +145,14 @@ jobs:
 
             if [ ! -f "$SRC_TAR" ]; then
               echo "❌ 源码包不存在：$SRC_TAR（rsync 上传失败）"
+              echo "→ /tmp 目录文件列表（排查上传位置/权限）:"
+              ls -lah /tmp | tail -n 50 || true
               exit 1
             fi
             if [ ! -f "$SRC_SHA" ]; then
               echo "❌ 校验文件不存在：$SRC_SHA（rsync 上传失败）"
+              echo "→ /tmp 目录文件列表（排查上传位置/权限）:"
+              ls -lah /tmp | tail -n 50 || true
               exit 1
             fi
 
