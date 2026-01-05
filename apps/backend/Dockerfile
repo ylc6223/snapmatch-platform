@@ -3,8 +3,16 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 RUN corepack enable pnpm
 
-# 复制所有源码和配置文件
+# 复制 monorepo 配置和 lockfile
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+
+# 复制所有工作区的 package.json（pnpm 需要它们来正确解析工作区依赖）
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/admin/package.json ./apps/admin/package.json
+COPY apps/backend/package.json ./apps/backend/package.json
+COPY packages/shared-types/package.json ./packages/shared-types/package.json
+
+# 复制需要构建的源码
 COPY apps/backend ./apps/backend
 COPY packages/shared-types ./packages/shared-types
 
