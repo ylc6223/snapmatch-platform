@@ -8,8 +8,9 @@ on:
 env:
   NODE_VERSION: 20
   PNPM_VERSION: 10
-  # ⚠️ 1Panel 部署路径配置 - 请根据实际域名修改
-  SITE_DOMAIN: www.thepexels.art # 替换为你的实际域名
+  # ✅ 使用 GitHub Secrets 配置部署路径，支持灵活切换域名/IP
+  # 在 GitHub Settings → Secrets → 添加 SITE_DOMAIN 和 API_BASE_URL
+  SITE_DOMAIN: ${{ secrets.SITE_DOMAIN || 'www.thepexels.art' }}
   PANEL_BASE_PATH: /opt/1panel/apps/openresty/openresty/www/sites
 
 jobs:
@@ -290,7 +291,7 @@ jobs:
       - name: 构建 Admin (Standalone 模式)
         run: pnpm -C apps/admin build
         env:
-          NEXT_PUBLIC_API_BASE_URL: https://www.thepexels.art/api
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.API_BASE_URL || 'https://www.thepexels.art/api' }}
 
       - name: 打包 Standalone 文件
         run: |
