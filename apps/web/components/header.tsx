@@ -20,7 +20,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const indicatorRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLDivElement>(null)
-  const resizeTimerRef = useRef<NodeJS.Timeout>()
+  const resizeTimerRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   // 使用 requestAnimationFrame 优化的更新函数
   const updateIndicator = useCallback((element: Element & HTMLElement) => {
@@ -67,7 +67,7 @@ export function Header() {
       resizeTimerRef.current = setTimeout(() => {
         const hoveredLink = document.querySelector('a[data-hovered="true"]')
         if (hoveredLink) {
-          updateIndicator(hoveredLink)
+          updateIndicator(hoveredLink as HTMLElement)
         }
       }, 100)
     }

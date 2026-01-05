@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, useInView } from "motion/react"
+import { motion, useInView, type Variants } from "motion/react"
 import { useRef } from "react"
 import { fadeIn, fadeInUp, fadeInLeft, fadeInRight, scaleIn } from "@/lib/animations"
 
