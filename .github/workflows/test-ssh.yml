@@ -1,0 +1,27 @@
+name: Test SSH Connection
+
+on:
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  test-ssh:
+    name: 测试 SSH 连接
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 测试 SSH 连接
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            echo "✅ SSH 连接成功！"
+            echo "当前用户: $(whoami)"
+            echo "当前目录: $(pwd)"
+            echo "主机名: $(hostname)"
+            echo "Docker 版本: $(docker --version)"
+            echo ""
+            echo "检查目录权限:"
+            ls -la /opt/1panel/apps/snapmatch/ 2>/dev/null || echo "目录不存在，需要创建"
