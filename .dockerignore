@@ -49,13 +49,26 @@ LICENSE
 tmp
 *.tsbuildinfo
 
-# 不需要的前端应用
-apps/web
-apps/admin
+# 前端应用源码（但保留 package.json 供 workspace 验证）
+apps/web/src
+apps/web/public
+apps/web/.next
+apps/web/out
+apps/web/node_modules
+apps/web/*.config.js
+apps/web/*.config.ts
+apps/web/tailwind.config.ts
+!apps/web/package.json
 
-# 只构建 backend 需要的包
-!apps/backend
-!packages/shared-types
+apps/admin/src
+apps/admin/public
+apps/admin/.next
+apps/admin/out
+apps/admin/node_modules
+apps/admin/*.config.js
+apps/admin/*.config.ts
+apps/admin/tailwind.config.ts
+!apps/admin/package.json
 
 # CI/CD
 .github
