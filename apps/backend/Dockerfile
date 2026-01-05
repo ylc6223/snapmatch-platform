@@ -8,12 +8,19 @@ ENV CI=1
 ENV HUSKY=0
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-# 复制 monorepo 配置和 lockfile（注意：不复制全仓源码，确保缓存命中）
+# 复制 pnpm 配置（本仓库使用 workspace 独立 lockfile）
+COPY .npmrc ./
+
+# 复制 monorepo 配置和根 lockfile（注意：不复制全仓源码，确保缓存命中）
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
 # 仅复制 Backend 与其 workspace 依赖的 package.json
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY packages/shared-types/package.json ./packages/shared-types/package.json
+
+# 复制对应 workspace 的 lockfile（shared-workspace-lockfile=false）
+COPY apps/backend/pnpm-lock.yaml ./apps/backend/pnpm-lock.yaml
+COPY packages/shared-types/pnpm-lock.yaml ./packages/shared-types/pnpm-lock.yaml
 
 # 只安装 @snapmatch/backend 及其依赖（包含 @snapmatch/shared-types），并启用 pnpm store 缓存
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
@@ -51,9 +58,14 @@ ENV CI=1
 ENV HUSKY=0
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
+# 复制 pnpm 配置（本仓库使用 workspace 独立 lockfile）
+COPY .npmrc ./
+
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY packages/shared-types/package.json ./packages/shared-types/package.json
+COPY apps/backend/pnpm-lock.yaml ./apps/backend/pnpm-lock.yaml
+COPY packages/shared-types/pnpm-lock.yaml ./packages/shared-types/pnpm-lock.yaml
 
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
   pnpm config set store-dir /pnpm-store && \
@@ -75,6 +87,7 @@ RUN adduser --system --uid 1001 nestjs
 
 # 复制 monorepo 配置文件
 COPY --from=build --chown=nestjs:nodejs /app/package.json ./package.json
+COPY --from=build --chown=nestjs:nodejs /app/.npmrc ./.npmrc
 COPY --from=build --chown=nestjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=build --chown=nestjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
 
