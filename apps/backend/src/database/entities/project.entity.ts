@@ -12,6 +12,9 @@ import { CustomerEntity } from "./customer.entity";
 import { PackageEntity } from "./package.entity";
 import { ProjectStatus } from "@snapmatch/shared-types";
 
+// 重新导出 ProjectStatus 以供其他模块使用
+export { ProjectStatus } from "@snapmatch/shared-types";
+
 @Entity({ name: "projects" })
 export class ProjectEntity {
   @PrimaryColumn({ name: "_id", type: "varchar", length: 34 })
