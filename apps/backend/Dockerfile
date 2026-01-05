@@ -19,6 +19,9 @@ RUN corepack enable pnpm
 # 复制依赖
 COPY --from=deps /app/node_modules ./node_modules
 
+# 复制 monorepo 配置文件（必需）
+COPY package.json pnpm-lock.yaml* ./
+
 # 复制源码
 COPY apps/backend ./apps/backend
 COPY packages/shared-types ./packages/shared-types
