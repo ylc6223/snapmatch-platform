@@ -73,79 +73,54 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # ========== Backend 构建与部署 ==========
+      # 改进：直接在服务器上构建，避免传输大镜像
 
-      - name: 构建 Backend Docker 镜像
-        run: |
-          docker build -f apps/backend/Dockerfile -t snapmatch-backend:${{ github.ref_name }} .
-          docker tag snapmatch-backend:${{ github.ref_name }} snapmatch-backend:latest
-
-      - name: 保存 Docker 镜像
-        run: |
-          docker save snapmatch-backend:latest | gzip > backend-image.tar.gz
-
-      - name: 准备 SSH（rsync）
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if ! command -v rsync >/dev/null 2>&1; then
-            echo "❌ 未检测到 rsync（runner 环境异常），无法继续部署。"
-            exit 1
-          fi
-
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-
-          (umask 077 && printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519)
-          chmod 600 ~/.ssh/id_ed25519
-
-          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
-          ssh-keygen -F "${{ secrets.SERVER_HOST }}" >/dev/null 2>&1 || {
-            echo "❌ 未能写入 known_hosts，终止部署。"
-            exit 1
-          }
-
-      - name: 上传 Backend Docker 镜像到服务器（rsync）
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          rsync -az --info=progress2 --partial \
-            -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
-            backend-image.tar.gz \
-            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/backend-image.tar.gz"
-
-      - name: 在服务器上启动 Backend 容器
+      - name: 在服务器上构建并启动 Backend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # 创建配置目录
-            sudo mkdir -p /opt/1panel/apps/snapmatch/backend
+            set -e
 
-            # 检查 .env.production 是否存在，如果不存在则提示用户创建
+            # 进入项目目录
+            cd /opt/1panel/apps/snapmatch || mkdir -p /opt/1panel/apps/snapmatch && cd /opt/1panel/apps/snapmatch
+
+            # 拉取最新代码
+            echo "→ 拉取最新代码..."
+            if [ -d "snapmatch-platform" ]; then
+              cd snapmatch-platform
+              git fetch --all
+              git checkout ${{ github.sha }}
+            else
+              git clone https://github.com/ylc6223/snapmatch-platform.git
+              cd snapmatch-platform
+              git checkout ${{ github.sha }}
+            fi
+
+            # 检查环境变量文件
             if [ ! -f /opt/1panel/apps/snapmatch/backend/.env.production ]; then
               echo "⚠️ 警告: .env.production 文件不存在"
-              echo "请参考文档创建环境变量文件:"
-              echo "  1. 基于 apps/backend/.env.production.example 创建 .env.production"
-              echo "  2. 填写必要的配置项 (JWT_SECRET, CLOUDBASE_ENV, CLOUDBASE_SECRET_ID, CLOUDBASE_SECRET_KEY)"
-              echo "  3. 上传到服务器路径: /opt/1panel/apps/snapmatch/backend/.env.production"
-              echo ""
-              echo "❌ 部署终止: 缺少环境变量文件"
+              echo "请参考文档创建环境变量文件"
               exit 1
             fi
 
-            # 加载 Docker 镜像
-            sudo docker load < /tmp/backend-image.tar.gz
-            rm /tmp/backend-image.tar.gz
+            # 进入 backend 目录
+            cd apps/backend
 
             # 停止旧容器
-            sudo docker stop snapmatch-backend || true
-            sudo docker rm snapmatch-backend || true
+            echo "→ 停止旧容器..."
+            sudo docker stop snapmatch-backend 2>/dev/null || true
+            sudo docker rm snapmatch-backend 2>/dev/null || true
+
+            # 在服务器上构建镜像（不传输！）
+            echo "→ 在服务器上构建镜像..."
+            sudo docker build -t snapmatch-backend:${{ github.ref_name }} .
+            sudo docker tag snapmatch-backend:${{ github.ref_name }} snapmatch-backend:latest
 
             # 启动新容器
+            echo "→ 启动新容器..."
             sudo docker run -d \
               --name snapmatch-backend \
               --restart unless-stopped \
@@ -154,6 +129,10 @@ jobs:
               -e PORT=3000 \
               -e NODE_ENV=production \
               snapmatch-backend:latest
+
+            # 清理旧镜像
+            echo "→ 清理旧镜像..."
+            sudo docker image prune -a --filter "until=24h" -f
 
             # 等待健康检查
             echo "等待 Backend 启动..."
