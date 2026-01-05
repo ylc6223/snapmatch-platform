@@ -9,6 +9,12 @@ import { Home, LayoutGrid, Image, FolderOpen, Settings, Moon, Sun, User, CreditC
 import type { AuthUser, Role } from '@/lib/auth/types';
 import { useThemeTransition } from '@/components/ui/theme-toggle-button';
 import { canAccess } from '@/lib/auth/can';
+
+// 扩展 AuthUser 类型以支持可选的头像和名称
+interface ExtendedAuthUser extends AuthUser {
+  avatar?: string;
+  name?: string;
+}
 import {
   Tooltip,
   TooltipContent,
@@ -86,7 +92,7 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
 ];
 
 interface SidebarProps {
-  user?: AuthUser; // 可选的用户信息
+  user?: ExtendedAuthUser; // 可选的用户信息
 }
 
 /**
@@ -194,7 +200,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
               icon={Icon ? <Icon className="w-5 h-5" /> : undefined}
               label={item.title}
               href={item.url}
-              subItems={item.items?.map(i => ({ title: i.title, href: i.url }))}
+              subItems={item.items?.map(i => ({ title: i.title, href: i.href }))}
               active={isActive(item.url)}
               isExpanded={expandedMenu === item.url}
               onToggle={(e) => toggleMenu(item.url, e)}
