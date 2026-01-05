@@ -97,10 +97,11 @@ COPY --from=build --chown=nestjs:nodejs /app/packages/shared-types/package.json 
 
 # 复制 node_modules（仅生产依赖）
 COPY --from=prod-deps --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=nestjs:nodejs /app/apps/backend/node_modules ./apps/backend/node_modules
 
 # 复制构建产物
 COPY --from=build --chown=nestjs:nodejs /app/packages/shared-types/dist ./packages/shared-types/dist
-COPY --from=build --chown=nestjs:nodejs /app/apps/backend/dist ./dist
+COPY --from=build --chown=nestjs:nodejs /app/apps/backend/dist ./apps/backend/dist
 
 # 切换到非 root 用户
 USER nestjs
@@ -115,4 +116,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "apps/backend/dist/main.js"]
