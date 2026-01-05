@@ -215,9 +215,18 @@ function BannerEditDialog({
             </label>
             <AssetUpload
               purpose="portfolio-asset"
-              uploadMode="manual"
-              maxConcurrent={1}
-              onSuccess={handleUploadSuccess}
+              mode="manual"
+              concurrency={1}
+              onAllComplete={(items) => {
+                const completedItem = items.find(item => item.status === 'success');
+                if (completedItem?.objectKey) {
+                  // 构建上传成功的结果对象
+                  handleUploadSuccess({
+                    objectKey: completedItem.objectKey,
+                    url: completedItem.objectKey ? `/api/assets/${completedItem.objectKey}` : '',
+                  });
+                }
+              }}
             />
             {formData.assetUrl && (
               <div className="mt-4">
@@ -237,7 +246,7 @@ function BannerEditDialog({
               标题（可选）
             </label>
             <Input
-              value={formData.title}
+              value={formData.title || ""}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
@@ -254,7 +263,7 @@ function BannerEditDialog({
               <div className="relative flex-1">
                 <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  value={formData.link}
+                  value={formData.link || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, link: e.target.value })
                   }
@@ -293,7 +302,7 @@ function BannerEditDialog({
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="date"
-                  value={formData.startDate}
+                  value={formData.startDate || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
@@ -310,7 +319,7 @@ function BannerEditDialog({
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="date"
-                  value={formData.endDate}
+                  value={formData.endDate || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, endDate: e.target.value })
                   }

@@ -14,9 +14,9 @@ interface DashboardLayoutClientProps {
     href: string;
     label: string;
     meta: {
-      affixTab?: boolean;
-      closable?: boolean;
-      keepAlive?: boolean;
+      affixTab: boolean;
+      closable: boolean;
+      keepAlive: boolean;
     };
   }>;
   children: React.ReactNode;

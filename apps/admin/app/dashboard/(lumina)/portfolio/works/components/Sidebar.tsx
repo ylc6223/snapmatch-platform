@@ -9,6 +9,12 @@ import { Home, LayoutGrid, Image, FolderOpen, Settings, Moon, Sun, User, CreditC
 import type { AuthUser } from '@/lib/auth/types';
 import { useThemeTransition } from '@/components/ui/theme-toggle-button';
 import { canAccess } from '@/lib/auth/can';
+
+// 扩展 AuthUser 类型以支持可选的头像和名称
+interface ExtendedAuthUser extends AuthUser {
+  avatar?: string;
+  name?: string;
+}
 import {
   Tooltip,
   TooltipContent,
@@ -16,15 +22,16 @@ import {
 } from "@/components/ui/tooltip";
 import { withAdminBasePath } from '@/lib/routing/base-path';
 import { apiFetch } from '@/lib/api/client';
+import type { Role } from '@/lib/auth/types';
 
 // 从主 dashboard 复制的菜单数据类型
 type MenuItem = {
   title: string;
   url: string;
   icon?: React.ComponentType<{ className?: string }>;
-  items?: { title: string; url: string }[];
+  items?: { title: string; href: string }[];
   permissions?: string[];
-  roles?: string[];
+  roles?: Role[];
 };
 
 // 导航菜单配置（与主dashboard保持一致）
@@ -35,8 +42,8 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: LayoutGrid,
     permissions: ["page:dashboard", "dashboard:view"],
     items: [
-      { title: "数据概览", url: "/dashboard/analytics" },
-      { title: "快捷入口", url: "/dashboard/shortcuts" }
+      { title: "数据概览", href: "/dashboard/analytics" },
+      { title: "快捷入口", href: "/dashboard/shortcuts" }
     ]
   },
   {
@@ -45,9 +52,9 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: Image,
     permissions: ["page:assets"],
     items: [
-      { title: "作品列表", url: "/dashboard/portfolio/works" },
-      { title: "分类管理", url: "/dashboard/portfolio/categories" },
-      { title: "轮播图配置", url: "/dashboard/portfolio/banners" }
+      { title: "作品列表", href: "/dashboard/portfolio/works" },
+      { title: "分类管理", href: "/dashboard/portfolio/categories" },
+      { title: "轮播图配置", href: "/dashboard/portfolio/banners" }
     ]
   },
   {
@@ -56,10 +63,10 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: FolderOpen,
     permissions: ["page:assets"],
     items: [
-      { title: "项目创建", url: "/dashboard/delivery/projects/new" },
-      { title: "照片库", url: "/dashboard/delivery/photos" },
-      { title: "选片链接", url: "/dashboard/delivery/viewer-links" },
-      { title: "精修交付", url: "/dashboard/delivery/retouch" }
+      { title: "项目创建", href: "/dashboard/delivery/projects/new" },
+      { title: "照片库", href: "/dashboard/delivery/photos" },
+      { title: "选片链接", href: "/dashboard/delivery/viewer-links" },
+      { title: "精修交付", href: "/dashboard/delivery/retouch" }
     ]
   },
   {
@@ -68,8 +75,8 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: User,
     permissions: ["page:packages"],
     items: [
-      { title: "客户档案", url: "/dashboard/crm/customers" },
-      { title: "订单列表", url: "/dashboard/crm/orders" }
+      { title: "客户档案", href: "/dashboard/crm/customers" },
+      { title: "订单列表", href: "/dashboard/crm/orders" }
     ]
   },
   {
@@ -78,15 +85,15 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: Settings,
     permissions: ["page:settings"],
     items: [
-      { title: "账号与权限", url: "/dashboard/settings/accounts" },
-      { title: "存储配置", url: "/dashboard/settings/storage" },
-      { title: "小程序配置", url: "/dashboard/settings/miniprogram" }
+      { title: "账号与权限", href: "/dashboard/settings/accounts" },
+      { title: "存储配置", href: "/dashboard/settings/storage" },
+      { title: "小程序配置", href: "/dashboard/settings/miniprogram" }
     ]
   }
 ];
 
 interface SidebarProps {
-  user?: AuthUser; // 可选的用户信息
+  user?: ExtendedAuthUser; // 可选的用户信息
 }
 
 /**
@@ -120,7 +127,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
   // 根据用户权限过滤菜单
   const navItems = React.useMemo(() => {
     if (!user) return [];
-    return DASHBOARD_NAV_ITEMS.filter((item) => canAccess(user, item));
+    return DASHBOARD_NAV_ITEMS.filter((item) =>
+      canAccess(user, {
+        permissions: item.permissions,
+        roles: item.roles
+      })
+    );
   }, [user]);
 
   // 判断当前路由是否激活
@@ -191,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
           return (
             <NavItem
               key={item.url}
-              icon={<Icon size={20} />}
+              icon={Icon ? <Icon className="w-5 h-5" /> : null}
               label={item.title}
               href={item.url}
               subItems={item.items}
