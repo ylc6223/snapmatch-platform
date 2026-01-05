@@ -81,15 +81,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          tar -czf snapmatch-platform-src.tar.gz \
-            --exclude-vcs \
-            --exclude='.pnpm-store' \
-            --exclude='**/node_modules' \
-            --exclude='**/.next' \
-            --exclude='**/dist' \
-            --exclude='**/build' \
-            --exclude='**/.turbo' \
-            .
+          # 直接从 git 对应提交导出源码，避免 `tar: .: file changed as we read it`
+          git archive --format=tar.gz --output=snapmatch-platform-src.tar.gz ${{ github.sha }}
 
           ls -lah snapmatch-platform-src.tar.gz
 
