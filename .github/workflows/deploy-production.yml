@@ -73,7 +73,57 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # ========== Backend 构建与部署 ==========
-      # 改进：直接在服务器上构建，避免传输大镜像
+      # 改进：不再让服务器从 GitHub 拉代码（避免 TLS/网络不稳定导致部署失败）
+      #      改为在 Actions 打包源码，通过 rsync 上传到服务器后再构建镜像
+
+      - name: 打包源码（用于服务器端构建 Backend）
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tar -czf snapmatch-platform-src.tar.gz \
+            --exclude-vcs \
+            --exclude='.pnpm-store' \
+            --exclude='**/node_modules' \
+            --exclude='**/.next' \
+            --exclude='**/dist' \
+            --exclude='**/build' \
+            --exclude='**/.turbo' \
+            .
+
+          ls -lah snapmatch-platform-src.tar.gz
+
+      - name: 准备 SSH（rsync）
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! command -v rsync >/dev/null 2>&1; then
+            echo "❌ 未检测到 rsync（runner 环境异常），无法继续部署。"
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          (umask 077 && printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519)
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keygen -F "${{ secrets.SERVER_HOST }}" >/dev/null 2>&1 || {
+            echo "❌ 未能写入 known_hosts，终止部署。"
+            exit 1
+          }
+
+      - name: 上传源码包到服务器（rsync）
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rsync -az --info=progress2 --partial --append-verify \
+            -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
+            snapmatch-platform-src.tar.gz \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/snapmatch-platform-src.tar.gz"
 
       - name: 在服务器上构建并启动 Backend
         uses: appleboy/ssh-action@v1.0.3
@@ -91,42 +141,26 @@ jobs:
             # 进入项目目录
             cd /opt/1panel/apps/snapmatch || mkdir -p /opt/1panel/apps/snapmatch && cd /opt/1panel/apps/snapmatch
 
-            # GitHub HTTPS 偶发 TLS 断连（GnuTLS recv error -110）会导致 fetch 失败。
-            # 这里增加重试 + 退避，提升部署稳定性；并强制使用 HTTP/1.1 避免部分环境的 HTTP/2/TLS 兼容问题。
-            retry() {
-              local max_attempts="${1:?max_attempts required}"
-              local sleep_seconds="${2:?sleep_seconds required}"
-              shift 2
+            # 使用 Actions 上传的源码包，避免服务器直接访问 GitHub（常见 TLS/网络问题）
+            SRC_TAR="/tmp/snapmatch-platform-src.tar.gz"
+            RELEASE_DIR="/opt/1panel/apps/snapmatch/releases/${{ github.sha }}"
 
-              local attempt=1
-              while true; do
-                if "$@"; then
-                  return 0
-                fi
-
-                if [ "$attempt" -ge "$max_attempts" ]; then
-                  echo "❌ 命令失败（已重试 ${attempt}/${max_attempts} 次）: $*"
-                  return 1
-                fi
-
-                echo "⚠️ 命令失败，${sleep_seconds}s 后重试（${attempt}/${max_attempts}）: $*"
-                sleep "$sleep_seconds"
-                attempt=$((attempt + 1))
-                sleep_seconds=$((sleep_seconds * 2))
-              done
-            }
-
-            # 拉取最新代码
-            echo "→ 拉取最新代码..."
-            if [ -d "snapmatch-platform" ]; then
-              cd snapmatch-platform
-              retry 5 2 git -c http.version=HTTP/1.1 fetch --all --prune
-              git checkout ${{ github.sha }}
-            else
-              retry 5 2 git -c http.version=HTTP/1.1 clone https://github.com/ylc6223/snapmatch-platform.git
-              cd snapmatch-platform
-              git checkout ${{ github.sha }}
+            if [ ! -f "$SRC_TAR" ]; then
+              echo "❌ 源码包不存在：$SRC_TAR（rsync 上传失败）"
+              exit 1
             fi
+
+            echo "→ 准备源码目录..."
+            if [ -d "$RELEASE_DIR" ]; then
+              rm -rf "$RELEASE_DIR"
+            fi
+            mkdir -p "$RELEASE_DIR"
+
+            echo "→ 解压源码包..."
+            tar -xzf "$SRC_TAR" -C "$RELEASE_DIR"
+            rm -f "$SRC_TAR"
+
+            cd "$RELEASE_DIR"
 
             # 检查环境变量文件
             if [ ! -f /opt/1panel/apps/snapmatch/backend/.env.production ]; then
