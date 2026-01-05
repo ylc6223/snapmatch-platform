@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 
-import { ChartAreaInteractive } from "@/components/shared/charts/chart-area-interactive";
-import { ExampleDataTable } from "@/components/data-table";
-import { SectionCards } from "@/components/shared/cards/section-cards";
+import { DashboardCards } from "@/components/shared/lumina-dashboard-cards";
+import { TrendChart } from "@/components/shared/lumina-trend-chart";
+import { TodoSidebar } from "@/components/shared/lumina-todo-sidebar";
 import { generateMeta } from "@/lib/utils";
-
-import data from "../data.json";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateMeta({
@@ -16,13 +14,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function Page() {
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">数据概览</h1>
+    <div className="relative mt-4">
+      {/* Main Content Area */}
+      <div className="pr-0 xl:pr-[342px]">
+        <DashboardCards />
+        <TrendChart />
       </div>
-      <SectionCards />
-      <ChartAreaInteractive />
-      <ExampleDataTable data={data} />
-    </>
+
+      {/* Todo Sidebar - Fixed positioning */}
+      <TodoSidebar />
+    </div>
   );
 }
