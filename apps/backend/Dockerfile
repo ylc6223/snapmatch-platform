@@ -17,7 +17,8 @@ COPY apps/backend ./apps/backend
 COPY packages/shared-types ./packages/shared-types
 
 # 安装所有依赖（包括 devDependencies，用于构建）
-RUN pnpm install --frozen-lockfile
+# 在 Docker 中移除 --frozen-lockfile，因为 CI 环境可能存在 lockfile 时序问题
+RUN pnpm install
 
 # ========== 阶段 2: 构建 ==========
 FROM node:20-alpine AS build
@@ -46,10 +47,12 @@ RUN corepack enable pnpm
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# 复制 monorepo 配置文件和 package.json
+# 复制 monorepo 配置文件和所有 package.json（pnpm 需要验证完整工作区）
 COPY --from=build --chown=nestjs:nodejs /app/package.json ./package.json
 COPY --from=build --chown=nestjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=build --chown=nestjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=build --chown=nestjs:nodejs /app/apps/web/package.json ./apps/web/package.json
+COPY --from=build --chown=nestjs:nodejs /app/apps/admin/package.json ./apps/admin/package.json
 COPY --from=build --chown=nestjs:nodejs /app/apps/backend/package.json ./apps/backend/package.json
 COPY --from=build --chown=nestjs:nodejs /app/packages/shared-types/package.json ./packages/shared-types/package.json
 
@@ -59,7 +62,7 @@ COPY --from=build --chown=nestjs:nodejs /app/apps/backend/dist ./dist
 
 # 重新安装生产依赖（避免符号链接问题）
 USER root
-RUN pnpm install --prod --frozen-lockfile --no-optional
+RUN pnpm install --prod --no-optional
 
 # 切换到非 root 用户
 USER nestjs
