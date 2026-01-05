@@ -81,11 +81,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          # 直接从 git 对应提交导出源码，避免 `tar: .: file changed as we read it`
-          git archive --format=tar.gz --output=snapmatch-platform-src.tar.gz ${{ github.sha }}
-          sha256sum snapmatch-platform-src.tar.gz > snapmatch-platform-src.tar.gz.sha256
+          SRC_BASENAME="snapmatch-platform-src-${{ github.sha }}"
 
-          ls -lah snapmatch-platform-src.tar.gz
+          # 直接从 git 对应提交导出源码，避免 `tar: .: file changed as we read it`
+          git archive --format=tar.gz --output="${SRC_BASENAME}.tar.gz" ${{ github.sha }}
+          sha256sum "${SRC_BASENAME}.tar.gz" > "${SRC_BASENAME}.tar.gz.sha256"
+
+          ls -lah "${SRC_BASENAME}.tar.gz" "${SRC_BASENAME}.tar.gz.sha256"
 
       - name: 准备 SSH（rsync）
         shell: bash
@@ -109,14 +111,40 @@ jobs:
             exit 1
           }
 
+      - name: 清理服务器临时路径（避免同名目录阻塞）
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "bash -lc '
+              set -euo pipefail
+              for p in \
+                \"/tmp/snapmatch-platform-src-${{ github.sha }}.tar.gz\" \
+                \"/tmp/snapmatch-platform-src-${{ github.sha }}.tar.gz.sha256\" \
+                \"/tmp/snapmatch-platform-src.tar.gz\" \
+                \"/tmp/snapmatch-platform-src.tar.gz.sha256\"; do
+                (sudo -n rm -rf \"\$p\" 2>/dev/null || rm -rf \"\$p\" 2>/dev/null || true)
+                if [ -e \"\$p\" ]; then
+                  echo \"❌ 无法清理 \$p（可能权限不足或被占用）\"
+                  ls -ld \"\$p\" || true
+                  exit 1
+                fi
+              done
+              echo \"✅ /tmp 同名路径已清理\"
+            '"
+
       - name: 上传源码包到服务器（rsync）
         shell: bash
         run: |
           set -euo pipefail
 
+          SRC_BASENAME="snapmatch-platform-src-${{ github.sha }}"
+
           rsync -az --info=progress2 --partial --append-verify \
             -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
-            snapmatch-platform-src.tar.gz snapmatch-platform-src.tar.gz.sha256 \
+            "${SRC_BASENAME}.tar.gz" "${SRC_BASENAME}.tar.gz.sha256" \
             "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/"
 
       - name: 在服务器上构建并启动 Backend
@@ -137,11 +165,21 @@ jobs:
             cd /opt/1panel/apps/snapmatch || mkdir -p /opt/1panel/apps/snapmatch && cd /opt/1panel/apps/snapmatch
 
             # 使用 Actions 上传的源码包，避免服务器直接访问 GitHub（常见 TLS/网络问题）
-            SRC_TAR="/tmp/snapmatch-platform-src.tar.gz"
-            SRC_SHA="/tmp/snapmatch-platform-src.tar.gz.sha256"
+            SRC_TAR="/tmp/snapmatch-platform-src-${{ github.sha }}.tar.gz"
+            SRC_SHA="/tmp/snapmatch-platform-src-${{ github.sha }}.tar.gz.sha256"
+            LEGACY_SRC_TAR="/tmp/snapmatch-platform-src.tar.gz"
+            LEGACY_SRC_SHA="/tmp/snapmatch-platform-src.tar.gz.sha256"
             RELEASE_DIR="/opt/1panel/apps/snapmatch/releases/${{ github.sha }}"
             RELEASES_DIR="/opt/1panel/apps/snapmatch/releases"
             KEEP_RELEASES=10
+
+            # 兼容旧版本工作流（固定文件名），方便回滚/重跑同一 sha
+            if [ ! -f "$SRC_TAR" ] && [ -f "$LEGACY_SRC_TAR" ]; then
+              SRC_TAR="$LEGACY_SRC_TAR"
+            fi
+            if [ ! -f "$SRC_SHA" ] && [ -f "$LEGACY_SRC_SHA" ]; then
+              SRC_SHA="$LEGACY_SRC_SHA"
+            fi
 
             if [ ! -f "$SRC_TAR" ]; then
               echo "❌ 源码包不存在：$SRC_TAR（rsync 上传失败）"
@@ -389,6 +427,25 @@ jobs:
             echo "❌ 未能写入 known_hosts，终止部署。"
             exit 1
           }
+
+      - name: 清理服务器临时路径（Admin 包）
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "bash -lc '
+              set -euo pipefail
+              p=\"/tmp/admin-standalone.tar.gz\"
+              (sudo -n rm -rf \"\$p\" 2>/dev/null || rm -rf \"\$p\" 2>/dev/null || true)
+              if [ -e \"\$p\" ]; then
+                echo \"❌ 无法清理 \$p（可能权限不足或被占用）\"
+                ls -ld \"\$p\" || true
+                exit 1
+              fi
+              echo \"✅ /tmp/admin-standalone.tar.gz 已清理\"
+            '"
 
       - name: 上传 Admin 到服务器（rsync）
         shell: bash
