@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     console.log("[Projects BFF] Received request:", { url: request.url });
 
     // 调用后端项目列表接口（auth=true：需要登录态）
-    const result = await backendFetch<ApiResponse<Project[]>>(
+    const result = await backendFetch<ApiResponse<ApiProject[]>>(
       `/api/v1/projects`
     );
 

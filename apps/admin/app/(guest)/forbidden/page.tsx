@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -7,6 +5,7 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { generateMeta } from "@/lib/utils";
 import { withAdminBasePath } from "@/lib/routing/base-path";
+import { LogoutButton } from "./logout-button";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateMeta({
@@ -35,14 +34,6 @@ export default function ForbiddenPage({
   const nextPath = normalizeNext(searchParams?.next);
   const message = normalizeMessage(searchParams?.message);
 
-  const handleLogout = async () => {
-    try {
-      await fetch(withAdminBasePath("/api/auth/logout"), { method: "POST" });
-    } finally {
-      window.location.href = withAdminBasePath("/login");
-    }
-  };
-
   return (
     <div className="grid h-screen items-center bg-background pb-8 lg:grid-cols-2 lg:pb-0">
       <div className="text-center">
@@ -55,9 +46,7 @@ export default function ForbiddenPage({
           <Button asChild size="lg">
             <Link href={nextPath}>返回</Link>
           </Button>
-          <Button onClick={handleLogout} size="lg" variant="ghost">
-            切换账号 <ArrowRight className="ms-2 h-4 w-4" />
-          </Button>
+          <LogoutButton />
         </div>
       </div>
 
