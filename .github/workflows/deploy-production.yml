@@ -83,6 +83,7 @@ jobs:
 
           # 直接从 git 对应提交导出源码，避免 `tar: .: file changed as we read it`
           git archive --format=tar.gz --output=snapmatch-platform-src.tar.gz ${{ github.sha }}
+          sha256sum snapmatch-platform-src.tar.gz > snapmatch-platform-src.tar.gz.sha256
 
           ls -lah snapmatch-platform-src.tar.gz
 
@@ -115,7 +116,7 @@ jobs:
 
           rsync -az --info=progress2 --partial --append-verify \
             -e "ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8" \
-            snapmatch-platform-src.tar.gz \
+            snapmatch-platform-src.tar.gz snapmatch-platform-src.tar.gz.sha256 \
             "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/snapmatch-platform-src.tar.gz"
 
       - name: 在服务器上构建并启动 Backend
@@ -124,6 +125,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 30m
           script: |
             set -e
 
@@ -136,12 +138,22 @@ jobs:
 
             # 使用 Actions 上传的源码包，避免服务器直接访问 GitHub（常见 TLS/网络问题）
             SRC_TAR="/tmp/snapmatch-platform-src.tar.gz"
+            SRC_SHA="/tmp/snapmatch-platform-src.tar.gz.sha256"
             RELEASE_DIR="/opt/1panel/apps/snapmatch/releases/${{ github.sha }}"
+            RELEASES_DIR="/opt/1panel/apps/snapmatch/releases"
+            KEEP_RELEASES=10
 
             if [ ! -f "$SRC_TAR" ]; then
               echo "❌ 源码包不存在：$SRC_TAR（rsync 上传失败）"
               exit 1
             fi
+            if [ ! -f "$SRC_SHA" ]; then
+              echo "❌ 校验文件不存在：$SRC_SHA（rsync 上传失败）"
+              exit 1
+            fi
+
+            echo "→ 校验源码包完整性..."
+            (cd /tmp && sha256sum -c "$(basename "$SRC_SHA")")
 
             echo "→ 准备源码目录..."
             if [ -d "$RELEASE_DIR" ]; then
@@ -152,6 +164,7 @@ jobs:
             echo "→ 解压源码包..."
             tar -xzf "$SRC_TAR" -C "$RELEASE_DIR"
             rm -f "$SRC_TAR"
+            rm -f "$SRC_SHA"
 
             cd "$RELEASE_DIR"
 
@@ -183,24 +196,37 @@ jobs:
               -e NODE_ENV=production \
               snapmatch-backend:latest
 
-            # 清理旧镜像
-            echo "→ 清理旧镜像..."
-            docker image prune -a --filter "until=24h" -f
-
             # 等待健康检查
             echo "等待 Backend 启动..."
+            health_ok=false
             for i in {1..30}; do
-              if curl -f http://localhost:3002/health; then
+              if curl -f --max-time 2 http://localhost:3002/health; then
                 echo "✅ Backend 健康检查通过"
-                exit 0
+                health_ok=true
+                break
               fi
               echo "尝试 $i/30..."
               sleep 2
             done
-            echo "❌ Backend 健康检查失败"
-            echo "查看容器日志:"
-            docker logs snapmatch-backend
-            exit 1
+
+            if [ "$health_ok" != "true" ]; then
+              echo "❌ Backend 健康检查失败"
+              echo "→ 容器状态:"
+              docker ps -a --filter name=snapmatch-backend || true
+              docker inspect snapmatch-backend --format '{{json .State}}' || true
+              echo "→ 端口监听(3002):"
+              ss -lntp 2>/dev/null | grep ':3002' || true
+              echo "→ 容器日志(最近 200 行):"
+              docker logs --tail 200 snapmatch-backend || true
+              exit 1
+            fi
+
+            # 清理历史 releases（仅保留最近 N 个）
+            echo "→ 清理历史 releases（保留最近 ${KEEP_RELEASES} 个）..."
+            mkdir -p "$RELEASES_DIR"
+            ls -1dt "$RELEASES_DIR"/* 2>/dev/null | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -rf
+            echo "✅ 部署完成"
+            exit 0
             ENDSCRIPT
 
   deploy-web:
