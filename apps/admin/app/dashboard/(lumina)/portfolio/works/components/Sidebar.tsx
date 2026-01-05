@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Home, LayoutGrid, Image, FolderOpen, Settings, Moon, Sun, User, CreditCard, Bell, LogOut } from 'lucide-react';
-import type { AuthUser } from '@/lib/auth/types';
+import type { AuthUser, Role } from '@/lib/auth/types';
 import { useThemeTransition } from '@/components/ui/theme-toggle-button';
 import { canAccess } from '@/lib/auth/can';
 import {
@@ -22,9 +22,9 @@ type MenuItem = {
   title: string;
   url: string;
   icon?: React.ComponentType<{ className?: string }>;
-  items?: { title: string; url: string }[];
+  items?: { title: string; href: string }[];
   permissions?: string[];
-  roles?: string[];
+  roles?: Role[];
 };
 
 // 导航菜单配置（与主dashboard保持一致）
@@ -35,8 +35,8 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: LayoutGrid,
     permissions: ["page:dashboard", "dashboard:view"],
     items: [
-      { title: "数据概览", url: "/dashboard/analytics" },
-      { title: "快捷入口", url: "/dashboard/shortcuts" }
+      { title: "数据概览", href: "/dashboard/analytics" },
+      { title: "快捷入口", href: "/dashboard/shortcuts" }
     ]
   },
   {
@@ -45,9 +45,9 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: Image,
     permissions: ["page:assets"],
     items: [
-      { title: "作品列表", url: "/dashboard/portfolio/works" },
-      { title: "分类管理", url: "/dashboard/portfolio/categories" },
-      { title: "轮播图配置", url: "/dashboard/portfolio/banners" }
+      { title: "作品列表", href: "/dashboard/portfolio/works" },
+      { title: "分类管理", href: "/dashboard/portfolio/categories" },
+      { title: "轮播图配置", href: "/dashboard/portfolio/banners" }
     ]
   },
   {
@@ -56,10 +56,10 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: FolderOpen,
     permissions: ["page:assets"],
     items: [
-      { title: "项目创建", url: "/dashboard/delivery/projects/new" },
-      { title: "照片库", url: "/dashboard/delivery/photos" },
-      { title: "选片链接", url: "/dashboard/delivery/viewer-links" },
-      { title: "精修交付", url: "/dashboard/delivery/retouch" }
+      { title: "项目创建", href: "/dashboard/delivery/projects/new" },
+      { title: "照片库", href: "/dashboard/delivery/photos" },
+      { title: "选片链接", href: "/dashboard/delivery/viewer-links" },
+      { title: "精修交付", href: "/dashboard/delivery/retouch" }
     ]
   },
   {
@@ -68,8 +68,8 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: User,
     permissions: ["page:packages"],
     items: [
-      { title: "客户档案", url: "/dashboard/crm/customers" },
-      { title: "订单列表", url: "/dashboard/crm/orders" }
+      { title: "客户档案", href: "/dashboard/crm/customers" },
+      { title: "订单列表", href: "/dashboard/crm/orders" }
     ]
   },
   {
@@ -78,9 +78,9 @@ const DASHBOARD_NAV_ITEMS: MenuItem[] = [
     icon: Settings,
     permissions: ["page:settings"],
     items: [
-      { title: "账号与权限", url: "/dashboard/settings/accounts" },
-      { title: "存储配置", url: "/dashboard/settings/storage" },
-      { title: "小程序配置", url: "/dashboard/settings/miniprogram" }
+      { title: "账号与权限", href: "/dashboard/settings/accounts" },
+      { title: "存储配置", href: "/dashboard/settings/storage" },
+      { title: "小程序配置", href: "/dashboard/settings/miniprogram" }
     ]
   }
 ];
@@ -243,9 +243,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ user }) => {
                  <div className="p-2">
                    {/* 用户信息头部 */}
                    <div className="px-3 py-2 border-b border-border mb-2">
-                     <p className="text-sm font-medium">用户</p>
-                     <p className="text-xs text-muted-foreground">{user.account || ''}</p>
-                   </div>
+                    <p className="text-sm font-medium">{user.account}</p>
+                    <p className="text-xs text-muted-foreground">用户</p>                   </div>
 
                    {/* 菜单项 */}
                    <Link

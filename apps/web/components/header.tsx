@@ -65,7 +65,7 @@ export function Header() {
       
       // 防抖：100ms 后执行
       resizeTimerRef.current = setTimeout(() => {
-        const hoveredLink = document.querySelector('a[data-hovered="true"]')
+        const hoveredLink = document.querySelector('a[data-hovered="true"]') as HTMLElement | null
         if (hoveredLink) {
           updateIndicator(hoveredLink as HTMLElement)
         }

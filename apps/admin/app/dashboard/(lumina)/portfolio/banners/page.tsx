@@ -215,8 +215,10 @@ function BannerEditDialog({
             </label>
             <AssetUpload
               purpose="portfolio-asset"
-              mode="manual"
+              workId={formData.id}
+              multiple={false}
               concurrency={1}
+              mode="manual"
               onAllComplete={handleUploadSuccess}
             />
             {formData.assetUrl && (
@@ -237,7 +239,7 @@ function BannerEditDialog({
               标题（可选）
             </label>
             <Input
-              value={formData.title || ''}
+              value={formData.title ?? ""}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
@@ -254,7 +256,7 @@ function BannerEditDialog({
               <div className="relative flex-1">
                 <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  value={formData.link || ''}
+                  value={formData.link ?? ""}
                   onChange={(e) =>
                     setFormData({ ...formData, link: e.target.value })
                   }
@@ -275,7 +277,7 @@ function BannerEditDialog({
             </label>
             <Input
               type="number"
-              value={formData.sort}
+              value={formData.sort ?? 0}
               onChange={(e) =>
                 setFormData({ ...formData, sort: Number(e.target.value) })
               }
@@ -293,7 +295,7 @@ function BannerEditDialog({
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="date"
-                  value={formData.startDate || ''}
+                  value={formData.startDate ?? ""}
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
@@ -310,7 +312,7 @@ function BannerEditDialog({
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="date"
-                  value={formData.endDate || ''}
+                  value={formData.endDate ?? ""}
                   onChange={(e) =>
                     setFormData({ ...formData, endDate: e.target.value })
                   }
