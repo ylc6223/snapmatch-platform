@@ -91,14 +91,39 @@ jobs:
             # 进入项目目录
             cd /opt/1panel/apps/snapmatch || mkdir -p /opt/1panel/apps/snapmatch && cd /opt/1panel/apps/snapmatch
 
+            # GitHub HTTPS 偶发 TLS 断连（GnuTLS recv error -110）会导致 fetch 失败。
+            # 这里增加重试 + 退避，提升部署稳定性；并强制使用 HTTP/1.1 避免部分环境的 HTTP/2/TLS 兼容问题。
+            retry() {
+              local max_attempts="${1:?max_attempts required}"
+              local sleep_seconds="${2:?sleep_seconds required}"
+              shift 2
+
+              local attempt=1
+              while true; do
+                if "$@"; then
+                  return 0
+                fi
+
+                if [ "$attempt" -ge "$max_attempts" ]; then
+                  echo "❌ 命令失败（已重试 ${attempt}/${max_attempts} 次）: $*"
+                  return 1
+                fi
+
+                echo "⚠️ 命令失败，${sleep_seconds}s 后重试（${attempt}/${max_attempts}）: $*"
+                sleep "$sleep_seconds"
+                attempt=$((attempt + 1))
+                sleep_seconds=$((sleep_seconds * 2))
+              done
+            }
+
             # 拉取最新代码
             echo "→ 拉取最新代码..."
             if [ -d "snapmatch-platform" ]; then
               cd snapmatch-platform
-              git fetch --all
+              retry 5 2 git -c http.version=HTTP/1.1 fetch --all --prune
               git checkout ${{ github.sha }}
             else
-              git clone https://github.com/ylc6223/snapmatch-platform.git
+              retry 5 2 git -c http.version=HTTP/1.1 clone https://github.com/ylc6223/snapmatch-platform.git
               cd snapmatch-platform
               git checkout ${{ github.sha }}
             fi
