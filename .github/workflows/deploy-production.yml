@@ -84,6 +84,10 @@ jobs:
           script: |
             set -e
 
+            # 使用 root 权限执行所有操作
+            sudo bash << 'ENDSCRIPT'
+            set -e
+
             # 进入项目目录
             cd /opt/1panel/apps/snapmatch || mkdir -p /opt/1panel/apps/snapmatch && cd /opt/1panel/apps/snapmatch
 
@@ -111,17 +115,17 @@ jobs:
 
             # 停止旧容器
             echo "→ 停止旧容器..."
-            sudo docker stop snapmatch-backend 2>/dev/null || true
-            sudo docker rm snapmatch-backend 2>/dev/null || true
+            docker stop snapmatch-backend 2>/dev/null || true
+            docker rm snapmatch-backend 2>/dev/null || true
 
             # 在服务器上构建镜像（不传输！）
             echo "→ 在服务器上构建镜像..."
-            sudo docker build -t snapmatch-backend:${{ github.ref_name }} .
-            sudo docker tag snapmatch-backend:${{ github.ref_name }} snapmatch-backend:latest
+            docker build -t snapmatch-backend:${{ github.ref_name }} .
+            docker tag snapmatch-backend:${{ github.ref_name }} snapmatch-backend:latest
 
             # 启动新容器
             echo "→ 启动新容器..."
-            sudo docker run -d \
+            docker run -d \
               --name snapmatch-backend \
               --restart unless-stopped \
               -p 3002:3000 \
@@ -132,7 +136,7 @@ jobs:
 
             # 清理旧镜像
             echo "→ 清理旧镜像..."
-            sudo docker image prune -a --filter "until=24h" -f
+            docker image prune -a --filter "until=24h" -f
 
             # 等待健康检查
             echo "等待 Backend 启动..."
@@ -146,8 +150,9 @@ jobs:
             done
             echo "❌ Backend 健康检查失败"
             echo "查看容器日志:"
-            sudo docker logs snapmatch-backend
+            docker logs snapmatch-backend
             exit 1
+            ENDSCRIPT
 
   deploy-web:
     name: 部署 Web 官网
