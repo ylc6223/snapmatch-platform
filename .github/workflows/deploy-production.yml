@@ -535,15 +535,12 @@ jobs:
             # 创建日志目录
             mkdir -p logs
 
-            # 使用 PM2 启动或重启服务
-            if run_as_root "pm2 describe snapmatch-admin >/dev/null 2>&1"; then
-              echo "重启 Admin 服务..."
-              run_as_root "pm2 restart snapmatch-admin"
-            else
-              echo "首次启动 Admin 服务..."
-              run_as_root "pm2 start ecosystem.config.js"
-              run_as_root "pm2 save"
-            fi
+            # 使用 PM2 启动或热更新服务（关键：必须带 --update-env 才会应用 ecosystem.config.js 里的 env 变更）
+            # - startOrReload：进程存在则 reload，不存在则 start
+            # - --update-env：让 env 以最新 ecosystem.config.js 为准（否则 pm2 restart 会沿用旧 env）
+            echo "启动/更新 Admin 服务（pm2 startOrReload --update-env）..."
+            run_as_root "pm2 startOrReload ecosystem.config.js --update-env"
+            run_as_root "pm2 save"
 
             # 等待服务启动
             sleep 3
