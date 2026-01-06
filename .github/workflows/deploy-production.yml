@@ -478,6 +478,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: ADMIN_NODE_ENV,ADMIN_PORT,ADMIN_HOSTNAME,ADMIN_COOKIE_SECURE
           script: |
             set -euo pipefail
 
@@ -487,6 +488,19 @@ jobs:
             run_as_root() {
               sudo bash -lc "export NVM_DIR=/root/.nvm; [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"; $*"
             }
+
+            # GitHub Actions Variables（可选）：用于控制 Admin 的运行环境与 Cookie 策略。
+            # 注意：这些值必须在仓库 Settings → Secrets and variables → Actions → Variables 中设置（不是 Secrets）。
+            admin_node_env="${ADMIN_NODE_ENV:-production}"
+            admin_port="${ADMIN_PORT:-3001}"
+            admin_hostname="${ADMIN_HOSTNAME:-0.0.0.0}"
+            admin_cookie_secure="${ADMIN_COOKIE_SECURE:-true}"
+
+            echo "Admin env from GitHub Variables:"
+            echo "  ADMIN_NODE_ENV=${admin_node_env}"
+            echo "  ADMIN_PORT=${admin_port}"
+            echo "  ADMIN_HOSTNAME=${admin_hostname}"
+            echo "  ADMIN_COOKIE_SECURE=${admin_cookie_secure}"
 
             if ! run_as_root "command -v node >/dev/null 2>&1"; then
               echo "❌ root 环境未检测到 Node.js（nvm），请先为 root 安装 Node.js 20+ 或修复 /root/.nvm。"
@@ -511,7 +525,7 @@ jobs:
             rm /tmp/admin-standalone.tar.gz
 
             # 写入 PM2 配置文件（每次部署都覆盖，确保与 GitHub Variables 一致）
-            cat > ecosystem.config.js << 'EOFPM2'
+            cat > ecosystem.config.js << EOFPM2
             module.exports = {
               apps: [{
                 name: 'snapmatch-admin',
@@ -520,10 +534,10 @@ jobs:
                 instances: 1,
                 exec_mode: 'cluster',
                 env: {
-                  NODE_ENV: '${{ vars.ADMIN_NODE_ENV || 'production' }}',
-                  PORT: '${{ vars.ADMIN_PORT || '3001' }}',
-                  HOSTNAME: '${{ vars.ADMIN_HOSTNAME || '0.0.0.0' }}',
-                  ADMIN_COOKIE_SECURE: '${{ vars.ADMIN_COOKIE_SECURE || 'true' }}',
+                  NODE_ENV: '${admin_node_env}',
+                  PORT: ${admin_port},
+                  HOSTNAME: '${admin_hostname}',
+                  ADMIN_COOKIE_SECURE: '${admin_cookie_secure}',
                 },
                 error_file: '/opt/1panel/apps/snapmatch/admin/logs/error.log',
                 out_file: '/opt/1panel/apps/snapmatch/admin/logs/out.log',
