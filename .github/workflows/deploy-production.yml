@@ -479,6 +479,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           envs: ADMIN_NODE_ENV,ADMIN_PORT,ADMIN_HOSTNAME,ADMIN_COOKIE_SECURE
+        env:
+          ADMIN_NODE_ENV: ${{ vars.ADMIN_NODE_ENV }}
+          ADMIN_PORT: ${{ vars.ADMIN_PORT }}
+          ADMIN_HOSTNAME: ${{ vars.ADMIN_HOSTNAME }}
+          ADMIN_COOKIE_SECURE: ${{ vars.ADMIN_COOKIE_SECURE }}
           script: |
             set -euo pipefail
 
