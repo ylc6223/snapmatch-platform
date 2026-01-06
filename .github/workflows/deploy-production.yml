@@ -510,9 +510,8 @@ jobs:
             tar -xzf /tmp/admin-standalone.tar.gz
             rm /tmp/admin-standalone.tar.gz
 
-            # 创建 PM2 配置文件（如果不存在）
-            if [ ! -f ecosystem.config.js ]; then
-              cat > ecosystem.config.js << 'EOFPM2'
+            # 写入 PM2 配置文件（每次部署都覆盖，确保与 GitHub Variables 一致）
+            cat > ecosystem.config.js << 'EOFPM2'
             module.exports = {
               apps: [{
                 name: 'snapmatch-admin',
@@ -521,9 +520,10 @@ jobs:
                 instances: 1,
                 exec_mode: 'cluster',
                 env: {
-                  NODE_ENV: 'production',
-                  PORT: 3001,
-                  HOSTNAME: '0.0.0.0',
+                  NODE_ENV: '${{ vars.ADMIN_NODE_ENV || 'production' }}',
+                  PORT: '${{ vars.ADMIN_PORT || '3001' }}',
+                  HOSTNAME: '${{ vars.ADMIN_HOSTNAME || '0.0.0.0' }}',
+                  ADMIN_COOKIE_SECURE: '${{ vars.ADMIN_COOKIE_SECURE || 'true' }}',
                 },
                 error_file: '/opt/1panel/apps/snapmatch/admin/logs/error.log',
                 out_file: '/opt/1panel/apps/snapmatch/admin/logs/out.log',
@@ -531,7 +531,6 @@ jobs:
               }]
             };
             EOFPM2
-            fi
 
             # 创建日志目录
             mkdir -p logs

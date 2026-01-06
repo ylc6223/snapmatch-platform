@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from "@/lib/auth/constants";
+import { getAdminCookieSecure } from "@/lib/auth/cookie-secure";
 import { withAdminBasePath } from "@/lib/routing/base-path";
 
 function redirectToLogin(request: NextRequest) {
@@ -26,7 +27,7 @@ function clearAuthCookies(response: NextResponse) {
   const common = {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: getAdminCookieSecure(),
     path: "/",
   };
   response.cookies.set({ name: ADMIN_ACCESS_TOKEN_COOKIE, value: "", maxAge: 0, ...common });
@@ -40,7 +41,7 @@ function setAuthCookies(
   const common = {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: getAdminCookieSecure(),
     path: "/",
   };
   response.cookies.set({ name: ADMIN_ACCESS_TOKEN_COOKIE, value: input.accessToken, ...common });

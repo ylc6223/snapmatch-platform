@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/constants";
 import { ADMIN_REFRESH_TOKEN_COOKIE } from "@/lib/auth/constants";
+import { getAdminCookieSecure } from "@/lib/auth/cookie-secure";
 
 /**
  * Admin 登录态 Cookie（仅服务端）
@@ -37,7 +38,7 @@ function getAdminAccessTokenCookieOptions(value: string) {
     value,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: getAdminCookieSecure(),
     path: "/"
   } as const;
 }
@@ -48,7 +49,7 @@ function getAdminRefreshTokenCookieOptions(value: string) {
     value,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: getAdminCookieSecure(),
     path: "/",
   } as const;
 }
