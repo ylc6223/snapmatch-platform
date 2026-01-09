@@ -61,36 +61,6 @@ export default async function CustomersPage({
     // 失败时使用空数据，客户端组件会重新加载
   }
 
-  // 客户列表数据获取器（传递给客户端组件）
-  const fetchCustomers = async ({
-    q,
-    page,
-    pageSize,
-    sortBy,
-    sortOrder,
-  }: {
-    q?: string;
-    page: number;
-    pageSize: number;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
-  }) => {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    params.set("page", String(page));
-    params.set("pageSize", String(pageSize));
-    if (sortBy) params.set("sortBy", sortBy);
-    if (sortOrder) params.set("sortOrder", sortOrder);
-
-    const response = await fetch(`/api/customers?${params.toString()}`);
-    if (!response.ok) {
-      throw new Error("获取客户列表失败");
-    }
-
-    const result = await response.json();
-    return result.data as PaginatedCustomersResponse;
-  };
-
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
@@ -104,7 +74,7 @@ export default async function CustomersPage({
       </div>
 
       {/* 客户表格（客户端组件） */}
-      <CustomerTable fetchCustomers={fetchCustomers} initialData={initialData} />
+      <CustomerTable initialData={initialData} />
     </div>
   );
 }
