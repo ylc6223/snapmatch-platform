@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
-import { isApiResponse } from '@/lib/api/response';
+import { ApiResponse, isApiResponse } from '@/lib/api/response';
 
 interface Customer {
   id: string;
@@ -21,6 +21,8 @@ interface Package {
   includedRetouchCount: number;
   includedAlbumCount: number;
   price?: number;
+  isActive: boolean;
+  sort: number;
 }
 
 interface ProjectCreateDrawerProps {
@@ -46,6 +48,9 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCustomerOpen, setIsCustomerOpen] = useState(false);
   const [isPackageOpen, setIsPackageOpen] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   const customerContainerRef = useRef<HTMLDivElement>(null);
   const packageContainerRef = useRef<HTMLDivElement>(null);
@@ -54,19 +59,45 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
   const defaultCover = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80';
   const currentCover = defaultCover;
 
-  // TODO: 从API获取客户列表
-  const [customers] = useState<Customer[]>([
-    { id: '1', name: '张三', phone: '13800138000' },
-    { id: '2', name: '李四', phone: '13900139000' },
-    { id: '3', name: '王五', phone: '13700137000' },
-  ]);
+  const fetchOptions = async () => {
+    setIsLoadingOptions(true);
+    try {
+      const [customersRes, packagesRes] = await Promise.all([
+        fetch('/admin/api/customers', { method: 'GET' }),
+        fetch('/admin/api/packages', { method: 'GET' }),
+      ]);
 
-  // TODO: 从API获取套餐列表
-  const [packages] = useState<Package[]>([
-    { id: '1', name: '基础套餐', includedRetouchCount: 10, includedAlbumCount: 20, price: 298000 },
-    { id: '2', name: '标准套餐', includedRetouchCount: 20, includedAlbumCount: 40, price: 498000 },
-    { id: '3', name: '豪华套餐', includedRetouchCount: 30, includedAlbumCount: 60, price: 798000 },
-  ]);
+      const customersJson = (await customersRes.json().catch(() => null)) as ApiResponse<Customer[]> | null;
+      const packagesJson = (await packagesRes.json().catch(() => null)) as ApiResponse<Package[]> | null;
+
+      if (!customersRes.ok) {
+        if (isApiResponse(customersJson)) {
+          throw new Error(customersJson.message);
+        }
+        throw new Error('获取客户列表失败');
+      }
+
+      if (!packagesRes.ok) {
+        if (isApiResponse(packagesJson)) {
+          throw new Error(packagesJson.message);
+        }
+        throw new Error('获取套餐列表失败');
+      }
+
+      if (!customersJson?.data || !packagesJson?.data) {
+        throw new Error('获取下拉选项失败');
+      }
+
+      setCustomers(customersJson.data);
+      setPackages(packagesJson.data.filter((p) => p.isActive).sort((a, b) => a.sort - b.sort));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '获取下拉选项失败';
+      toast.error(message);
+      console.error('获取下拉选项失败:', error);
+    } finally {
+      setIsLoadingOptions(false);
+    }
+  };
 
   // 点击外部关闭下拉
   React.useEffect(() => {
@@ -81,6 +112,11 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    fetchOptions();
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,13 +273,18 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => setIsCustomerOpen(!isCustomerOpen)}
+                disabled={isLoadingOptions}
                 className={cn(
                   "w-full flex items-center justify-between bg-muted/30 border-2 rounded-xl px-4 py-3 text-base font-bold transition-all outline-none",
                   isCustomerOpen ? "bg-background border-primary/20 shadow-lg" : "border-transparent hover:bg-muted/50"
                 )}
               >
                 <span className={cn(!selectedCustomerData && "text-muted-foreground/60")}>
-                  {selectedCustomerData ? `${selectedCustomerData.name} (${selectedCustomerData.phone})` : "选择客户"}
+                  {isLoadingOptions
+                    ? "加载客户中..."
+                    : selectedCustomerData
+                      ? `${selectedCustomerData.name} (${selectedCustomerData.phone})`
+                      : "选择客户"}
                 </span>
                 <ChevronDown size={16} className={cn("text-muted-foreground transition-transform duration-200", isCustomerOpen && "rotate-180")} />
               </button>
@@ -277,7 +318,7 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
                     ))}
                     {customers.length === 0 && (
                       <div className="py-6 text-center text-sm text-muted-foreground">
-                        暂无客户
+                        {isLoadingOptions ? "加载中..." : "暂无客户"}
                       </div>
                     )}
                   </div>
@@ -295,13 +336,18 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => setIsPackageOpen(!isPackageOpen)}
+                disabled={isLoadingOptions}
                 className={cn(
                   "w-full flex items-center justify-between bg-muted/30 border-2 rounded-xl px-4 py-3 text-base font-bold transition-all outline-none",
                   isPackageOpen ? "bg-background border-primary/20 shadow-lg" : "border-transparent hover:bg-muted/50"
                 )}
               >
                 <span className={cn(!selectedPackageData && "text-muted-foreground/60")}>
-                  {selectedPackageData ? selectedPackageData.name : "选择套餐"}
+                  {isLoadingOptions
+                    ? "加载套餐中..."
+                    : selectedPackageData
+                      ? selectedPackageData.name
+                      : "选择套餐"}
                 </span>
                 <ChevronDown size={16} className={cn("text-muted-foreground transition-transform duration-200", isPackageOpen && "rotate-180")} />
               </button>
@@ -340,7 +386,7 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
                     ))}
                     {packages.length === 0 && (
                       <div className="py-6 text-center text-sm text-muted-foreground">
-                        暂无套餐
+                        {isLoadingOptions ? "加载中..." : "暂无套餐"}
                       </div>
                     )}
                   </div>
@@ -376,7 +422,7 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
           <Button
             type="submit"
             onClick={handleSubmit}
-            disabled={isSubmitting || !projectName.trim() || !selectedCustomer || !selectedPackage}
+            disabled={isSubmitting || isLoadingOptions || !projectName.trim() || !selectedCustomer || !selectedPackage}
             className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (

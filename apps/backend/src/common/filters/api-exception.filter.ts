@@ -17,8 +17,19 @@ function pickCodeMessage(value: unknown) {
   if (!isRecord(value)) return null;
   const code = value.code;
   const message = value.message;
-  if (typeof code === "number" && typeof message === "string") return { code, message };
-  return null;
+  if (typeof code !== "number" || typeof message !== "string") return null;
+
+  const errors = value.errors;
+  if (!Array.isArray(errors)) return { code, message };
+
+  const normalizedErrors = errors
+    .filter((item): item is { field: string; reason: string } => {
+      if (!isRecord(item)) return false;
+      return typeof item.field === "string" && typeof item.reason === "string";
+    })
+    .map((item) => ({ field: item.field, reason: item.reason }));
+
+  return normalizedErrors.length > 0 ? { code, message, errors: normalizedErrors } : { code, message };
 }
 
 @Catch()

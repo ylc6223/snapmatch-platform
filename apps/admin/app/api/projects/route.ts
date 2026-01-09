@@ -44,17 +44,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("[Projects BFF] Request body:", body);
 
-    const { coverImageUrl: _coverImageUrl, shootDate, ...rest } = body ?? {};
-    let normalizedShootDate: number | undefined;
-    if (typeof shootDate === "number" && Number.isFinite(shootDate)) {
-      normalizedShootDate = shootDate;
-    } else if (typeof shootDate === "string") {
-      const parsed = Date.parse(shootDate);
-      if (!Number.isNaN(parsed)) normalizedShootDate = parsed;
-    }
+    // 前后端字段保持一致：只接收后端 CreateProjectDto 支持的字段。
+    // 当前后端尚未支持 coverImageUrl，这里直接丢弃，避免触发后端 whitelist 校验失败。
+    const { coverImageUrl: _coverImageUrl, ...rest } = body ?? {};
+    const payload = {
+      name: rest.name,
+      description: rest.description,
+      customerId: rest.customerId,
+      packageId: rest.packageId,
+      shootDate: rest.shootDate,
+      expiresAt: rest.expiresAt,
+    };
 
     // 验证必填字段
-    if (!rest.customerId || !rest.packageId) {
+    if (!payload.customerId || !payload.packageId) {
       return NextResponse.json(
         makeErrorResponse({
           code: 400,
@@ -64,10 +67,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const payload = {
-      ...rest,
-      ...(normalizedShootDate !== undefined ? { shootDate: normalizedShootDate } : {}),
-    };
+    if (payload.shootDate !== undefined && !(typeof payload.shootDate === "number" && Number.isFinite(payload.shootDate))) {
+      return NextResponse.json(
+        makeErrorResponse({
+          code: 400,
+          message: "shootDate 必须为毫秒时间戳（number）",
+        }),
+        { status: 400 }
+      );
+    }
 
     // 调用后端创建接口
     const result = await backendFetch<ApiResponse<ApiProject>>(
