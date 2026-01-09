@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
   Carousel,
   CarouselContent,
@@ -10,12 +11,40 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { type Project } from '@snapmatch/shared-types';
+import { ProjectStatus, type Project } from '@snapmatch/shared-types';
 
 export function FeaturedProjects() {
   const router = useRouter();
   const [featured, setFeatured] = React.useState<Project[]>([]);
   const [loading, setLoading] = React.useState(true);
+
+  // 状态颜色映射
+  const getStatusColor = (status: ProjectStatus) => {
+    const colors: Record<ProjectStatus, string> = {
+      [ProjectStatus.PENDING]: 'bg-amber-500',
+      [ProjectStatus.SELECTING]: 'bg-blue-500',
+      [ProjectStatus.SUBMITTED]: 'bg-indigo-500',
+      [ProjectStatus.RETOUCHING]: 'bg-cyan-500',
+      [ProjectStatus.PENDING_CONFIRMATION]: 'bg-orange-500',
+      [ProjectStatus.DELIVERED]: 'bg-green-500',
+      [ProjectStatus.CANCELLED]: 'bg-gray-400',
+    };
+    return colors[status] || 'bg-gray-400';
+  };
+
+  // 状态标签映射
+  const getStatusLabel = (status: ProjectStatus) => {
+    const labels: Record<ProjectStatus, string> = {
+      [ProjectStatus.PENDING]: '待选片',
+      [ProjectStatus.SELECTING]: '选片中',
+      [ProjectStatus.SUBMITTED]: '已提交',
+      [ProjectStatus.RETOUCHING]: '修图中',
+      [ProjectStatus.PENDING_CONFIRMATION]: '待确认',
+      [ProjectStatus.DELIVERED]: '已交付',
+      [ProjectStatus.CANCELLED]: '已取消',
+    };
+    return labels[status] || status;
+  };
 
   React.useEffect(() => {
     const fetchFeaturedProjects = async () => {
@@ -48,8 +77,13 @@ export function FeaturedProjects() {
             精选 & 活跃项目
           </h2>
         </div>
-        <div className="flex items-center justify-center h-[200px]">
-          <div className="text-sm text-muted-foreground">加载中...</div>
+        {/* 骨架屏 - 4个轮播卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="relative aspect-[16/9] overflow-hidden rounded-lg shadow-md bg-muted border border-border">
+              <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted-foreground/10 to-muted animate-pulse" />
+            </div>
+          ))}
         </div>
       </section>
     );
@@ -99,8 +133,11 @@ export function FeaturedProjects() {
                       <Badge className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm rounded-sm px-2">
                         {project.description || '项目'}
                       </Badge>
-                      <span className="text-xs font-medium bg-green-500/80 px-2 py-0.5 rounded-sm backdrop-blur-sm">
-                        进行中
+                      <span className={cn(
+                        "text-xs font-medium px-2 py-0.5 rounded-sm backdrop-blur-sm",
+                        getStatusColor(project.status as ProjectStatus).replace('bg-', 'bg-').replace('500', '500/80')
+                      )}>
+                        {getStatusLabel(project.status as ProjectStatus)}
                       </span>
                     </div>
                     <h3 className="text-2xl font-bold leading-tight mb-1">{project.name}</h3>

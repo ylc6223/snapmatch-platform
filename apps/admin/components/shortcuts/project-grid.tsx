@@ -1,13 +1,15 @@
 import React from 'react';
 import { ProjectCard } from './project-card';
+import { ProjectCardSkeleton } from './project-card-skeleton';
 import { ProjectStatus, type Project } from '@snapmatch/shared-types';
 import { toast } from 'sonner';
 
 interface ProjectGridProps {
   activeFilter: string;
+  sortBy?: 'createdAt' | '-createdAt';
 }
 
-export function ProjectGrid({ activeFilter }: ProjectGridProps) {
+export function ProjectGrid({ activeFilter, sortBy = '-createdAt' }: ProjectGridProps) {
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -43,35 +45,45 @@ export function ProjectGrid({ activeFilter }: ProjectGridProps) {
 
   // Filter projects based on active filter
   const filteredProjects = React.useMemo(() => {
-    if (activeFilter === '全部') {
-      return projects;
+    let filtered = projects;
+
+    // 1. 应用筛选
+    if (activeFilter !== '全部') {
+      // Map filter names to status values
+      const filterStatusMap: Record<string, ProjectStatus[]> = {
+        '进行中': [
+          ProjectStatus.PENDING,
+          ProjectStatus.SELECTING,
+          ProjectStatus.SUBMITTED,
+          ProjectStatus.RETOUCHING,
+          ProjectStatus.PENDING_CONFIRMATION,
+        ],
+        '选片中': [ProjectStatus.SELECTING],
+        '修图中': [ProjectStatus.RETOUCHING],
+        '已交付': [ProjectStatus.DELIVERED],
+      };
+
+      const statuses = filterStatusMap[activeFilter];
+      filtered = filtered.filter(project => statuses.includes(project.status as ProjectStatus));
     }
 
-    // Map filter names to status values
-    const filterStatusMap: Record<string, ProjectStatus[]> = {
-      '进行中': [
-        ProjectStatus.PENDING,
-        ProjectStatus.SELECTING,
-        ProjectStatus.SUBMITTED,
-        ProjectStatus.RETOUCHING,
-        ProjectStatus.PENDING_CONFIRMATION,
-      ],
-      '选片中': [ProjectStatus.SELECTING],
-      '修图中': [ProjectStatus.RETOUCHING],
-      '已交付': [ProjectStatus.DELIVERED],
-    };
+    // 2. 应用排序
+    filtered = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortBy === '-createdAt' ? dateB - dateA : dateA - dateB;
+    });
 
-    const statuses = filterStatusMap[activeFilter];
-    return projects.filter(project => statuses.includes(project.status as ProjectStatus));
-  }, [activeFilter, projects]);
+    return filtered;
+  }, [activeFilter, projects, sortBy]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center pb-20 min-h-[600px]">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-          <p className="mt-4 text-sm text-muted-foreground">加载中...</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20 min-h-[600px]">
+        {/* 8个骨架屏卡片 */}
+        {Array.from({ length: 8 }).map((_, index) => (
+          <ProjectCardSkeleton key={index} />
+        ))}
       </div>
     );
   }

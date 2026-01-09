@@ -9,6 +9,7 @@ import { ProjectGrid } from '@/components/shortcuts/project-grid';
 
 export default function Page() {
   const [activeFilter, setActiveFilter] = React.useState('全部');
+  const [sortBy, setSortBy] = React.useState<'createdAt' | '-createdAt'>('-createdAt');
 
   return (
     <div className="min-h-screen font-sans text-foreground bg-background selection:bg-accent selection:text-accent-foreground">
@@ -19,8 +20,16 @@ export default function Page() {
         <FeaturedProjects />
 
         <div className="mt-2">
-          <FilterBar activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-          <ProjectGrid activeFilter={activeFilter} />
+          <FilterBar
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+          />
+          <ProjectGrid
+            activeFilter={activeFilter}
+            sortBy={sortBy}
+          />
         </div>
       </main>
     </div>

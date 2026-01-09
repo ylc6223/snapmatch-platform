@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, List, ChevronDown } from 'lucide-react';
+import { LayoutGrid, List, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'motion/react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,12 +7,16 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface FilterBarProps {
   activeFilter: string;
   onFilterChange: (filter: string) => void;
+  sortBy?: 'createdAt' | '-createdAt';
+  onSortChange?: (sortBy: 'createdAt' | '-createdAt') => void;
 }
 
-export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
+export function FilterBar({ activeFilter, onFilterChange, sortBy = '-createdAt', onSortChange }: FilterBarProps) {
   const [view, setView] = React.useState<'grid' | 'list'>('grid');
 
   const filters = ['全部', '进行中', '选片中', '修图中', '已交付'];
+
+  const sortLabel = sortBy === '-createdAt' ? '最新创建' : '最早创建';
 
   return (
     <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4 py-6 pb-2 mb-6 border-b border-border">
@@ -55,17 +59,21 @@ export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
       {/* Right: Actions */}
       <div className="flex items-center gap-6">
 
-        {/* Dropdowns - Minimal Text */}
+        {/* 排序按钮 - 直接点击切换 */}
         <div className="flex items-center gap-4 hidden lg:flex">
-             <button className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              <span>日期</span>
-              <ChevronDown size={14} className="text-muted-foreground" />
-            </button>
+          <button
+            onClick={() => onSortChange?.(sortBy === '-createdAt' ? 'createdAt' : '-createdAt')}
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowUpDown size={14} className="text-muted-foreground group-hover:rotate-180 transition-transform duration-300" />
+            <span>{sortLabel}</span>
+          </button>
 
-            <button className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              <span>类型</span>
-              <ChevronDown size={14} className="text-muted-foreground" />
-            </button>
+          {/* 类型筛选 - 占位，暂不实现 */}
+          <button className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors opacity-50 cursor-not-allowed" disabled>
+            <span>类型</span>
+            <ChevronDown size={14} className="text-muted-foreground" />
+          </button>
         </div>
 
         <div className="h-4 w-[1px] bg-border hidden lg:block"></div>
