@@ -19,7 +19,6 @@ import { Badge } from "@/components/ui/badge";
 import { CustomerFormDialog } from "@/components/customers/customer-form-dialog";
 import {
   useDataTableQueryState,
-  type DataTableFetcher,
 } from "@/components/data-table/use-data-table-query-state";
 import { DataTable } from "@/components/data-table/table";
 import { DataTableToolbar } from "@/components/data-table/toolbar";
@@ -30,9 +29,40 @@ import type {
 } from "@/lib/types/customer";
 
 interface CustomerTableProps {
-  fetchCustomers: DataTableFetcher<Customer>;
   initialData: PaginatedCustomersResponse;
 }
+
+/**
+ * 客户列表数据获取器（内部函数）
+ */
+const fetchCustomers = async ({
+  q,
+  page,
+  pageSize,
+  sortBy,
+  sortOrder,
+}: {
+  q?: string;
+  page: number;
+  pageSize: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}): Promise<PaginatedCustomersResponse> => {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  if (sortBy) params.set("sortBy", sortBy);
+  if (sortOrder) params.set("sortOrder", sortOrder);
+
+  const response = await fetch(`/api/customers?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取客户列表失败");
+  }
+
+  const result = await response.json();
+  return result.data as PaginatedCustomersResponse;
+};
 
 /**
  * 客户表格组件（客户端组件）
@@ -44,7 +74,6 @@ interface CustomerTableProps {
  * - Dialog 状态管理
  */
 export function CustomerTable({
-  fetchCustomers,
   initialData,
 }: CustomerTableProps) {
   const [queryState, queryActions] = useDataTableQueryState({
@@ -196,7 +225,7 @@ export function CustomerTable({
         setIsRefreshing(false);
       }
     },
-    [queryState, fetchCustomers]
+    [queryState]
   );
 
   // 当查询状态变化时重新加载数据
