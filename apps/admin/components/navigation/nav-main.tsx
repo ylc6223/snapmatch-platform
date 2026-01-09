@@ -9,12 +9,6 @@ import { ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -24,7 +18,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  useSidebar,
 } from "@/components/ui/sidebar"
 
 type NavItem = {
@@ -44,10 +37,8 @@ export function NavMain({
   showQuickActions?: boolean
 }) {
   const pathname = usePathname()
-  const { isMobile, state } = useSidebar()
 
   const normalizedPathname = pathname.split(/[?#]/)[0]
-  const shouldUseDropdownSubmenu = !isMobile && state === "collapsed"
 
   const isActive = React.useCallback(
     (href: string) => {
@@ -98,32 +89,6 @@ export function NavMain({
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )
-            }
-
-            if (shouldUseDropdownSubmenu) {
-              return (
-                <DropdownMenu key={item.title}>
-                  <SidebarMenuItem>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuButton
-                        tooltip={item.title}
-                        isActive={itemIsActive}
-                        className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                      >
-                        {item.icon ? <item.icon /> : null}
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" align="start" className="min-w-56 rounded-lg">
-                      {item.items?.map((child) => (
-                        <DropdownMenuItem key={child.title} asChild>
-                          <Link href={child.url}>{child.title}</Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </SidebarMenuItem>
-                </DropdownMenu>
               )
             }
 

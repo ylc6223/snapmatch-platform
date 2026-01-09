@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { AssetsModule } from './assets/assets.module';
 import { ProjectsModule } from './projects/projects.module';
 import { ViewerModule } from './viewer/viewer.module';
+import { CustomersModule } from './customers/customers.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { ViewerModule } from './viewer/viewer.module';
     ProjectsModule,
     // 客户选片端模块：Token访问、照片浏览、选片提交。
     ViewerModule,
+    // 客户管理模块：客户档案的增删改查。
+    CustomersModule,
   ],
   controllers: [HealthController],
   providers: [
