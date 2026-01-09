@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileImage } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Project, ProjectStatus } from '@snapmatch/shared-types';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
@@ -23,6 +24,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const router = useRouter();
   const statusColor = statusColors[project.status as ProjectStatus];
 
   // 使用 coverImageUrl 或默认封面
@@ -31,8 +33,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
   // 使用 dayjs 格式化时间
   const formattedDate = dayjs(project.createdAt).format('YYYY年MM月DD日');
 
+  const handleClick = () => {
+    router.push(`/admin/dashboard/projects/${project.id}`);
+  };
+
   return (
-    <div className="group flex flex-col gap-3 cursor-pointer">
+    <div className="group flex flex-col gap-3 cursor-pointer" onClick={handleClick}>
       {/* Image Area - No hover lift */}
       <div className="relative aspect-[16/10] overflow-hidden rounded-md bg-muted border border-border">
         <img

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Star } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import {
   Carousel,
@@ -12,6 +13,7 @@ import {
 import { type Project } from '@snapmatch/shared-types';
 
 export function FeaturedProjects() {
+  const router = useRouter();
   const [featured, setFeatured] = React.useState<Project[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -82,6 +84,7 @@ export function FeaturedProjects() {
               <motion.div
                 className="relative group cursor-pointer"
                 transition={{ duration: 0.2 }}
+                onClick={() => router.push(`/admin/dashboard/projects/${project.id}`)}
               >
                 <div className="relative aspect-[16/9] overflow-hidden rounded-lg shadow-md">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity" />
