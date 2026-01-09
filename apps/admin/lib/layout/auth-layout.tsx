@@ -28,8 +28,16 @@ export async function authenticateUser(): Promise<AuthUser> {
       redirect(withAdminBasePath("/login?next=/dashboard/portfolio/works"));
     }
 
+    const backendBaseUrl = process.env.BACKEND_BASE_URL;
+    if (!backendBaseUrl) {
+      throw new Error(
+        "Missing environment variable: BACKEND_BASE_URL. " +
+        "Please set it in .env.local (see .env.example for reference)"
+      );
+    }
+
     const response = await fetch(
-      new URL("/api/v1/auth/me", process.env.BACKEND_BASE_URL ?? "http://localhost:3002"),
+      new URL("/api/v1/auth/me", backendBaseUrl),
       {
         method: "GET",
         headers: {

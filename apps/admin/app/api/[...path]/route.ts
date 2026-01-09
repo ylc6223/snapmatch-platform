@@ -14,7 +14,14 @@ import { isApiResponse, makeErrorResponse } from "@/lib/api/response";
 export const runtime = "nodejs";
 
 function getBackendBaseUrl() {
-  return process.env.BACKEND_BASE_URL ?? "http://localhost:3002";
+  const baseUrl = process.env.BACKEND_BASE_URL;
+  if (!baseUrl) {
+    throw new Error(
+      "Missing environment variable: BACKEND_BASE_URL. " +
+      "Please set it in .env.local (see .env.example for reference)"
+    );
+  }
+  return baseUrl;
 }
 
 async function refreshSession(refreshToken: string) {
