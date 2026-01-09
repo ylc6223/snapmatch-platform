@@ -1,9 +1,21 @@
+import type { Metadata } from "next";
+import { UsersRound } from "lucide-react";
 import { CustomerTable } from "@/components/customers/customer-table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import type {
-  Customer,
   PaginatedCustomersResponse,
   CustomersQueryParams,
 } from "@/lib/types/customer";
+import { generateMeta } from "@/lib/utils";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return generateMeta({
+    title: "客户档案",
+    description: "管理客户信息，支持新增、编辑、删除和搜索。",
+  });
+}
 
 /**
  * 客户档案页面（服务端组件）
@@ -62,16 +74,24 @@ export default async function CustomersPage({
   }
 
   return (
-    <div className="space-y-6">
-      {/* 页面标题 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">客户档案</h1>
-          <p className="text-muted-foreground mt-2">
-            管理客户信息，支持新增、编辑、删除和搜索
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6 pt-4">
+      <Card className="border-border/60 bg-gradient-to-b from-primary/5 to-card shadow-xs">
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <UsersRound className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base sm:text-lg">客户档案</CardTitle>
+              <Badge variant="outline" className="h-6">
+                CRM
+              </Badge>
+            </div>
+            <CardDescription className="max-w-[72ch]">
+              管理客户信息，支持新增、编辑、删除和搜索。
+            </CardDescription>
+          </div>
+        </CardHeader>
+      </Card>
+      <Separator />
 
       {/* 客户表格（客户端组件） */}
       <CustomerTable initialData={initialData} />
