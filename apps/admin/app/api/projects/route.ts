@@ -27,6 +27,74 @@ export interface ApiResponse<T> {
 }
 
 /**
+ * BFF：创建新项目
+ *
+ * 对接后端：
+ * - POST `${BACKEND_BASE_URL}/api/v1/projects`
+ *
+ * 说明：
+ * - 创建新项目
+ * - 必须提供 customerId 和 packageId
+ * - TODO: 客户和套餐列表应从 API 获取
+ */
+export async function POST(request: NextRequest) {
+  try {
+    console.log("[Projects BFF] Received POST request");
+
+    const body = await request.json();
+    console.log("[Projects BFF] Request body:", body);
+
+    // 验证必填字段
+    if (!body.customerId || !body.packageId) {
+      return NextResponse.json(
+        makeErrorResponse({
+          code: 400,
+          message: "客户和套餐为必填项",
+        }),
+        { status: 400 }
+      );
+    }
+
+    // 调用后端创建接口
+    const result = await backendFetch<ApiResponse<ApiProject>>(
+      `/api/v1/projects`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    console.log("[Projects BFF] Project created successfully:", result.data);
+
+    // 透传后端的 envelope 响应
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    console.error("创建项目失败:", error);
+
+    if (error instanceof BackendError) {
+      if (isApiResponse(error.payload)) {
+        return NextResponse.json(error.payload, { status: error.status });
+      }
+      return NextResponse.json(
+        makeErrorResponse({
+          code: error.status,
+          message: "创建项目失败",
+        }),
+        { status: error.status }
+      );
+    }
+
+    return NextResponse.json(
+      makeErrorResponse({ code: 500, message: "创建项目失败" }),
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * BFF：获取所有项目列表
  *
  * 对接后端：

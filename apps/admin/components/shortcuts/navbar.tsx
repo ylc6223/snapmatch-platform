@@ -5,10 +5,12 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SearchInput, SearchResult } from '@/components/ui/search-input';
+import { ProjectCreateDrawer } from '@/components/projects/project-create-drawer';
 import { toast } from 'sonner';
 
 export function Navbar() {
   const router = useRouter();
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false);
 
   const handleSearchSelect = (item: SearchResult) => {
     // 显示选中的项目信息
@@ -42,11 +44,24 @@ export function Navbar() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-4">
-        <Button className="rounded-md px-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+        <Button
+          onClick={() => setIsCreateOpen(true)}
+          className="rounded-md px-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+        >
           <Plus size={16} />
           <span>新建项目</span>
         </Button>
       </div>
+
+      {/* 创建项目抽屉 */}
+      <ProjectCreateDrawer
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSuccess={(projectId) => {
+          // 跳转到项目详情页
+          router.push(`/dashboard/projects/${projectId}`);
+        }}
+      />
     </nav>
   );
 }
