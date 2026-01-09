@@ -5,6 +5,8 @@ import { X, UploadCloud, Image as ImageIcon, FileText, User, Package, ChevronDow
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import dayjs from 'dayjs';
+import { isApiResponse } from '@/lib/api/response';
 
 interface Customer {
   id: string;
@@ -39,20 +41,18 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
   onSuccess,
 }) => {
   const [projectName, setProjectName] = useState('');
-  const [coverImageUrl, setCoverImageUrl] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [selectedPackage, setSelectedPackage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCustomerOpen, setIsCustomerOpen] = useState(false);
   const [isPackageOpen, setIsPackageOpen] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const customerContainerRef = useRef<HTMLDivElement>(null);
   const packageContainerRef = useRef<HTMLDivElement>(null);
 
   // 默认封面图
   const defaultCover = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80';
-  const currentCover = coverImageUrl || defaultCover;
+  const currentCover = defaultCover;
 
   // TODO: 从API获取客户列表
   const [customers] = useState<Customer[]>([
@@ -110,16 +110,21 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
         },
         body: JSON.stringify({
           name: projectName.trim(),
-          coverImageUrl: coverImageUrl,
           customerId: selectedCustomer,
           packageId: selectedPackage,
           // 其他字段使用默认值
           description: '',
-          shootDate: new Date().toISOString(),
+          shootDate: dayjs().valueOf(),
         }),
       });
 
       if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        if (isApiResponse(errorPayload)) {
+          const description = errorPayload.errors?.map((e) => `${e.field}: ${e.reason}`).join('；');
+          toast.error(errorPayload.message, { description });
+          return;
+        }
         throw new Error('创建项目失败');
       }
 
@@ -131,7 +136,6 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
 
       // 清空表单
       setProjectName('');
-      setCoverImageUrl('');
       setSelectedCustomer('');
       setSelectedPackage('');
 
@@ -145,17 +149,6 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // TODO: 实现真实的文件上传逻辑
-    // 这里暂时使用占位符
-    const mockUrl = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000)}/800/450`;
-    setCoverImageUrl(mockUrl);
-    toast.success('封面上传成功');
   };
 
   const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
@@ -188,28 +181,15 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
               className="w-full h-full object-cover"
             />
 
-            {/* 上传按钮遮罩 */}
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-all cursor-pointer flex items-center justify-center group"
-            >
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <UploadCloud size={48} className="text-white mb-2" />
-                <p className="text-white text-base font-semibold">点击更换封面</p>
-                <p className="text-white/70 text-sm">可选</p>
+            {/* 封面上传暂不支持（后端尚未接收 coverImageUrl） */}
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+              <div className="text-center">
+                <UploadCloud size={40} className="text-white/90 mb-2 mx-auto" />
+                <p className="text-white text-base font-semibold">暂不支持上传封面</p>
               </div>
             </div>
           </div>
         </div>
-
-        {/* 隐藏的文件输入 */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
       </div>
 
       {/* 右侧区域：表单 */}

@@ -44,8 +44,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("[Projects BFF] Request body:", body);
 
+    const { coverImageUrl: _coverImageUrl, shootDate, ...rest } = body ?? {};
+    let normalizedShootDate: number | undefined;
+    if (typeof shootDate === "number" && Number.isFinite(shootDate)) {
+      normalizedShootDate = shootDate;
+    } else if (typeof shootDate === "string") {
+      const parsed = Date.parse(shootDate);
+      if (!Number.isNaN(parsed)) normalizedShootDate = parsed;
+    }
+
     // 验证必填字段
-    if (!body.customerId || !body.packageId) {
+    if (!rest.customerId || !rest.packageId) {
       return NextResponse.json(
         makeErrorResponse({
           code: 400,
@@ -55,6 +64,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const payload = {
+      ...rest,
+      ...(normalizedShootDate !== undefined ? { shootDate: normalizedShootDate } : {}),
+    };
+
     // 调用后端创建接口
     const result = await backendFetch<ApiResponse<ApiProject>>(
       `/api/v1/projects`,
@@ -63,7 +77,7 @@ export async function POST(request: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       }
     );
 
@@ -77,6 +91,19 @@ export async function POST(request: NextRequest) {
     if (error instanceof BackendError) {
       if (isApiResponse(error.payload)) {
         return NextResponse.json(error.payload, { status: error.status });
+      }
+      if (
+        error.payload &&
+        typeof error.payload === "object" &&
+        typeof (error.payload as { message?: unknown }).message === "string"
+      ) {
+        return NextResponse.json(
+          makeErrorResponse({
+            code: error.status,
+            message: (error.payload as { message: string }).message,
+          }),
+          { status: error.status },
+        );
       }
       return NextResponse.json(
         makeErrorResponse({
