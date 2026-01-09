@@ -16,7 +16,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, ResponsiveContainer } from "rechart
 
 // --- Card 1: Project Stats ---
 const ProjectStatsCard = () => (
-  <Card className="flex flex-col animate-in zoom-in-50 duration-500 h-full">
+  <Card className="flex flex-col h-full">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
       <CardTitle className="text-sm font-medium text-muted-foreground">项目统计</CardTitle>
       <Folder className="h-4 w-4 text-cyan-500" />
@@ -52,7 +52,7 @@ const ProjectStatsCard = () => (
 
 // --- Card 2: Selection Progress ---
 const SelectionProgressCard = () => (
-  <Card className="flex flex-col animate-in zoom-in-50 duration-500 h-full">
+  <Card className="flex flex-col h-full">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
       <CardTitle className="text-sm font-medium text-muted-foreground">选片监控</CardTitle>
       <CheckCircle className="h-4 w-4 text-blue-500" />
@@ -107,7 +107,7 @@ const SelectionProgressCard = () => (
 
 // --- Card 3: Photo Data ---
 const PhotoDataCard = () => (
-  <Card className="flex flex-col animate-in zoom-in-50 duration-500 h-full">
+  <Card className="flex flex-col h-full">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
       <CardTitle className="text-sm font-medium text-muted-foreground">照片数据</CardTitle>
       <HardDrive className="h-4 w-4 text-purple-500" />
@@ -172,7 +172,7 @@ const portfolioChartConfig = {
 } satisfies ChartConfig;
 
 const PortfolioDataCard = () => (
-  <Card className="flex flex-col animate-in zoom-in-50 duration-500 h-full">
+  <Card className="flex flex-col h-full">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
       <CardTitle className="text-sm font-medium text-muted-foreground">作品集统计</CardTitle>
       <ImageIcon className="h-4 w-4 text-pink-500" />
@@ -225,7 +225,7 @@ const pieChartConfig = {
 } satisfies ChartConfig;
 
 const SelectionRateCard = () => (
-  <Card className="flex flex-col animate-in zoom-in-50 duration-500 h-full">
+  <Card className="flex flex-col h-full">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium text-muted-foreground">完成率</CardTitle>
       <Database className="h-4 w-4 text-cyan-500" />
@@ -275,7 +275,7 @@ const SelectionRateCard = () => (
 
 // --- Card 6: Monthly Overview ---
 const MonthlyOverviewCard = () => (
-  <Card className="flex flex-col animate-in zoom-in-50 duration-500 h-full">
+  <Card className="flex flex-col h-full">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
       <CardTitle className="text-sm font-medium text-muted-foreground">月度概览 (1月)</CardTitle>
       <Eye className="h-4 w-4 text-foreground" />
