@@ -77,8 +77,16 @@ export default async function Page({ children }: { children: React.ReactNode }) 
       requestHeaders.get("x-admin-access-token") ?? (await getAdminAccessToken())
     if (!accessToken) redirect(withAdminBasePath("/login?next=/dashboard/analytics"))
 
+    const backendBaseUrl = process.env.BACKEND_BASE_URL
+    if (!backendBaseUrl) {
+      throw new Error(
+        "Missing environment variable: BACKEND_BASE_URL. " +
+        "Please set it in .env.local (see .env.example for reference)"
+      )
+    }
+
     const response = await fetch(
-      new URL("/api/v1/auth/me", process.env.BACKEND_BASE_URL ?? "http://localhost:3002"),
+      new URL("/api/v1/auth/me", backendBaseUrl),
       {
         method: "GET",
         headers: { accept: "application/json", authorization: `Bearer ${accessToken}` },

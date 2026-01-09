@@ -26,14 +26,14 @@ import { PackagesModule } from './packages/packages.module';
     AuthModule,
     // 资产上传模块：统一签名接口、作品集素材/交付照片确认、云存储抽象层（本地 R2，生产预留 COS）。
     AssetsModule,
-    // 客户模块：用于项目创建时绑定客户。
-    CustomersModule,
     // 套餐模块：用于项目创建时绑定套餐。
     PackagesModule,
     // 项目管理模块：创建项目、上传照片、客户选片。
     ProjectsModule,
     // 客户选片端模块：Token访问、照片浏览、选片提交。
     ViewerModule,
+    // 客户管理模块：客户档案的增删改查。
+    CustomersModule,
   ],
   controllers: [HealthController],
   providers: [

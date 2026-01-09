@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionExpiredDialog } from "@/components/dialogs/session-expired-dialog";
 import { ForbiddenDialog } from "@/components/dialogs/forbidden-dialog";
+import { GlobalLoader } from "@/components/global-loader";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = React.useState(
@@ -31,6 +32,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <Toaster />
         <SessionExpiredDialog />
         <ForbiddenDialog />
+        <GlobalLoader />
       </QueryClientProvider>
     </ThemeProvider>
   );

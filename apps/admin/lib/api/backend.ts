@@ -24,7 +24,14 @@ export class BackendError extends Error {
 
 function getBackendBaseUrl() {
   // 仅服务端读取，不要使用 NEXT_PUBLIC_ 前缀以免泄露给浏览器。
-  return process.env.BACKEND_BASE_URL ?? "http://localhost:3002";
+  const baseUrl = process.env.BACKEND_BASE_URL;
+  if (!baseUrl) {
+    throw new Error(
+      "Missing environment variable: BACKEND_BASE_URL. " +
+      "Please set it in .env.local (see .env.example for reference)"
+    );
+  }
+  return baseUrl;
 }
 
 async function readResponsePayload(response: Response) {
