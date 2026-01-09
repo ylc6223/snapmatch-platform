@@ -84,7 +84,7 @@ export function FeaturedProjects() {
               <motion.div
                 className="relative group cursor-pointer"
                 transition={{ duration: 0.2 }}
-                onClick={() => router.push(`/admin/dashboard/projects/${project.id}`)}
+                onClick={() => router.push(`dashboard/projects/${project.id}`)}
               >
                 <div className="relative aspect-[16/9] overflow-hidden rounded-lg shadow-md">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity" />

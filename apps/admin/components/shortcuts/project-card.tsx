@@ -34,7 +34,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const formattedDate = dayjs(project.createdAt).format('YYYY年MM月DD日');
 
   const handleClick = () => {
-    router.push(`/admin/dashboard/projects/${project.id}`);
+    router.push(`dashboard/projects/${project.id}`);
   };
 
   return (

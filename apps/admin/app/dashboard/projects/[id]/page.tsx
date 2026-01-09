@@ -43,7 +43,7 @@ export default function ProjectDetailPage() {
   }, [projectId]);
 
   const handleClose = () => {
-    router.push('/admin/dashboard/shortcuts');
+    router.push('dashboard/shortcuts');
   };
 
   if (loading) {
