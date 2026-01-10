@@ -142,7 +142,7 @@ export function CustomerCombobox({
                 {items.length === 0 ? <CommandEmpty>未找到匹配客户</CommandEmpty> : null}
 
                 {items.length > 0 ? (
-                  <CommandGroup heading="客户">
+                  <CommandGroup>
                     {items.map((customer) => (
                       <CommandItem
                         key={customer.id}
