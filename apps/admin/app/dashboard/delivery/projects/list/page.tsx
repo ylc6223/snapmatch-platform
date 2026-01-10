@@ -21,15 +21,15 @@ export default function Page() {
   return (
     <div className="min-h-screen font-sans text-foreground bg-background">
       {/* 上部分：背景区域 + 搜索框 */}
-      <div className="relative bg-gradient-to-b from-primary/10 to-background border-b border-border">
+      <div className="relative bg-gradient-to-b from-primary/20 to-background border-b border-border">
         {/* Sparkles 背景效果 */}
         <SparklesCore
           id="tsparticles-hero"
           background="transparent"
-          minSize={0.4}
-          maxSize={1}
+          minSize={2}
+          maxSize={4}
           particleDensity={80}
-          particleColor="hsl(var(--primary))"
+          particleColor="hsl(var(--foreground))"
           speed={2}
           className="absolute inset-0 w-full h-full pointer-events-none"
         />

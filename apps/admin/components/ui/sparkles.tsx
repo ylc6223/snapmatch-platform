@@ -52,13 +52,13 @@ export function SparklesCore({
         },
         opacity: {
           value: {
-            min: 0.1,
-            max: 0.8,
+            min: 0.4,
+            max: 0.9,
           },
           animation: {
             enable: true,
             speed: speed,
-            minimumValue: 0.1,
+            minimumValue: 0.4,
           },
         },
         size: {
