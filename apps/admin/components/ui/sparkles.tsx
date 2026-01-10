@@ -2,7 +2,6 @@
 
 import React, { useMemo } from "react";
 import { Particles } from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
 
 interface SparklesCoreProps {
   id?: string;
@@ -25,10 +24,6 @@ export function SparklesCore({
   particleColor = "#ffffff",
   particleDensity = 100,
 }: SparklesCoreProps) {
-  const particlesLoaded = async () => {
-    // Optional callback when particles are loaded
-  };
-
   const options = useMemo(
     () => ({
       background: {
@@ -45,7 +40,7 @@ export function SparklesCore({
         },
         move: {
           enable: true,
-          direction: "none",
+          direction: "none" as const,
           speed: {
             min: 0.1,
             max: 0.3,
@@ -77,16 +72,10 @@ export function SparklesCore({
     [background, particleColor, particleDensity, minSize, maxSize, speed]
   );
 
-  const particlesInit = async (engine: any) => {
-    await loadSlim(engine);
-  };
-
   return (
     <Particles
       id={id}
       className={className}
-      init={particlesInit}
-      loaded={particlesLoaded}
       options={options}
     />
   );

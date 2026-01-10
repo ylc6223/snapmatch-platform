@@ -26,6 +26,8 @@ export interface Project {
   createdAt: number;
   updatedAt: number;
   coverImageUrl?: string;
+  customerName?: string;
+  shootDate?: number;
 }
 
 /**

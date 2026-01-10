@@ -1,7 +1,7 @@
 import { Spinner } from "@/components/ui/spinner"
-import { Button, type ButtonProps } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { ReactNode } from "react"
+import { ReactNode, ComponentProps } from "react"
 
 /**
  * ButtonLoader 组件
@@ -22,7 +22,7 @@ export function ButtonLoader({
   disabled,
   className,
   ...props
-}: ButtonProps & {
+}: ComponentProps<typeof Button> & {
   loading?: boolean
   loadingText?: string
   children?: ReactNode

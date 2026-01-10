@@ -80,16 +80,25 @@ export default function Page() {
   const photos = useMemo(() => {
     if (USE_MOCK_DATA) {
       return GENERATED_MOCK_PHOTOS.map((photo) => ({
-        ...photo,
         id: photo.id,
         filename: photo.alt,
         thumbKey: photo.src,
         previewKey: photo.src,
         originalKey: photo.src,
+        projectId: 'mock-project',
+        projectName: photo.photographer,
+        customerId: undefined,
+        customerName: undefined,
+        categoryId: undefined,
+        categoryName: undefined,
+        isProjectCover: false,
+        selected: undefined,
+        selectedAt: undefined,
+        fileSize: 0,
         width: photo.width,
         height: photo.height,
-        photographer: photo.photographer,
-        avgColor: photo.avgColor,
+        createdAt: 1704067200000, // Fixed timestamp for mock data (2024-01-01)
+        tags: undefined,
       }));
     }
     return photosData?.data || [];

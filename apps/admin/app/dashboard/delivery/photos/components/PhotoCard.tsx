@@ -5,28 +5,16 @@ import { Heart, Plus, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import type { Photo } from '../hooks/usePhotos';
 
 export interface PhotoCardProps {
-  photo: {
-    id: string;
-    filename: string;
-    thumbKey: string;
-    previewKey: string;
-    originalKey: string;
-    projectName?: string;
-    customerName?: string;
-    photographer?: string;
-    avgColor?: string;
-    selected?: boolean;
-    width?: number;
-    height?: number;
-  };
+  photo: Photo;
   isSelected?: boolean;
   onSelect?: (photoId: string) => void;
   onLike?: (photoId: string) => void;
   onAddToCollection?: (photoId: string) => void;
-  onDownload?: (photo: PhotoCardProps['photo']) => void;
-  onClick?: (photo: PhotoCardProps['photo']) => void;
+  onDownload?: (photo: Photo) => void;
+  onClick?: (photo: Photo) => void;
 }
 
 export function PhotoCard({
@@ -48,10 +36,10 @@ export function PhotoCard({
       onClick={() => onClick?.(photo)}
     >
       {/* Image - 使用 Next.js Image 组件，设置 width 和 height */}
-      <div className="relative w-full" style={{ backgroundColor: photo.avgColor || 'rgb(243 244 246)' }}>
+      <div className="relative w-full" style={{ backgroundColor: 'rgb(243 244 246)' }}>
         <Image
           src={photo.thumbKey}
-          alt={photo.filename || photo.photographer || 'Photo'}
+          alt={photo.filename || 'Photo'}
           width={width}
           height={height}
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
@@ -100,14 +88,14 @@ export function PhotoCard({
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8 border border-white/50">
             <AvatarImage
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${photo.projectName || photo.photographer || photo.id}`}
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${photo.projectName || photo.id}`}
             />
             <AvatarFallback className="text-xs bg-white/90 text-gray-700">
-              {(photo.projectName || photo.photographer || 'U')[0].toUpperCase()}
+              {(photo.projectName || 'U')[0].toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <span className="text-white font-medium text-sm drop-shadow-md line-clamp-1">
-            {photo.projectName || photo.photographer || 'Unknown'}
+            {photo.projectName || 'Unknown'}
           </span>
         </div>
 
