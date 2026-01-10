@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Loader2, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -95,13 +95,27 @@ export function CustomerCombobox({
         <Button
           type="button"
           role="combobox"
-          variant="outline"
+          variant="ghost"
           aria-expanded={open}
           disabled={disabled}
-          className="w-full justify-between bg-muted/30 border-2 border-transparent hover:bg-muted/50 hover:border-transparent data-[state=open]:bg-background data-[state=open]:border-primary/20 data-[state=open]:shadow-lg px-4 py-3 h-auto text-base font-bold"
+          className={cn(
+            "w-full flex items-center justify-between bg-muted/30 border-2 rounded-xl px-4 py-3 text-base font-bold transition-all outline-none h-auto",
+            "border-transparent hover:bg-muted/50",
+            "data-[state=open]:bg-background data-[state=open]:border-primary/20 data-[state=open]:shadow-lg",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+          )}
         >
           <span className={cn(!value && "text-muted-foreground/60")}>{label}</span>
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+          {disabled ? (
+            <Lock className="ml-2 size-4 shrink-0 opacity-60" />
+          ) : (
+            <ChevronDown
+              className={cn(
+                "ml-2 size-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                open && "rotate-180",
+              )}
+            />
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">

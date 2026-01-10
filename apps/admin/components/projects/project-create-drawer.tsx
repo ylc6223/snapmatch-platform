@@ -347,7 +347,7 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
             type="submit"
             onClick={handleSubmit}
             disabled={isSubmitting || isLoadingOptions || !projectName.trim() || !selectedCustomer || !selectedPackage}
-            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base transition-colors shadow-xl shadow-primary/20 flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
