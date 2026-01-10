@@ -97,7 +97,7 @@ export function SearchInput({
         setIsLoading(false);
       }
     },
-    500, // 500ms 防抖延迟
+    300, // 300ms 防抖延迟（符合文档规范）
     { leading: false, trailing: true }
   );
 
