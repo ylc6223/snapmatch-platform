@@ -35,6 +35,10 @@ export function SparklesCore({
         color: background,
       },
       fpsLimit: 60,
+      fullScreen: {
+        enable: false,
+        zIndex: 0,
+      },
       particles: {
         color: {
           value: particleColor,
