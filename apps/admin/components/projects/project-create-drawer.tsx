@@ -7,12 +7,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import { ApiResponse, isApiResponse } from '@/lib/api/response';
-
-interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-}
+import { CustomerCombobox, type CustomerComboboxItem } from '@/components/customers/customer-combobox';
 
 interface Package {
   id: string;
@@ -43,39 +38,24 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
   onSuccess,
 }) => {
   const [projectName, setProjectName] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerComboboxItem | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCustomerOpen, setIsCustomerOpen] = useState(false);
   const [isPackageOpen, setIsPackageOpen] = useState(false);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
-  const customerContainerRef = useRef<HTMLDivElement>(null);
   const packageContainerRef = useRef<HTMLDivElement>(null);
 
   // 默认封面图
   const defaultCover = 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80';
   const currentCover = defaultCover;
 
-  const fetchOptions = async () => {
+  const fetchPackages = async () => {
     setIsLoadingOptions(true);
     try {
-      const [customersRes, packagesRes] = await Promise.all([
-        fetch('/admin/api/customers', { method: 'GET' }),
-        fetch('/admin/api/packages', { method: 'GET' }),
-      ]);
-
-      const customersJson = (await customersRes.json().catch(() => null)) as ApiResponse<Customer[]> | null;
+      const packagesRes = await fetch('/admin/api/packages', { method: 'GET' });
       const packagesJson = (await packagesRes.json().catch(() => null)) as ApiResponse<Package[]> | null;
-
-      if (!customersRes.ok) {
-        if (isApiResponse(customersJson)) {
-          throw new Error(customersJson.message);
-        }
-        throw new Error('获取客户列表失败');
-      }
 
       if (!packagesRes.ok) {
         if (isApiResponse(packagesJson)) {
@@ -84,11 +64,10 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
         throw new Error('获取套餐列表失败');
       }
 
-      if (!customersJson?.data || !packagesJson?.data) {
+      if (!packagesJson?.data) {
         throw new Error('获取下拉选项失败');
       }
 
-      setCustomers(customersJson.data);
       setPackages(packagesJson.data.filter((p) => p.isActive).sort((a, b) => a.sort - b.sort));
     } catch (error) {
       const message = error instanceof Error ? error.message : '获取下拉选项失败';
@@ -102,9 +81,6 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
   // 点击外部关闭下拉
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (customerContainerRef.current && !customerContainerRef.current.contains(event.target as Node)) {
-        setIsCustomerOpen(false);
-      }
       if (packageContainerRef.current && !packageContainerRef.current.contains(event.target as Node)) {
         setIsPackageOpen(false);
       }
@@ -115,7 +91,7 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
 
   React.useEffect(() => {
     if (!isOpen) return;
-    fetchOptions();
+    fetchPackages();
   }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -146,7 +122,7 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
         },
         body: JSON.stringify({
           name: projectName.trim(),
-          customerId: selectedCustomer,
+          customerId: selectedCustomer.id,
           packageId: selectedPackage,
           // 其他字段使用默认值
           description: '',
@@ -172,7 +148,7 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
 
       // 清空表单
       setProjectName('');
-      setSelectedCustomer('');
+      setSelectedCustomer(null);
       setSelectedPackage('');
 
       // 关闭抽屉并跳转
@@ -187,7 +163,6 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
     }
   };
 
-  const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
   const selectedPackageData = packages.find(p => p.id === selectedPackage);
 
   if (!isOpen) return null;
@@ -269,62 +244,11 @@ export const ProjectCreateDrawer: React.FC<ProjectCreateDrawerProps> = ({
             <label className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
               <User size={14} /> 客户 <span className="text-destructive">*</span>
             </label>
-            <div className="relative" ref={customerContainerRef}>
-              <button
-                type="button"
-                onClick={() => setIsCustomerOpen(!isCustomerOpen)}
-                disabled={isLoadingOptions}
-                className={cn(
-                  "w-full flex items-center justify-between bg-muted/30 border-2 rounded-xl px-4 py-3 text-base font-bold transition-all outline-none",
-                  isCustomerOpen ? "bg-background border-primary/20 shadow-lg" : "border-transparent hover:bg-muted/50"
-                )}
-              >
-                <span className={cn(!selectedCustomerData && "text-muted-foreground/60")}>
-                  {isLoadingOptions
-                    ? "加载客户中..."
-                    : selectedCustomerData
-                      ? `${selectedCustomerData.name} (${selectedCustomerData.phone})`
-                      : "选择客户"}
-                </span>
-                <ChevronDown size={16} className={cn("text-muted-foreground transition-transform duration-200", isCustomerOpen && "rotate-180")} />
-              </button>
-
-              {isCustomerOpen && (
-                <div className="absolute top-[calc(100%+8px)] left-0 w-full z-50 overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-2xl animate-in fade-in-0 zoom-in-95">
-                  <div className="p-1.5 max-h-[240px] overflow-y-auto">
-                    {customers.map((customer) => (
-                      <button
-                        key={customer.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCustomer(customer.id);
-                          setIsCustomerOpen(false);
-                        }}
-                        className={cn(
-                          "w-full flex flex-col items-start rounded-lg py-3 px-3 text-base font-bold transition-colors",
-                          customer.id === selectedCustomer
-                            ? 'bg-primary/10 text-primary'
-                            : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                        )}
-                      >
-                        <span>{customer.name}</span>
-                        <span className="text-xs font-normal opacity-70">{customer.phone}</span>
-                        {customer.id === selectedCustomer && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <Check size={16} strokeWidth={3} />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                    {customers.length === 0 && (
-                      <div className="py-6 text-center text-sm text-muted-foreground">
-                        {isLoadingOptions ? "加载中..." : "暂无客户"}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <CustomerCombobox
+              disabled={isSubmitting}
+              value={selectedCustomer}
+              onChange={setSelectedCustomer}
+            />
           </div>
 
           {/* 套餐选择 */}
