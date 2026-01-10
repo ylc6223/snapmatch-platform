@@ -100,7 +100,10 @@ export function FeaturedProjects() {
           <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
           精选 & 活跃项目
         </h2>
-        <button className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+        <button
+          onClick={() => router.push('delivery/projects/list')}
+          className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+        >
           查看全部 <ArrowRight size={16} />
         </button>
       </div>

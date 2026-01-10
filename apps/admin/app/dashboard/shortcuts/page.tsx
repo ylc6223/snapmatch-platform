@@ -13,7 +13,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen font-sans text-foreground bg-background selection:bg-accent selection:text-accent-foreground">
-      <Toaster position="top-right" richColors />
+      {/*<Toaster position="top-right" richColors />*/}
       <Navbar />
 
       <main className="max-w-[1600px] mx-auto px-6 sm:px-8">

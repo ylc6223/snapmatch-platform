@@ -56,7 +56,7 @@ const data = {
       icon: IconTruckDelivery,
       permissions: ["page:assets"],
       items: [
-        { title: "项目创建", url: "/dashboard/delivery/projects/new" },
+        { title: "项目管理", url: "/dashboard/delivery/projects/list" },
         { title: "照片库", url: "/dashboard/delivery/photos" },
         { title: "选片链接", url: "/dashboard/delivery/viewer-links" },
         { title: "精修交付", url: "/dashboard/delivery/retouch" }
