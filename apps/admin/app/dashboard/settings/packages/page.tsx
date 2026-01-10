@@ -1,36 +1,36 @@
 import type { Metadata } from "next";
-import { UsersRound } from "lucide-react";
+import { Package } from "lucide-react";
 import { headers } from "next/headers";
-import { CustomerTable } from "@/components/customers/customer-table";
+import { PackageTable } from "@/components/packages/package-table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type {
-  PaginatedCustomersResponse,
-  CustomersQueryParams,
-} from "@/lib/types/customer";
+  PaginatedPackagesResponse,
+  PackagesQueryParams,
+} from "@/lib/types/package";
 import { generateMeta } from "@/lib/utils";
 import { withAdminBasePath } from "@/lib/routing/base-path";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateMeta({
-    title: "客户档案",
-    description: "管理客户信息，支持新增、编辑、删除和搜索。",
+    title: "套餐管理",
+    description: "管理套餐配置，支持新增、编辑、删除和搜索。",
   });
 }
 
 /**
- * 客户档案页面（服务端组件）
+ * 套餐管理页面（服务端组件）
  *
  * 架构说明：
  * - 本页面为服务端组件，负责初始数据获取（SSR）
- * - ClientTable 为客户端组件，负责交互逻辑（表格、Dialog等）
+ * - PackageTable 为客户端组件，负责交互逻辑（表格、Dialog等）
  * - 避免 hydration mismatch 问题
  */
-export default async function CustomersPage({
+export default async function PackagesPage({
   searchParams,
 }: {
-  searchParams: Promise<CustomersQueryParams>;
+  searchParams: Promise<PackagesQueryParams>;
 }) {
   // 获取查询参数
   const params = await searchParams;
@@ -38,8 +38,8 @@ export default async function CustomersPage({
     q = "",
     page = 1,
     pageSize = 20,
-    sortBy = "createdAt",
-    sortOrder = "desc",
+    sortBy = "sort",
+    sortOrder = "asc",
   } = params;
 
   // 构建查询参数
@@ -51,7 +51,7 @@ export default async function CustomersPage({
   if (sortOrder) queryParams.set("sortOrder", sortOrder);
 
   // 服务端获取初始数据
-  let initialData: PaginatedCustomersResponse = {
+  let initialData: PaginatedPackagesResponse = {
     items: [],
     total: 0,
     page: Number(page),
@@ -66,7 +66,7 @@ export default async function CustomersPage({
     const baseUrl = host ? `${protocol}://${host}` : "http://localhost:3000";
 
     const response = await fetch(
-      `${baseUrl}${withAdminBasePath(`/api/customers?${queryParams.toString()}`)}`,
+      `${baseUrl}${withAdminBasePath(`/api/packages?${queryParams.toString()}`)}`,
       {
         cache: "no-store",
         ...(cookie ? { headers: { cookie } } : {}),
@@ -78,7 +78,7 @@ export default async function CustomersPage({
       initialData = result.data;
     }
   } catch (error) {
-    console.error("获取客户列表失败:", error);
+    console.error("获取套餐列表失败:", error);
     // 失败时使用空数据，客户端组件会重新加载
   }
 
@@ -88,22 +88,22 @@ export default async function CustomersPage({
         <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <UsersRound className="size-4 text-muted-foreground" />
-              <CardTitle className="text-base sm:text-lg">客户档案</CardTitle>
+              <Package className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base sm:text-lg">套餐管理</CardTitle>
               <Badge variant="outline" className="h-6">
-                CRM
+                系统设置
               </Badge>
             </div>
             <CardDescription className="max-w-[72ch]">
-              管理客户信息，支持新增、编辑、删除和搜索。
+              管理套餐配置，支持新增、编辑、删除和搜索。
             </CardDescription>
           </div>
         </CardHeader>
       </Card>
       <Separator />
 
-      {/* 客户表格（客户端组件） */}
-      <CustomerTable initialData={initialData} />
+      {/* 套餐表格（客户端组件） */}
+      <PackageTable initialData={initialData} />
     </div>
   );
 }

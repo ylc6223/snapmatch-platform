@@ -14,6 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { apiFetch, getApiErrorMessage } from "@/lib/api/client";
+import { type ApiResponse } from "@/lib/api/response";
+import { withAdminBasePath } from "@/lib/routing/base-path";
 import type { Customer, CreateCustomerInput, UpdateCustomerInput } from "@/lib/types/customer";
 
 interface CustomerFormDialogProps {
@@ -40,9 +43,9 @@ export function CustomerFormDialog({
     tags: customer?.tags || [],
   });
 
-  const handleInputChange = (
-    field: keyof CreateCustomerInput,
-    value: string
+  const handleInputChange = <K extends keyof CreateCustomerInput>(
+    field: K,
+    value: CreateCustomerInput[K]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -64,24 +67,16 @@ export function CustomerFormDialog({
       setIsSubmitting(true);
 
       const url = isEditing
-        ? `/api/customers/${customer!.id}`
-        : "/api/customers";
+        ? withAdminBasePath(`/api/customers/${customer!.id}`)
+        : withAdminBasePath("/api/customers");
 
       const method = isEditing ? "PATCH" : "POST";
 
-      const response = await fetch(url, {
+      await apiFetch<ApiResponse<unknown>>(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "操作失败");
-      }
 
       toast.success(isEditing ? "客户更新成功" : "客户创建成功");
       onSuccess?.();
@@ -97,8 +92,7 @@ export function CustomerFormDialog({
         tags: [],
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "操作失败";
-      toast.error(message);
+      toast.error(getApiErrorMessage(error, "操作失败"));
       console.error("提交客户表单失败:", error);
     } finally {
       setIsSubmitting(false);

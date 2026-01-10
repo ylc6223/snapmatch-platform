@@ -79,6 +79,7 @@ const data = {
       permissions: ["page:settings"],
       items: [
         { title: "账号与权限", url: "/dashboard/settings/accounts" },
+        { title: "套餐管理", url: "/dashboard/settings/packages" },
         { title: "存储配置", url: "/dashboard/settings/storage" },
         { title: "小程序配置", url: "/dashboard/settings/miniprogram" }
       ]

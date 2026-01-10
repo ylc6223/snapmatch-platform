@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CustomerFormDialog } from "@/components/customers/customer-form-dialog";
+import { Switch } from "@/components/ui/switch";
+import { PackageFormDialog } from "@/components/packages/package-form-dialog";
 import {
   useDataTableQueryState,
 } from "@/components/data-table/use-data-table-query-state";
@@ -29,18 +30,18 @@ import { type ApiResponse } from "@/lib/api/response";
 import { apiFetch, getApiErrorMessage } from "@/lib/api/client";
 import { withAdminBasePath } from "@/lib/routing/base-path";
 import type {
-  Customer,
-  PaginatedCustomersResponse,
-} from "@/lib/types/customer";
+  Package,
+  PaginatedPackagesResponse,
+} from "@/lib/types/package";
 
-interface CustomerTableProps {
-  initialData: PaginatedCustomersResponse;
+interface PackageTableProps {
+  initialData: PaginatedPackagesResponse;
 }
 
 /**
- * 客户列表数据获取器（内部函数）
+ * 套餐列表数据获取器（内部函数）
  */
-const fetchCustomers = async ({
+const fetchPackages = async ({
   q,
   page,
   pageSize,
@@ -52,7 +53,7 @@ const fetchCustomers = async ({
   pageSize: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-}): Promise<PaginatedCustomersResponse> => {
+}): Promise<PaginatedPackagesResponse> => {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   params.set("page", String(page));
@@ -60,8 +61,8 @@ const fetchCustomers = async ({
   if (sortBy) params.set("sortBy", sortBy);
   if (sortOrder) params.set("sortOrder", sortOrder);
 
-  const url = withAdminBasePath(`/api/customers?${params.toString()}`);
-  const payload = await apiFetch<ApiResponse<PaginatedCustomersResponse>>(url);
+  const url = withAdminBasePath(`/api/packages?${params.toString()}`);
+  const payload = await apiFetch<ApiResponse<PaginatedPackagesResponse>>(url);
   return (
     payload.data ?? {
       items: [],
@@ -73,20 +74,31 @@ const fetchCustomers = async ({
 };
 
 /**
- * 客户表格组件（客户端组件）
+ * 格式化价格显示（分 -> 元）
+ */
+const formatPrice = (priceInCents: number | null | undefined): string => {
+  if (priceInCents === null || priceInCents === undefined) {
+    return "-";
+  }
+  return `¥${(priceInCents / 100).toFixed(2)}`;
+};
+
+/**
+ * 套餐表格组件（客户端组件）
  *
  * 负责：
  * - 表格数据展示
  * - 排序、分页、搜索
  * - 新增/编辑/删除操作
+ * - 启用/禁用切换
  * - Dialog 状态管理
  */
-export function CustomerTable({
+export function PackageTable({
   initialData,
-}: CustomerTableProps) {
+}: PackageTableProps) {
   const [queryState, queryActions] = useDataTableQueryState({
     defaultPageSize: 20,
-    defaultSort: [{ id: "createdAt", desc: true }],
+    defaultSort: [{ id: "sort", desc: false }],
   });
 
   const onSortingChange: OnChangeFn<SortingState> = React.useCallback(
@@ -105,85 +117,111 @@ export function CustomerTable({
     [queryActions, queryState.columnVisibility],
   );
 
-  const [data, setData] = React.useState<PaginatedCustomersResponse>(initialData);
+  const [data, setData] = React.useState<PaginatedPackagesResponse>(initialData);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   // Dialog 状态
   const [isFormDialogOpen, setIsFormDialogOpen] = React.useState(false);
-  const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null);
-  const [deleteConfirmCustomer, setDeleteConfirmCustomer] = React.useState<Customer | null>(null);
+  const [editingPackage, setEditingPackage] = React.useState<Package | null>(null);
+  const [deleteConfirmPackage, setDeleteConfirmPackage] = React.useState<Package | null>(null);
 
   /**
    * 表格列定义
    */
-  const columns: ColumnDef<Customer>[] = React.useMemo(
+  const columns: ColumnDef<Package>[] = React.useMemo(
     () => [
       {
         accessorKey: "name",
-        header: "客户姓名",
+        header: "套餐名称",
         cell: ({ row }) => (
           <div className="font-medium">{row.getValue("name")}</div>
         ),
       },
       {
-        accessorKey: "phone",
-        header: "手机号",
-        cell: ({ row }) => (
-          <div className="text-muted-foreground">{row.getValue("phone")}</div>
-        ),
-      },
-      {
-        accessorKey: "email",
-        header: "邮箱",
+        accessorKey: "includedRetouchCount",
+        header: "精修/入册",
         cell: ({ row }) => {
-          const email = row.getValue("email") as string | undefined;
-          return email ? (
-            <div className="text-muted-foreground">{email}</div>
-          ) : (
-            <span className="text-muted-foreground/50">-</span>
-          );
-        },
-      },
-      {
-        accessorKey: "tags",
-        header: "标签",
-        cell: ({ row }) => {
-          const tags = row.getValue("tags") as string[] | undefined;
-          return tags && tags.length > 0 ? (
-            <div className="flex gap-1 flex-wrap">
-              {tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          ) : (
-            <span className="text-muted-foreground/50">-</span>
-          );
-        },
-      },
-      {
-        accessorKey: "createdAt",
-        header: "创建时间",
-        cell: ({ row }) => {
-          const createdAt = row.getValue("createdAt") as number;
-          const date = new Date(createdAt);
+          const retouch = row.getValue("includedRetouchCount") as number;
+          const album = row.getValue("includedAlbumCount") as number;
           return (
-            <div className="text-muted-foreground text-sm">
-              {date.toLocaleDateString("zh-CN", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })}
+            <div className="text-muted-foreground">
+              {retouch} / {album} 张
             </div>
+          );
+        },
+      },
+      {
+        accessorKey: "price",
+        header: "套餐价格",
+        cell: ({ row }) => {
+          const price = row.getValue("price") as number | null | undefined;
+          return (
+            <div className="text-muted-foreground">
+              {formatPrice(price)}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "extraPrices",
+        header: "超额单价",
+        cell: ({ row }) => {
+          const extraRetouch = row.original.extraRetouchPrice;
+          const extraAlbum = row.original.extraAlbumPrice;
+          return (
+            <div className="text-sm text-muted-foreground">
+              <div>精修: {formatPrice(extraRetouch)}</div>
+              <div>入册: {formatPrice(extraAlbum)}</div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "includeAllOriginals",
+        header: "底片全送",
+        cell: ({ row }) => {
+          const includeAll = row.getValue("includeAllOriginals") as boolean;
+          return (
+            <Badge variant={includeAll ? "default" : "secondary"}>
+              {includeAll ? "是" : "否"}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "isActive",
+        header: "状态",
+        cell: ({ row }) => {
+          const pkg = row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={pkg.isActive}
+                onCheckedChange={(checked) => handleToggleActive(pkg, checked)}
+                disabled={isLoading}
+              />
+              <span className="text-sm text-muted-foreground">
+                {pkg.isActive ? "启用" : "禁用"}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "sort",
+        header: "排序",
+        cell: ({ row }) => {
+          const sort = row.getValue("sort") as number;
+          return (
+            <div className="text-muted-foreground">{sort}</div>
           );
         },
       },
       {
         id: "actions",
         cell: ({ row }) => {
-          const customer = row.original;
+          const pkg = row.original;
 
           return (
             <DropdownMenu>
@@ -195,7 +233,7 @@ export function CustomerTable({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => handleEdit(customer)}
+                  onClick={() => handleEdit(pkg)}
                   className="cursor-pointer"
                 >
                   <IconEdit className="mr-2 h-4 w-4" />
@@ -203,7 +241,7 @@ export function CustomerTable({
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => handleDelete(customer)}
+                  onClick={() => handleDelete(pkg)}
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <IconTrash className="mr-2 h-4 w-4" />
@@ -215,7 +253,7 @@ export function CustomerTable({
         },
       },
     ],
-    []
+    [isLoading]
   );
 
   /**
@@ -230,7 +268,7 @@ export function CustomerTable({
           setIsLoading(true);
         }
 
-        const result = await fetchCustomers({
+        const result = await fetchPackages({
           q: queryState.q,
           page: queryState.page,
           pageSize: queryState.pageSize,
@@ -240,8 +278,8 @@ export function CustomerTable({
 
         setData(result);
       } catch (error) {
-        toast.error(getApiErrorMessage(error, "获取客户列表失败"));
-        console.error("获取客户列表失败:", error);
+        toast.error(getApiErrorMessage(error, "获取套餐列表失败"));
+        console.error("获取套餐列表失败:", error);
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -258,44 +296,63 @@ export function CustomerTable({
   /**
    * 处理编辑
    */
-  const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer);
+  const handleEdit = (pkg: Package) => {
+    setEditingPackage(pkg);
     setIsFormDialogOpen(true);
   };
 
   /**
    * 处理删除
    */
-  const handleDelete = (customer: Customer) => {
-    setDeleteConfirmCustomer(customer);
+  const handleDelete = (pkg: Package) => {
+    setDeleteConfirmPackage(pkg);
   };
 
   /**
    * 确认删除
    */
   const confirmDelete = async () => {
-    if (!deleteConfirmCustomer) return;
+    if (!deleteConfirmPackage) return;
 
     try {
-      await apiFetch(withAdminBasePath(`/api/customers/${deleteConfirmCustomer.id}`), {
+      await apiFetch(withAdminBasePath(`/api/packages/${deleteConfirmPackage.id}`), {
         method: "DELETE",
       });
 
-      toast.success("客户删除成功");
-      setDeleteConfirmCustomer(null);
+      toast.success("套餐删除成功");
+      setDeleteConfirmPackage(null);
       loadData(true);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "删除失败"));
-      console.error("删除客户失败:", error);
+      console.error("删除套餐失败:", error);
     }
   };
 
   /**
-   * 处理新建客户
+   * 处理新建套餐
    */
   const handleCreate = () => {
-    setEditingCustomer(null);
+    setEditingPackage(null);
     setIsFormDialogOpen(true);
+  };
+
+  /**
+   * 切换启用状态
+   */
+  const handleToggleActive = async (pkg: Package, checked: boolean) => {
+    try {
+      await apiFetch(withAdminBasePath(`/api/packages/${pkg.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: checked }),
+      });
+
+      toast.success(checked ? "套餐已启用" : "套餐已禁用");
+      loadData(true);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "操作失败"));
+      console.error("切换套餐状态失败:", error);
+    }
   };
 
   /**
@@ -321,8 +378,8 @@ export function CustomerTable({
             q={queryState.q}
             onQChange={queryActions.setQ}
             onRefresh={() => loadData(true)}
-            actions={<Button onClick={handleCreate}>新建客户</Button>}
-            placeholder="搜索客户姓名或手机号..."
+            actions={<Button onClick={handleCreate}>新建套餐</Button>}
+            placeholder="搜索套餐名称..."
           />
         )}
       />
@@ -336,31 +393,31 @@ export function CustomerTable({
         onPageSizeChange={queryActions.setPageSize}
       />
 
-      {/* 客户表单 Dialog */}
-      <CustomerFormDialog
+      {/* 套餐表单 Dialog */}
+      <PackageFormDialog
         isOpen={isFormDialogOpen}
         onClose={() => setIsFormDialogOpen(false)}
         onSuccess={handleFormSuccess}
-        customer={editingCustomer}
+        package={editingPackage}
       />
 
       {/* 删除确认 Dialog */}
-      {deleteConfirmCustomer && (
+      {deleteConfirmPackage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="bg-background border rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-2">确认删除</h3>
             <p className="text-muted-foreground mb-4">
-              确定要删除客户
+              确定要删除套餐
               <span className="font-medium text-foreground">
                 {" "}
-                {deleteConfirmCustomer.name}
+                {deleteConfirmPackage.name}
               </span>
               吗？此操作无法撤销。
             </p>
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={() => setDeleteConfirmCustomer(null)}
+                onClick={() => setDeleteConfirmPackage(null)}
               >
                 取消
               </Button>
