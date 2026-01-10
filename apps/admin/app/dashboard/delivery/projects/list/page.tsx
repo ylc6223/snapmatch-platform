@@ -13,6 +13,12 @@ export default function Page() {
   const router = useRouter();
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
   const [sortBy, setSortBy] = React.useState<'createdAt' | '-createdAt'>('-createdAt');
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  // 只在客户端挂载后才渲染 Sparkles，避免 hydration 错误
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleSearchSelect = (item: SearchResult) => {
     router.push(`/dashboard/projects/${item.id}`);
@@ -22,17 +28,19 @@ export default function Page() {
     <div className="min-h-screen font-sans text-foreground bg-background">
       {/* 上部分：背景区域 + 搜索框 */}
       <div className="relative bg-gradient-to-b from-primary/20 to-background border-b border-border">
-        {/* Sparkles 背景效果 */}
-        <SparklesCore
-          id="tsparticles-hero"
-          background="transparent"
-          minSize={2}
-          maxSize={4}
-          particleDensity={80}
-          particleColor="hsl(var(--foreground))"
-          speed={2}
-          className="absolute inset-0 w-full h-full pointer-events-none"
-        />
+        {/* Sparkles 背景效果 - 只在客户端渲染 */}
+        {isMounted && (
+          <SparklesCore
+            id="tsparticles-hero"
+            background="transparent"
+            minSize={2}
+            maxSize={4}
+            particleDensity={80}
+            particleColor="hsl(var(--foreground))"
+            speed={2}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+          />
+        )}
 
         {/* 内容层 */}
         <div className="relative z-10 max-w-[1600px] mx-auto px-6 sm:px-8 py-12">
