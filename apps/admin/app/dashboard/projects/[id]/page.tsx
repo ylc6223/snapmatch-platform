@@ -43,7 +43,7 @@ export default function ProjectDetailPage() {
   }, [projectId]);
 
   const handleClose = () => {
-    router.push('/dashboard/shortcuts');
+    router.back();
   };
 
   if (loading) {
@@ -67,7 +67,7 @@ export default function ProjectDetailPage() {
             onClick={handleClose}
             className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
           >
-            返回快捷入口
+            返回上一页
           </button>
         </div>
       </div>
