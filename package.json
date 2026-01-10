@@ -44,5 +44,11 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.7",
+      "@types/react-dom": "19.2.3"
+    }
   }
 }
