@@ -128,8 +128,8 @@ export const ProjectDetailDrawer: React.FC<ProjectDetailDrawerProps> = ({
                 className={cn(
                   "relative h-16 w-16 md:h-20 md:w-20 rounded-lg overflow-hidden flex-shrink-0 transition-all",
                   activeImageIndex === idx
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105 opacity-100'
-                    : 'opacity-60 hover:opacity-100 hover:scale-105'
+                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background opacity-100'
+                    : 'opacity-60 hover:opacity-100'
                 )}
               >
                 <img src={img} className="w-full h-full object-cover" alt={`thumb-${idx}`} />
@@ -256,7 +256,7 @@ export const ProjectDetailDrawer: React.FC<ProjectDetailDrawerProps> = ({
         {/* 粘性底部操作栏 */}
         <div className="p-6 border-t border-border bg-card/80 backdrop-blur-md sticky bottom-0 z-10 flex flex-col gap-3">
           <button
-            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 uppercase tracking-wide"
+            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-black text-sm transition-colors shadow-xl shadow-primary/20 flex items-center justify-center gap-2 uppercase tracking-wide hover:bg-primary/90"
             onClick={() => {
               // TODO: 实现编辑功能
               console.log('编辑项目:', project.id);
