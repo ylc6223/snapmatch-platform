@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { UsersRound } from "lucide-react";
+import { headers } from "next/headers";
 import { CustomerTable } from "@/components/customers/customer-table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import type {
   CustomersQueryParams,
 } from "@/lib/types/customer";
 import { generateMeta } from "@/lib/utils";
+import { withAdminBasePath } from "@/lib/routing/base-path";
 
 export async function generateMetadata(): Promise<Metadata> {
   return generateMeta({
@@ -57,10 +59,17 @@ export default async function CustomersPage({
   };
 
   try {
+    const requestHeaders = await headers();
+    const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+    const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+    const cookie = requestHeaders.get("cookie") ?? "";
+    const baseUrl = host ? `${protocol}://${host}` : "http://localhost:3000";
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/customers?${queryParams.toString()}`,
+      `${baseUrl}${withAdminBasePath(`/api/customers?${queryParams.toString()}`)}`,
       {
         cache: "no-store",
+        ...(cookie ? { headers: { cookie } } : {}),
       }
     );
 

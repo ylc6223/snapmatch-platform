@@ -4,7 +4,9 @@ import * as React from "react";
 import { toast } from "sonner";
 import {
   type ColumnDef,
+  type OnChangeFn,
   type SortingState,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { IconDotsVertical, IconEdit, IconTrash } from "@tabler/icons-react";
 import {
@@ -23,6 +25,9 @@ import {
 import { DataTable } from "@/components/data-table/table";
 import { DataTableToolbar } from "@/components/data-table/toolbar";
 import { DataTablePagination } from "@/components/data-table/pagination";
+import { type ApiResponse } from "@/lib/api/response";
+import { apiFetch, getApiErrorMessage } from "@/lib/api/client";
+import { withAdminBasePath } from "@/lib/routing/base-path";
 import type {
   Customer,
   PaginatedCustomersResponse,
@@ -55,13 +60,16 @@ const fetchCustomers = async ({
   if (sortBy) params.set("sortBy", sortBy);
   if (sortOrder) params.set("sortOrder", sortOrder);
 
-  const response = await fetch(`/api/customers?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error("获取客户列表失败");
-  }
-
-  const result = await response.json();
-  return result.data as PaginatedCustomersResponse;
+  const url = withAdminBasePath(`/api/customers?${params.toString()}`);
+  const payload = await apiFetch<ApiResponse<PaginatedCustomersResponse>>(url);
+  return (
+    payload.data ?? {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+    }
+  );
 };
 
 /**
@@ -80,6 +88,22 @@ export function CustomerTable({
     defaultPageSize: 20,
     defaultSort: [{ id: "createdAt", desc: true }],
   });
+
+  const onSortingChange: OnChangeFn<SortingState> = React.useCallback(
+    (updater) => {
+      const next = typeof updater === "function" ? updater(queryState.sorting) : updater;
+      queryActions.setSorting(next);
+    },
+    [queryActions, queryState.sorting],
+  );
+
+  const onColumnVisibilityChange: OnChangeFn<VisibilityState> = React.useCallback(
+    (updater) => {
+      const next = typeof updater === "function" ? updater(queryState.columnVisibility) : updater;
+      queryActions.setColumnVisibility(next);
+    },
+    [queryActions, queryState.columnVisibility],
+  );
 
   const [data, setData] = React.useState<PaginatedCustomersResponse>(initialData);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -216,9 +240,7 @@ export function CustomerTable({
 
         setData(result);
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "获取客户列表失败";
-        toast.error(message);
+        toast.error(getApiErrorMessage(error, "获取客户列表失败"));
         console.error("获取客户列表失败:", error);
       } finally {
         setIsLoading(false);
@@ -255,24 +277,15 @@ export function CustomerTable({
     if (!deleteConfirmCustomer) return;
 
     try {
-      const response = await fetch(
-        `/api/customers/${deleteConfirmCustomer.id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.message || "删除失败");
-      }
+      await apiFetch(withAdminBasePath(`/api/customers/${deleteConfirmCustomer.id}`), {
+        method: "DELETE",
+      });
 
       toast.success("客户删除成功");
       setDeleteConfirmCustomer(null);
       loadData(true);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "删除失败";
-      toast.error(message);
+      toast.error(getApiErrorMessage(error, "删除失败"));
       console.error("删除客户失败:", error);
     }
   };
@@ -299,9 +312,9 @@ export function CustomerTable({
         data={data.items}
         isLoading={isLoading}
         sorting={queryState.sorting}
-        onSortingChange={queryActions.setSorting}
+        onSortingChange={onSortingChange}
         columnVisibility={queryState.columnVisibility}
-        onColumnVisibilityChange={queryActions.setColumnVisibility}
+        onColumnVisibilityChange={onColumnVisibilityChange}
         renderToolbar={(table) => (
           <DataTableToolbar
             table={table}
